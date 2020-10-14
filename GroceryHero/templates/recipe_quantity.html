@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">{{ legend }}</legend>
+            {% set index = namespace(value=0) %}
+            {% for input_form in form.ingredient_forms %}
+                <div class="form-inline form-row mb-3">
+                    <h5 class="col">{{ form.ingredients[index.value] }}</h5>
+                    {{ input_form.csrf_token }}
+                    <!--Ingredient Quantity form-->
+<!--                    {{ input_form.ingredient_quantity.label(class="form-control-label") }}-->
+<!--                    {{ input_form.ingredient_type.label(class="form-control-label" ) }}-->
+                    {% if input_form.ingredient_quantity.errors %}
+                        {{ input_form.ingredient_quantity(class="form-control is-invalid", placeholder="Enter Quantity") }}
+                        <div class="invalid-feedback">
+                            {% for error in input_form.ingredient_quantity.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="col">
+                            {{ input_form.ingredient_quantity(class="form-control") }}
+                        </div>
+                    {% endif %}
+                    <!--Ingredient Type form-->
+                    <div class="col">
+                        {{ input_form.ingredient_type(class="custom-select") }}
+                    </div>
+                </div>
+                {% set index.value = index.value + 1 %}
+            {% endfor %}
+        </fieldset>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-info") }}
+        </div>
+    </form>
+</div>
+{% endblock content %}

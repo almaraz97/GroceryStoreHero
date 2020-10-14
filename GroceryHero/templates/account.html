@@ -1,0 +1,190 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Account settings -->
+<div class="content-section">
+    <div class="media">
+            <img class="rounded-circle account-img" src="{{ image_file }}">
+        <div class="media-body">
+            <h2 class="account-heading">{{ current_user.username }}</h2>
+            <p class="text-secondary">{{ current_user.email }}</p>
+        </div>
+    </div>
+        <legend class="border-bottom mb-4" style="display:inline;">Account Info
+            <button class="btn btn-danger btn-sm" style="float: right; display:inline;" data-toggle="modal" data-target="#deleteModal">Delete</button>
+        </legend>
+        <form method="POST" action="" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group mb-2">
+                <div class="form-group">
+                    {{ form.username.label(class="form-control-label") }}
+                    {% if form.username.errors %}
+                        {{ form.username(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.username.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.username(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.email.label(class="form-control-label") }}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.email.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.email(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group mb-0 pb-0">
+                    {{ form.picture.label() }}
+                    {{ form.picture(class="form-control-file") }}
+                    {% if form.picture.errors %}
+                        {% for error in form.picture.errors %}
+                            <span class="text-danger">{{ error }}</span></br>
+                        {% endfor %}
+                  {% endif %}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+</div>
+<!-- Harmony Settings -->
+<div class="content-section">
+    <form action="#" method="POST">
+    <legend class="border-bottom mb-4">Advanced Harmony Tool Settings</legend>
+    <div class="row mb-3">
+        <div class="col-4">
+            <div class="list-group" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action active" id="list-rec-list" data-toggle="list" href="#list-rec" role="tab" aria-controls="rec">Recommendations</a>
+                <a class="list-group-item list-group-item-action" id="list-pair-list" data-toggle="list" href="#list-pair" role="tab" aria-controls="pair">Recipe Group Weights</a>
+                <a class="list-group-item list-group-item-action" id="list-ingredient-list" data-toggle="list" href="#list-ingredient" role="tab" aria-controls="ingredient">Ingredient Weights</a>
+                <a class="list-group-item list-group-item-action" id="list-exclude-list" data-toggle="list" href="#list-exclude" role="tab" aria-controls="exclude">Ingredient Excludes</a>
+                <a class="list-group-item list-group-item-action" id="list-sticky-list" data-toggle="list" href="#list-sticky" role="tab" aria-controls="sticky">Sticky Weights</a>
+                <a class="list-group-item list-group-item-action" id="list-Menu-list" data-toggle="list" href="#list-Menu" role="tab" aria-controls="Menu">History Excludes</a>
+                <a class="list-group-item list-group-item-action" id="list-algorithm-list" data-toggle="list" href="#list-algorithm" role="tab" aria-controls="algorithm">Harmony Scoring</a>
+            </div>
+        </div>
+        <!--Forms within each tab-->
+        <div class="col-8">
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="list-rec" role="tabpanel" aria-labelledby="list-rec-list">
+                    <p>Want more recipe recommendations? Change this number if you'd like more. Currently each
+                        recommendation excludes it's recipes from the following recommendations so each recommendation
+                        gives you unique recipes.</p>
+                    {{ form3.recommend_num(class="custom-select") }}
+                </div>
+                <div class="tab-pane fade" id="list-pair" role="tabpanel" aria-labelledby="list-pair-list">
+                    <p>Some recipes are so harmonious together that they are always recommended.
+                        Penalize groups of recipes so they are less likely to show up together.
+                    1 does nothing, 5 means recipes in the group will rarely show up together.</p>
+                    <textarea rows="3" class="form-control" readonly>Current Recipe Pair Weights:&#013;{{ tastes }}</textarea>
+                    <div class="row">
+                        <div class="col-9 pr-1">
+                            {{ form3.pairs(class="custom-select mb-2 mt-3") }}
+                        </div>
+                        <div class="col pl-1">
+                            {{ form3.pair_weight(class="custom-select mt-3") }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="list-ingredient" role="tabpanel" aria-labelledby="list-ingredient-list">
+                    <p>Want to see more of a certain ingredient? Increase its weight so the tool recommends it more often,
+                        or decrease it so you see it less often. All ingredients are set to 1 by default but ones you've
+                        modify are added to the box below.</p>
+                    {% if items|length > 0  %}
+                            {% set items = items|join(', ') %}
+                    {% else %}
+                        {% set items = '' %}
+                    {% endif %}
+                    <textarea rows="3" class="form-control" readonly>Current Weights:&#013;{{ ing_weights }}</textarea>
+                    <div class="row">
+                        <div class="col pr-1">
+                            {{ form3.ingredient(class="custom-select mb-2 mt-3") }}
+                        </div>
+                        <div class="col pl-1">
+                            {{ form3.ingredient_weights(class="custom-select mb-2 mt-3") }}
+                        </div>
+                    </div>
+                    <div class="pb-2">
+                        {{ form3.delete_weights(class="btn btn-danger btn-sm", style="float:right;") }}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="list-exclude" role="tabpanel" aria-labelledby="list-exclude-list">
+                    <p>Some ingredients not relevant for the Harmony tool? Ingredients like spices are not purchased
+                    frequently so pairing recipes that share them won't reduce your grocery bill and will likely lead to
+                    similar tasting recommendations and lower real harmony scores.</p>
+                    <div class="row">
+                        <div class="col pr-1">
+                            {{ form3.ingredient_ex(class="custom-select mb-2", size=7) }}
+                        </div>
+                        <div class="col pl-1">
+                            {{ form3.ingredient_rem(class="custom-select mb-2", size=7) }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="list-sticky" role="tabpanel" aria-labelledby="list-sticky-list">
+                    <p>Some ingredients you may want to stick together. If an ingredient spoils quickly for example,
+                        it can be more likely to be paired with another recipe containing that ingredient to increase
+                        the chance that what you buy won't go to waste.</p>
+                    <textarea rows="3" class="form-control" readonly>Current Weights:&#013;{{ sticky_weights }}</textarea>
+                    <div class="row">
+                        <div class="col pr-1">
+                            {{ form3.ingredient2(class="custom-select mb-2 mt-3") }}
+                        </div>
+                        <div class="col pl-1">
+                            {{ form3.sticky_weights(class="custom-select mb-2 mt-3") }}
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="list-Menu" role="tabpanel" aria-labelledby="list-Menu-list">
+                    <p>Want last weeks recipes excluded from your Harmony Tool recommendations? When you clear your
+                        menu in the dashboard page, those recipes are saved to your account and can then be referenced when giving
+                        you recipe recommendations. Select how many 'clears' back the harmony tool will go when excluding
+                        your previously eaten recipes.
+                    </p>
+                    {{ form3.history_exclude(class="custom-select") }}
+                </div>
+                <div class="tab-pane fade" id="list-algorithm" role="tabpanel" aria-labelledby="list-algorithm-list">
+                    <p>How the harmony tool evaluates a group of recipes' harmony. Read more about this in the
+                        <a href="about#advanced">About page.</a></p>
+                    {{ form3.algorithm(class="custom-select mb-3") }}
+                    <p>How the harmony tool scores are shown to you. A "true" harmony score is likely to between 10% and 50% for good scores while the
+                    "graded" setting tries to give you scores in >60% for good scores which can be read similar to school grades.
+                    The more recipes there are together, the less likely that all ingredients will overlap so the smaller the score. Grading
+                    compensates for this.</p>
+                    {{ form3.modifier(class="custom-select") }}
+                </div>
+            </div>
+        </div>
+    </div>
+        {{ form3.submit(class="btn btn-outline-info mt-2 mb-3") }}
+    </form>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Permanently Delete Your Account?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <form method="POST" action="{{ url_for('users.delete_account', token=1) }}">
+                    {{ form.submit(class="btn btn-danger", value="Delete") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

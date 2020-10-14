@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1 class="mb-3">Your Recipes:</h1>
+    {% if current_user.is_authenticated %}
+        <!--Drop down menu search bar-->
+        <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <button class="input-group-text" for="inputGroupSelect01">Select</button>
+                </div>
+                <select class="custom-select" id="inputGroupSelect01" name="search">
+                        <option selected>Recipe Options</option>
+                    {% for recipe in search_recipes %}
+                        <option value="{{ recipe.title }}">{{ recipe.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        <!--Search bar with button-->
+        <div style="margin-bottom: 15px;">
+        <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
+            <div class="input-group flex-nowrap">
+                <input type="text" class="form-control" placeholder="Recipe Name" name="search">
+                <div class="input-group-prepend">
+                    <button class="input-group-text" id="addon-wrapping">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endif %}
+{% if cards is not defined or cards|length < 1 %}
+    <div class="card">
+        <div class="card-header p-0" id="headingMenu">
+            <h5 class="mb-0">
+                <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
+                   {% if current_user.is_authenticated %}
+                     <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.new_recipe') }}">You have no recipes yet. Click to add a recipe.</a>
+                   {% else %}
+                     <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no recipes yet. Login to add an recipe.</a>
+                   {% endif %}
+                </button>
+            </h5>
+        </div>
+    </div>
+{% else %}
+    <div class="pb-5">
+        <p class="text-muted mb-2" style="float: left;">You have {{ search_recipes|length }} recipe(s)</p>
+        <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">Go to Harmony Tool</button>
+    </div>
+        <!--Recipe cards-->
+        {% for recipe in cards %}
+            <article class="media content-section">
+                <!--Add and remove buttons-->
+                {% if recipe.in_menu %}
+                        <button class="btn btn-success btn-sm mt-3 updateButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Menu</button>
+                {% else %}
+                        <button class="btn btn-light btn-sm mt-3 updateButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Menu</button>
+                {% endif %}
+                <div class="media-body ml-4">
+                    <div class="article-metadata">
+                        <a style="font-size: 18px;" class="mr-2" href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">{{ recipe.title }}</a>
+    <!--                    <small class="text-muted">{{ recipe.date_created.strftime('%Y-%m-%d') }}</small>-->
+                    </div>
+                    <p class="article-content mt-2 mb-2">{{ recipe.quantity|join(', ') }}</p>
+                </div>
+            </article>
+        {% endfor %}
+{% endif %}
+<button class="btn btn-sm btn-secondary mb-4 col-12" id="tool" style="float: right;" onClick="document.getElementById('top').scrollIntoView();">Go to Top</button>
+{% endblock content %}
+
