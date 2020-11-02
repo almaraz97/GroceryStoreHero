@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="" />
+    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -20,6 +23,30 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Website" type="PythonConfigurationType" factoryName="Python">
+      <module name="GroceryStoreHero" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -33,5 +60,39 @@
       <updated>1603312528185</updated>
     </task>
     <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1603383493295">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1603383493295" />
+    <state x="471" y="146" key="FileChooserDialogImpl" timestamp="1603383562946">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="471" y="146" key="FileChooserDialogImpl/0.0.1366.768@0.0.1366.768" timestamp="1603383562946" />
+    <state width="1345" height="202" key="GridCell.Tab.0.bottom" timestamp="1603470983641">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="1345" height="202" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1603470983641" />
+    <state width="1345" height="202" key="GridCell.Tab.0.center" timestamp="1603470983639">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="1345" height="202" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1603470983639" />
+    <state width="1345" height="202" key="GridCell.Tab.0.left" timestamp="1603470983635">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="1345" height="202" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1603470983635" />
+    <state width="1345" height="202" key="GridCell.Tab.0.right" timestamp="1603470983640">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="1345" height="202" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1603470983640" />
+    <state x="192" y="23" key="SettingsEditor" timestamp="1603383853859">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="192" y="23" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1603383853859" />
+    <state x="376" y="216" key="com.intellij.ide.util.TipDialog" timestamp="1603383405815">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="376" y="216" key="com.intellij.ide.util.TipDialog/0.0.1366.768@0.0.1366.768" timestamp="1603383405815" />
   </component>
 </project>
