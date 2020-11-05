@@ -111,15 +111,15 @@
                                 </div>
                             </fieldset>
                             <div class="form-group mt-1">
-                                {{ form2.import_recipes_button(class="btn btn-outline-info") }}
-                                {{ form2.import_aisles_button(class="btn btn-outline-info") }}
+                                {{ form2.import_recipes_button(class="btn btn-info") }}
+                                {{ form2.import_aisles_button(class="btn btn-info") }}
                             </div>
                         </form>
                         <form method="POST" action="{{ url_for('users.export') }}" enctype="multipart/form-data">
                             <h4 class="mt-3 mb-2">Download</h4>
                             <fieldset class="form-group">
-                                <input class="btn btn-outline-info" type="submit" value="Recipes" name="export">
-                                <input class="btn btn-outline-info" type="submit" value="Aisles" name="export">
+                                <input class="btn btn-info" type="submit" value="Recipes" name="export">
+                                <input class="btn btn-info" type="submit" value="Aisles" name="export">
                             </fieldset>
                         </form>
                     {% elif aisle is defined %}

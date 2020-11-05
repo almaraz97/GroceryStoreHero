@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="" />
+    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/account.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/account.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/layout.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -133,7 +137,28 @@
       <option name="project" value="LOCAL" />
       <updated>1604607494832</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Remove venv">
+      <created>1604607866920</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1604607866920</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Remove venv">
+      <created>1604607952231</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1604607952232</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Remove venv">
+      <created>1604607973606</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1604607973606</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -141,7 +166,8 @@
     <MESSAGE value="Fix site.db columns" />
     <MESSAGE value="Merge" />
     <MESSAGE value="Remove database commits" />
-    <option name="LAST_COMMIT_MESSAGE" value="Remove database commits" />
+    <MESSAGE value="Remove venv" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove venv" />
   </component>
   <component name="WindowStateProjectService">
     <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604604998559">
