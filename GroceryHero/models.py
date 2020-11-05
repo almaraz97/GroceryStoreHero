@@ -27,13 +27,14 @@ class User(db.Model, UserMixin):
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)
     grocery_list = db.Column(db.JSON, nullable=True)
-    extras = db.Column(db.JSON, nullable=False, default=json.dumps([]))
+    extras = db.Column(db.JSON, nullable=True, default=[])
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     messages = db.Column(db.JSON, nullable=False, default=[])
     history = db.Column(db.JSON, nullable=False, default=[])  # Eating history
     friend_requests = db.Column(db.JSON, nullable=False, default=[])
     friends = db.Column(db.JSON, nullable=False, default=[])
-    pantry = db.Column(db.JSON, nullable=False, default={})
+    # {Shelf: {Ingredient: [quantity, unit],...},...}
+    pantry = db.Column(db.JSON, nullable=True, default={})
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
@@ -65,7 +66,7 @@ class Recipes(db.Model):  # Add picture of recipe in recipe page
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
-    # servings = db.Column(db.Integer, nullable=True)
+    servings = db.Column(db.Integer, nullable=True, default=0)
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
