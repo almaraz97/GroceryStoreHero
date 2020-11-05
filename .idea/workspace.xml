@@ -114,14 +114,29 @@
       <option name="project" value="LOCAL" />
       <updated>1604605920759</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Remove database commits">
+      <created>1604607384290</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1604607384290</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Remove database commits">
+      <created>1604607406142</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1604607406142</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Fix site.db columns" />
     <MESSAGE value="Merge" />
-    <option name="LAST_COMMIT_MESSAGE" value="Merge" />
+    <MESSAGE value="Remove database commits" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remove database commits" />
   </component>
   <component name="WindowStateProjectService">
     <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604604998559">
