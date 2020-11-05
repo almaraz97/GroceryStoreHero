@@ -90,7 +90,7 @@ def delete_shelf():
         deletes = form.shelves.data
         for delete in deletes:
             del shelves[delete]
-        current_user.pantry = {}  # todo double needed
+        current_user.pantry = {}  # todo ?double needed
         db.session.commit()
         current_user.pantry = shelves
         db.session.commit()

@@ -2,21 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Main/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Main/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Main/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Main/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Pantry/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Pantry/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Pantry/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Pantry/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Recipes/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Recipes/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/Recipes/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Recipes/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/site.db" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/site.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/account.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/account.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/layout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/pantry.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/pantry.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/stats.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/stats.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,17 +65,59 @@
       <option name="presentableId" value="Default" />
       <updated>1603312528185</updated>
     </task>
+    <task id="LOCAL-00001" summary="Fix site.db columns">
+      <created>1604605482802</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1604605482802</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Fix site.db columns">
+      <created>1604605492556</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1604605492556</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Merge">
+      <created>1604605577855</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1604605577855</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Merge">
+      <created>1604605586552</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1604605586552</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Merge">
+      <created>1604605594011</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1604605594011</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="Fix site.db columns" />
+    <MESSAGE value="Merge" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge" />
   </component>
   <component name="WindowStateProjectService">
     <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604604998559">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
     <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1604604998559" />
-    <state x="328" y="0" key="CommitChangelistDialog2" timestamp="1604605586341">
+    <state x="328" y="0" key="CommitChangelistDialog2" timestamp="1604605593683">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
-    <state x="328" y="0" key="CommitChangelistDialog2/0.0.1366.768@0.0.1366.768" timestamp="1604605586341" />
+    <state x="328" y="0" key="CommitChangelistDialog2/0.0.1366.768@0.0.1366.768" timestamp="1604605593683" />
     <state width="420" height="439" key="GridCell.Tab.0.bottom" timestamp="1604605052323">
       <screen x="0" y="0" width="1366" height="768" />
     </state>
