@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">{{ legend }}</legend>
+            <div class="form-group">
+                {{ form.shelves.label(class="form-control-label") }}
+                {% if form.shelves.errors %}
+                    {{ form.shelves(class="custom-select is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.shelves.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.shelves(class="custom-select") }}
+                {% endif %}
+            </div>
+        </fieldset>
+        <div class="form-group">
+                {{ form.submit(class="btn btn-danger") }}
+        </div>
+    </form>
+</div>
+{% endblock content %}
