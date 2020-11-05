@@ -10,13 +10,13 @@
         <div style="margin-bottom:20px;">
             <h3 style="display:inline;">Menu Items</h3>
            {% if current_user.is_authenticated %}
-               <button style="float: right;" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">Clear Menu</button>
+               <button style="float:right;" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">Clear Menu</button>
            {% else %}
-               <button style="float: right;" class="btn btn-outline-danger btn-sm">Clear Menu</button>
+               <button style="float:right;" class="btn btn-outline-danger btn-sm">Clear Menu</button>
            {% endif %}
         </div>
         <!--Accordion Menu List-->
-        <div id="accordion" class="mb-4">
+        <div id="accordion" class="my-3">
             {% if menu_recipes[0] is not defined and menu_recipes[0] != '' %}
                 <div class="card">
                     <div class="card-header p-0" id="headingMenu">
@@ -50,7 +50,7 @@
                                 {% endif %}
                             </h5>
                         </div>
-                        <!--Info-->
+                        <!--Info section-->
                         <div id="collapse{{ recipe.id }}" class="collapse" aria-labelledby="heading{{ recipe.id }}" data-parent="#accordion">
                             <div class="card-body mt-3 ml-4">
                                  <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
@@ -64,15 +64,13 @@
                 {% endfor %}
             {% endif %}
         </div>
-       <!--Grocery list section WEB-->
-      <div class="content-section mt-5 mb-3">
+      <div class="content-section mt-4 mb-3">
+         <!--Grocery list section WEB-->
          <div class="mb-3 mt-2 border-bottom pb-3 d-none d-md-block d-lg-block d-xl-block">
             <h3 style="margin: 40px 0 20px 0; display:inline;">Grocery List</h3>
            {% if current_user.is_authenticated %}
-               <form action="#" style="float: right; display:inline;">
-                   <button class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal" data-target="#deleteModal2">Clear Extras</button>
-               </form>
-               <form action="{{ url_for('main.add_to_extras') }}" style="float: right; display:inline;">
+               <button style="float: right; display:inline;" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal" data-target="#deleteModal2">Clear Extras</button>
+               <form action="{{ url_for('main.add_to_extras') }}" style="float:right; display:inline;">
                    <button class="btn btn-outline-success btn-sm" >Add Extras</button>
                </form>
            {% else %}
@@ -122,14 +120,14 @@
                             <h5 class="m-0">{{ key }}</h5>  <!-- Aisle name -->
                             <ul class="mt-2 mb-3 ml-1">
                                 {% for item in groceries[key] %}
-                                    {% if item[-1] == 1 %}
+                                    {% if item[-1] == 1 %} <!--Are they struck out or not-->
                                         <s>
-                                           <li class="groceries text-muted" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                                           <li class="groceries text-muted" style="text-decorator-color: text-muted; cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                                              <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                                           </li>
                                         </s>
                                     {% else %}
-                                        <li class="groceries" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                                        <li class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                                             <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                                         </li>
                                     {% endif %}

@@ -4,15 +4,18 @@
 <article class="media content-section">
 <!--    <img class="rounded-circle article-img mt-2" src="{{ url_for('static', filename='profile_pics/' + recipe.author.image_file) }}">-->
     <div class="media-body mb-2 pl-2">
-        <div class="article-metadata mb-3 pb-1 row">
-            <h2 class="article-title mb-0 col-8 mt-2">{{ recipe.title }}</h2>
+        <div class="article-metadata mb-3 pb-1">
+                <h2 style="display:inline" class="article-title mb-0 mt-2">{{ recipe.title }}</h2>
             {% if recipe.author == current_user %}
-                <div class="col-4 mt-2">
-                    <a class="btn btn-secondary btn-sm col-4 ml-5" href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}">Update</a>
-                    <button type="button" class="btn btn-danger btn-sm col-4" data-toggle="modal" data-target="#deleteModal">Delete</button>
-                </div>
+                <form method="POST" action="" enctype="multipart/form-data" style="float:right">
+                    <button class="btn btn-success btn-sm mt-2 ml-1">Download</button>
+                </form>
+                <button style="float:right" type="button" class="btn btn-outline-danger btn-sm ml-1 mt-2" data-toggle="modal" data-target="#deleteModal">Delete</button>
+                <a style="float:right" class="btn btn-outline-info btn-sm mt-2" href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}">Update</a>
             {% endif %}
-           <small class="text-muted pl-3">{{ recipe.date_created.strftime('%Y-%m-%d') }}</small>
+            <div class="row">
+                <small class="text-muted pl-3 col-12">{{ recipe.date_created.strftime('%Y-%m-%d') }}</small>
+            </div>
         </div>
 
         {% set ingredients = recipe.quantity.keys() %}

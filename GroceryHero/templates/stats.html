@@ -3,7 +3,13 @@
 <h1 class="mb-3">Your Statistics:</h1>
 <article class="media content-section">
    <div>
-      <h4 class="mt-2">Total Recipe Consumption Frequency Chart </h4>
+      <h4 class="border-bottom">Harmony Stats</h4>
+      <ul class="mb-3">
+         <li>Entire Recipe List- {{ harmony }}%</li>
+         <li>Average Menu Harmony- {{ avg_harmony }}%</li>
+         <li>Average Menu Size {{ average_menu_len }}</li>
+      </ul>
+      <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
@@ -18,7 +24,7 @@
             </tr>
          {% endfor %}
       </table>
-      <h4 class="">Ingredient Frequency Chart</h4>
+      <h4 class="mb-3">Ingredient Frequency Chart</h4>
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
@@ -35,10 +41,7 @@
       </table>
       <h4 class="border-bottom">Recipe Pair Frequency</h4>
       <h4 class="border-bottom">Recipe Dimensionality (UMAP)</h4>
-      <h4 class="border-bottom">Whole Recipe List Harmony</h4>
-         <p>{{ harmony }}%</p>
-      <h4 class="border-bottom">Average Menu Harmony</h4>
-         <p>{{ avg_harmony }}%</p>
+      <h4 class="border-bottom">Average Menu Size</h4>
    </div>
 </article>
 {% endblock content %}

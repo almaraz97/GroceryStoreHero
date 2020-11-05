@@ -17,70 +17,68 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
     assert len(input_recipe_dict) > 1  # You need more than one recipe to make comparison
     if ingredient_excludes is None:
         ingredient_excludes = []
-    # List of unique ingredients from recipe dict (alphabetical)
+    # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
     recipe_ingredients = sorted(set([item for sublist in input_recipe_dict.values()
                                      for item in sublist if item not in ingredient_excludes]))
-    # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value)
+    # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
     recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe]
                            else 0
                            for ingredient in recipe_ingredients]
                   for recipe in input_recipe_dict}
-    # Similarity matrix (recipe name Key, vector of outgoing graph edges Value) # pd.Series faster? Set 0's by diagonal?
+    # Similarity Matrix (recipe name Key, vector of outgoing graph edges Value) # pd.Series faster? Set 0's by diagonal?
     comp_vec = {recipe: [0 if recipe == list(input_recipe_dict)[i]  # Self commonality = 0
                          else dot(recipe_vec[recipe], recipe_vec[list(input_recipe_dict)[i]])
                          for i in range(len(input_recipe_dict))]
                 for recipe in input_recipe_dict}
-    # Average outgoing graph edge (Sum of similarity matrix diagonal)
+    # Average Magnitude (average outgoing graph edge ie sum of similarity matrix triangle)
     avg_mag = sum([sum(comp_vec[recipe]) for recipe in comp_vec]) / 2
-    # List of Average direction of recipe dict w.r.t. ingredients
-    avg_vec = [(x * avg_mag) for x in [(sum(x) / len(comp_vec)) for x in zip(*recipe_vec.values())]]
-
-    # Average taste of recipe dict (int)
+    # Average Direction of recipe dict w.r.t. ingredients
+    avg_vec = [sum(row) / len(comp_vec) for row in zip(*recipe_vec.values())]
+    if ingredient_weights is not None or sticky_weights is not None:  # If there are weight modifiers
+        # List of ingredient weights (ingredient as Index and weight as Value (in order of Ingredient Set))
+        ingredient_weights = [1 for _ in recipe_ingredients] if ingredient_weights is None else \
+            [ingredient_weights[ingredient] if ingredient in ingredient_weights else 1 for ingredient in recipe_ingredients]
+        sticky_weights = [0 for _ in recipe_ingredients] if sticky_weights is None else \
+            [int(sticky_weights[ingredient]) if ingredient in sticky_weights else 0 for ingredient in recipe_ingredients]
+        # Sum rows of recipe matrix, add threshold of 1 so sticky only applies once >2 recipes share an ingredient
+        avg_sticky = [max(sum(row) / len(recipe_vec) - (1 / len(recipe_vec)), 0) for row in zip(*recipe_vec.values())]
+        sticky_weights = [x * y for x, y in zip(avg_sticky, sticky_weights)]
+        # Apply multipliers
+        avg_vec = [(x + y) * z for x, y, z in zip(avg_vec, sticky_weights, ingredient_weights)]
+    # The Average Vector
+    avg_vec = [avg_mag * x for x in avg_vec]
+    # Maximum Magnitude (magnitude normalized with number of comparisons)
+    perfect_mag = (math.factorial(len(comp_vec)) / (2 * math.factorial(len(comp_vec) - 2))) / 2
+    # Maximum Direction multiplied by Maximum Magnitude
+    perfect_vec = [perfect_mag * (1.0 * len(avg_vec)) for _ in avg_vec]
+    if algorithm == 'Charity':  # Zero norm
+        score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
+        max_l = perfect_vec[0]
+    elif algorithm == 'Fairness':  # One norm
+        score = sum(avg_vec)
+        max_l = sum(perfect_vec)
+    elif algorithm == 'Balanced':  # Two norm
+        score = math.sqrt(sum([x ** 2 for x in avg_vec]))
+        max_l = math.sqrt(sum([x ** 2 for x in perfect_vec]))
+    elif algorithm == 'Selfish':  # Nine norm
+        score = sum([x ** 9 for x in avg_vec]) ** (1. / 9)
+        max_l = sum([x ** 9 for x in perfect_vec]) ** (1. / 9)
+    elif algorithm == 'Greedy':  # Infinity norm
+        score = max(avg_vec)
+        max_l = max(perfect_vec)
+    else:
+        score, max_l = 1, 1
+    # Average taste of recipe dict
     avg_taste = 1
     if tastes is not None:
         taste_comparisons = list(itertools.combinations(input_recipe_dict, 2))  # All taste comparisons for in_rec_dict
         taste_scores = [tastes[comparison] if comparison in tastes else 1 for comparison in taste_comparisons]
         avg_taste = sum(taste_scores) / len(taste_comparisons)
-    # List of ingredient weights (ingredient as Index and weight as Value)
-    if ingredient_weights is None:
-        weight_vec = [1 for _ in recipe_ingredients]  # Weight of each ingredient in order of recipe ingredients
-    else:
-        weight_vec = [ingredient_weights[ingredient] if ingredient in ingredient_weights else 1 for ingredient in
-                      recipe_ingredients]
-    if sticky_weights is None:
-        sticky_weights = [0 for _ in range(len(recipe_ingredients))]
-    else:
-        sticky_weights = [int(sticky_weights[ingredient]) if ingredient in sticky_weights else 0 for ingredient in
-                          recipe_ingredients]
-    avg_sticky = [(sum(vector) / len(recipe_vec) - (1 / len(recipe_vec))) for vector in zip(*recipe_vec.values())]
-    sticky_weights = [x * y for x, y in zip(avg_sticky, sticky_weights)]
-    # Apply multipliers
-    avg_vec = [(x + y) * z for x, y, z in zip(avg_vec, sticky_weights, weight_vec)]
-    # Highest possible magnitude & vector (magnitude normalized with number of comparisons)
-    perfect_mag = (math.factorial(len(comp_vec)) / (2 * math.factorial(len(comp_vec) - 2))) / 2
-    perfect_vec = [perfect_mag * (1.0 * len(avg_vec)) for _ in avg_vec]
-    # Norms
-    if algorithm == 'Charity':
-        score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
-        max_l = perfect_vec[0]
-    elif algorithm == 'Fairness':
-        score = sum(avg_vec)
-        max_l = sum(perfect_vec)
-    elif algorithm == 'Balanced':
-        score = math.sqrt(sum([x ** 2 for x in avg_vec]))
-        max_l = math.sqrt(sum([x ** 2 for x in perfect_vec]))
-    elif algorithm == 'Selfish':
-        score = sum([x ** 9 for x in avg_vec]) ** (1. / 9)
-        max_l = sum([x ** 9 for x in perfect_vec]) ** (1. / 9)
-    elif algorithm == 'Greedy':
-        score = max(avg_vec)
-        max_l = max(perfect_vec)
-    else:
-        score, max_l = 1, 1
     return (score / max_l) * (1 / avg_taste)
 
 
 def create_combos(recipes, count, excludes, includes, limit):
+    """Create all possible combinations of given recipes"""
     if excludes is not None:
         excludes = [excludes] if isinstance(excludes, str) else excludes
         recipes = [recipe for recipe in recipes if recipe not in excludes]
@@ -97,6 +95,7 @@ def create_combos(recipes, count, excludes, includes, limit):
 
 
 def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky, modifier):
+    """Score each combination of recipe"""
     scores = {}
     for group in combos:
         dictionary = {recipe: recipes[recipe] for recipe in group}  # recipe+ingredients of each thing in the group
@@ -104,15 +103,15 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
                                    sticky_weights=sticky,
                                    ingredient_excludes=ing_ex) ** modifier  # (1 / (count * 2 - 3))
         if max_sim is not None:  # If there is a maximum similarity
+
             if harmony_score < max_sim:  # Only allow groups with less than maximum
                 scores[group] = harmony_score
         else:
             scores[group] = harmony_score
     sorted_scored_combos = sorted(scores, key=lambda key: scores[key])
-    testing = []
-    for i, j in {k: scores[k] for k in sorted_scored_combos}.items():
-        testing.append(j)
-    print(testing)
+    # testing = []
+    # for i, j in {k: scores[k] for k in sorted_scored_combos}.items():
+    #     testing.append(j)
     return sorted_scored_combos
 
 
@@ -144,12 +143,12 @@ def millify(n):
 def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', rec_limit=5,
                  limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None, sticky_weights=None):
     # Ensure preferences come through properly if not specified
-    print(count)
-    rec_limit = len(recipes) if count == 1 else rec_limit
-    max_sim = None if max_sim == 'No limit' else int(max_sim) / 100
+    rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
+    max_sim = None if max_sim == 'No Limit' else int(max_sim)/100
+     # max_sim = int(max_sim)/100 if isinstance(max_sim, int) else None
     excludes = None if not excludes else excludes  # Comes in as 0 or not
     includes = [] if not includes else includes
-    modifier = 1 / (5 * (count + len(includes)) + 1) if modifier == 'Graded' else 1.0
+    modifier = 1 / (1*(count + len(includes)) + 1) if modifier == 'Graded' else 1.0
     ingredient_weights = None if not ingredient_weights else ingredient_weights
     tastes = None if not tastes else tastes
     # Recipes in, unique scored combos out

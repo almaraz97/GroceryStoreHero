@@ -1,38 +1,46 @@
 import json
 import string
 from flask import render_template, url_for, redirect, Blueprint, request, abort, flash
-from GroceryHero.HarmonyTool import norm_stack
+from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
-from GroceryHero.Users.forms import HarmonyForm, AdvancedHarmonyForm, FullHarmonyForm
-from GroceryHero.Users.utils import load_harmony_form, update_harmony_preferences
-from GroceryHero.models import Recipes, Aisles, User
+from GroceryHero.Users.forms import FullHarmonyForm
+from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
-from GroceryHero.Main.utils import update_grocery_list, ensure_harmony_keys, get_harmony_settings, get_history_stats
+from GroceryHero.Main.utils import (update_grocery_list, ensure_harmony_keys, get_harmony_settings, get_history_stats,
+                                    show_harmony_weights, update_pantry)
 from GroceryHero import db
 
 main = Blueprint('main', __name__)
 
+"""
+Added history, eaten, date joined, messages columns. Add history functionalities, add eaten functionalities, stats
+visualisations, most eaten recipes, menu stats, better on mobile
+fixed double reload of clear extras button, Allowed unsorted extras, Centered 'grocerylist' and buttons for mobile
+views, added navbars for mobile, stopped saving redundant recipe weights
+make mobile icons for advanced harmony form, fixed menu harmony display, fix recipe group weights,
+Fix search bar in recipe page, Make cursor over cross off text, added harmony page better, validate numbers on quantity
+Made ingredients alphabetical in menu list, but only from here on and when updating a recipe
+add pantry functionality, add/remove shelf buttons like grocery-list buttons, download recipe single, fixed history,
+bug when deleted, add "add all" for a recipe recommendation (ul ids instead of li), pantry column;add;remove;clear,
+add similarity rating button for recipe recommendation
+"""
 
-# Now
-# Added history, eaten, date joined, messages columns. Add history functionalities, add eaten functionalities, stats
-# visualisations, most eaten recipes, menu stats, better on mobile
-
-# fixed double reload of clear extras button, Allowed unsorted extras, Centered 'grocerylist' and buttons for mobile
-# views, added navbars for mobile, stopped saving redundant recipe weights
-# todo change to form.validate_on_submit() and add hidden tags # todo Allow fractions for quantity page
-# todo add average menu size to stats
-# todo add store title to grocery-list above aisle names
-# todo Allow each store to have aisles 1-10
-# todo add all harmony keys to check_columns, default model, and other places
+# This update
+# todo add all_ingredients column to fill pantry and aisles from?
+# todo add Measurement equivalence as part of object adding logic
+# todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
+# todo put statistics inside scroll box to shorten page
+# todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
+# todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
 # Soon
-# todo Fix search bar in recipe page
+# todo Allow fractions for quantity page
 # todo figure our JSON situation from harmony preferences JSON column coming in and out
 # todo save the day a history clear was performed (can find average time before eating recipe again)
-# todo Make cursor over cross off text, (cursor: pointer;) in CSS class for LI
-# todo make mobile icons for advanced harmony form
 # todo Javascript adding from RHT recommended
+# todo be able to add serving size to a recipe and multiply it in the menu
+# todo add grocery-list items being used by recipes (Garlic 3 units (used by x,y,z))
 # Later
 # todo have aisle ingredients show recipes that have that ingredient
 # todo Store RHT dict of combos (value as HS), exclude, wont be recalculated (subsets could be excluded and average HS?)
@@ -44,11 +52,11 @@ main = Blueprint('main', __name__)
 @main.route('/')
 @main.route('/home')
 def home():
-    menu_list, groceries, username, harmony_score, overlap, aisles, most_eaten, least_eaten = \
-        [], [], [], 0, 0, None, None, None
+    menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics = \
+        [], [], [], 0, 0, None, None, None, None  # []*3, 0, 0, None*4
     if current_user.is_authenticated:
         ensure_harmony_keys(current_user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-        preferences = get_harmony_settings(current_user.harmony_preferences)  # Harmony preferences dict
+        preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim'])
         menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                      if recipe.in_menu]
         # GroceryList maker
@@ -59,13 +67,14 @@ def home():
                                 for item in groceries[aisle]]
         aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
         if len(menu_list) > 1:
-            harmony_score = round((norm_stack({recipe.title: recipe.quantity for recipe in menu_list}, **preferences))
-                                  ** (1 / (len(menu_list) * 2 - 3)) * 100, 1)
+            harmony, _ = recipe_stack({recipe.title: recipe.quantity for recipe in menu_list}, count=len(menu_list),
+                                      **preferences)
+            harmony = 5  # list(harmony.values())[0]
         username = current_user.username.capitalize()
-        most_eaten, least_eaten = get_history_stats(current_user)
+        statistics = get_history_stats(current_user)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
-                           sidebar=True, home=True, username=username, harmony_score=harmony_score, aisles=aisles,
-                           overlap=overlap, most_eaten=most_eaten, least_eaten=least_eaten)
+                           sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
+                           overlap=overlap, statistics=statistics)
 
 
 @main.route('/home/clear', methods=['GET', 'POST'])
@@ -78,12 +87,11 @@ def clear_menu():
             history.append(recipe.id)
             recipe.in_menu = False
             recipe.eaten = False
-        update_grocery_list(current_user)  # Update grocery list
+        update_pantry(current_user, menu_recipes)
+        update_grocery_list(current_user)
         histories.append(history)
         current_user.history = histories
         db.session.commit()
-    else:
-        pass
     return redirect(url_for('main.home'))
 
 
@@ -93,28 +101,48 @@ def about():
 
 
 @main.route('/harmony_tool', methods=['GET', 'POST'])
-def harmony_tool():
+def harmony_tool():  # todo must use Javascript to reload page and enter previous information
+    recommended = None
     form = FullHarmonyForm()
-    form1 = HarmonyForm()
-    form2 = load_harmony_form(AdvancedHarmonyForm(), current_user)
+    form.basic.groups.choices = range(2, 4)
     # Shows user their previous settings
     preferences = get_harmony_settings(current_user.harmony_preferences)
-    ing_weights = preferences['ingredient_weights']
-    ing_weights = json.loads(ing_weights) if isinstance(ing_weights, str) else ing_weights
-    ing_weights = ', '.join([str(key) + ': ' + str(value) for key, value in ing_weights.items()])
-    tastes = preferences['tastes']
-    tastes = json.loads(tastes) if isinstance(tastes, str) else tastes  # Formatting for showing pairs to user
-    tastes = '\n'.join([str(key[0])+', '+str(key[1])+': '+str(value) for key, value in tastes.items()])
-    sticky = preferences['sticky_weights']
-    sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
-    sticky = ', '.join([str(key) + ': ' + str(value) for key, value in sticky.items()])
-    if form2.is_submitted():
-        update_harmony_preferences(form2, current_user)
-        db.session.commit()
-        # flash('Your settings have been updated', 'success')
-        return redirect(url_for('main.harmony_tool'))
-    return render_template('harmony.html', title='Harmony', form1=form1, form2=form2, form=form,
-                           ing_weights=ing_weights, tastes=tastes, sticky_weights=sticky)
+    preferences['rec_limit'] = 'No Limit'
+    ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
+    if request.method == 'POST':
+        preferences['algorithm'] = form.advanced.algorithm.data
+        preferences['modifier'] = form.advanced.modifier.data
+        return redirect(url_for('main.harmony_tool2', preferences=preferences))
+    return render_template('harmony.html', title='Harmony Tool', form=form,
+                           ing_weights=ing_weights, tastes=tastes, sticky_weights=sticky, recommended=recommended,
+                           sidebar=True, harmony=True)
+
+
+@main.route('/harmony_tool/<preferences>', methods=['GET', 'POST'])
+def harmony_tool2(preferences):
+    ing_weights, form, sticky, tastes, recommended = None, None, None, None, None
+    recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
+    recipes = {r.title: r.quantity.keys() for r in recipe_list}
+    if preferences is not None:
+        preferences = {'advanced': {'pairs':None, 'pair_weight':None,'ingredient':None, 'ingredient_weights':None,
+                                    'ingredient_ex':None, 'ingredient_rem':None, 'ingredient2':None, 'sticky_weights':None,
+                                    'history_exclude':None, 'recommend_num':None, 'algorithm':None, 'modifier':None
+                                    }, 'basic': {'groups':None, 'excludes':None, 'similarity':None}}
+        form = FullHarmonyForm(data=preferences)
+    else:
+        return redirect(url_for('harmony_tool2'))
+    if request.method == 'POST':
+        recipe_history = [item for sublist in current_user.history[:int(form.advanced.history_exclude.data)]
+                          for item in sublist]
+        recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
+        count = int(form.basic.groups.data)  # todo consider weighting settings
+        recommended, _ = recipe_stack(recipes, count, max_sim=form.basic.similarity.data,
+                                      excludes=form.basic.excludes.data + recipe_history,
+                                      limit=500_000, **preferences)
+    elif request.method == 'GET':
+        pass
+    return render_template('harmony.html', title='Harmony Tool', form=form, ing_weights=ing_weights, tastes=tastes,
+                           sticky_weights=sticky, recommended=recommended, sidebar=True, harmony=True)
 
 
 @login_required
@@ -122,8 +150,10 @@ def harmony_tool():
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
     history = current_user.history
     if len(history) > 0:
+        average_menu_len = sum([len(x) for x in history])/len(history)
+        all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]  # todo remove old ids?
         # Recipe History/Frequency
-        history = [item for sublist in history for item in sublist]
+        history = [item for sublist in history for item in sublist if item in all_ids]  # Flatten ID list of lists
         history2 = current_user.history
         history_set = set(history)
         history_count = {}
@@ -154,10 +184,10 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony)/len(avg_harmony), 5)
     else:
-        history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony = None, None, None, None, None
+        history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony, average_menu_len = [None]*6
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len)
 
 
 @main.route('/extras', methods=['GET', 'POST'])
@@ -216,7 +246,7 @@ def add_extras(ingredients):
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
 
 
-def fraction_check(num, ingredients):
+def fraction_check(num, ingredients):  # todo
     if num.count('/') == 1 and ''.join(i for i in num if i not in ['/', ' ']).isnumeric():
         num = num.split('/')
         return float(num[0]) / float(num[1])

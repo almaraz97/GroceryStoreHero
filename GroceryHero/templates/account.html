@@ -62,7 +62,8 @@
     <legend class="border-bottom mb-4">Advanced Harmony Tool Settings</legend>
     <div class="row mb-3">
         <div class="col-4">
-            <div class="list-group" id="list-tab" role="tablist">
+            <!--show on not small-->
+            <div class="list-group d-none d-md-block d-lg-block d-xl-block" id="list-tab" role="tablist">
                 <a class="list-group-item list-group-item-action active" id="list-rec-list" data-toggle="list" href="#list-rec" role="tab" aria-controls="rec">Recommendations</a>
                 <a class="list-group-item list-group-item-action" id="list-pair-list" data-toggle="list" href="#list-pair" role="tab" aria-controls="pair">Recipe Group Weights</a>
                 <a class="list-group-item list-group-item-action" id="list-ingredient-list" data-toggle="list" href="#list-ingredient" role="tab" aria-controls="ingredient">Ingredient Weights</a>
@@ -70,6 +71,16 @@
                 <a class="list-group-item list-group-item-action" id="list-sticky-list" data-toggle="list" href="#list-sticky" role="tab" aria-controls="sticky">Sticky Weights</a>
                 <a class="list-group-item list-group-item-action" id="list-Menu-list" data-toggle="list" href="#list-Menu" role="tab" aria-controls="Menu">History Excludes</a>
                 <a class="list-group-item list-group-item-action" id="list-algorithm-list" data-toggle="list" href="#list-algorithm" role="tab" aria-controls="algorithm">Harmony Scoring</a>
+            </div>
+            <!--show only on small-->
+            <div class="list-group d-block d-sm-none" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action active justify-content-center d-flex" id="list-rec-list" data-toggle="list" href="#list-rec" role="tab" aria-controls="rec"><img src="{{ url_for('static', filename='icons/Recommendations.png')  }}" height="50px" width="50px"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-pair-list" data-toggle="list" href="#list-pair" role="tab" aria-controls="pair"><img src="{{ url_for('static', filename='icons/Group_weights.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-ingredient-list" data-toggle="list" href="#list-ingredient" role="tab" aria-controls="ingredient"><img src="{{ url_for('static', filename='icons/Ing_weight.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-exclude-list" data-toggle="list" href="#list-exclude" role="tab" aria-controls="exclude"><img src="{{ url_for('static', filename='icons/Exclude.png')  }}" height="42px" width="40px" class="p-0 m-1"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-sticky-list" data-toggle="list" href="#list-sticky" role="tab" aria-controls="sticky"><img src="{{ url_for('static', filename='icons/Sticky_weights.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-Menu-list" data-toggle="list" href="#list-Menu" role="tab" aria-controls="Menu"><img src="{{ url_for('static', filename='icons/History.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-algorithm-list" data-toggle="list" href="#list-algorithm" role="tab" aria-controls="algorithm"><img src="{{ url_for('static', filename='icons/Mode.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
             </div>
         </div>
         <!--Forms within each tab-->
@@ -158,8 +169,9 @@
                     {{ form3.algorithm(class="custom-select mb-3") }}
                     <p>How the harmony tool scores are shown to you. A "true" harmony score is likely to between 10% and 50% for good scores while the
                     "graded" setting tries to give you scores in >60% for good scores which can be read similar to school grades.
-                    The more recipes there are together, the less likely that all ingredients will overlap so the smaller the score. Grading
-                    compensates for this.</p>
+                    </p>
+                    <!-- The more recipes there are together, the less likely that all ingredients will overlap so the smaller the score. Grading
+                    compensates for this.-->
                     {{ form3.modifier(class="custom-select") }}
                 </div>
             </div>
