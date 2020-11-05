@@ -8,17 +8,15 @@ h1, h2, h3, h4, h5, h6 {
   color: #444444;
 }
 
+.btn-outline-info:hover,
+.btn-outline-info.hover {
+  color: white !important;
+}
 
 .bg-steel {
   background-color: #28a745 !important;
 }
 
-
-/*old green*/
-/*.bg-steel {
-  background-color: #228b22 !important;
-}
-*/
 
 .site-header .navbar-nav .nav-link {
   color: #ffffff;  /* Switched the hover and normal */

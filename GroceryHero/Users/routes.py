@@ -9,7 +9,7 @@ from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountF
 from GroceryHero.Main.forms import ImportForm
 from GroceryHero.Users.utils import save_picture, send_reset_email, import_files, update_harmony_preferences, \
     load_harmony_form
-from GroceryHero.Main.utils import get_harmony_settings
+from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights
 import json
 
 users = Blueprint('users', __name__)
@@ -68,15 +68,7 @@ def account():
     form4 = DeleteAccountForm()
     # Shows user their previous settings
     preferences = get_harmony_settings(current_user.harmony_preferences)
-    ing_weights = preferences['ingredient_weights']
-    ing_weights = json.loads(ing_weights) if isinstance(ing_weights, str) else ing_weights
-    ing_weights = ', '.join([str(key) + ': ' + str(value) for key, value in ing_weights.items()])
-    tastes = preferences['tastes']
-    tastes = json.loads(tastes) if isinstance(tastes, str) else tastes  # Formatting for showing pairs to user
-    tastes = '\n'.join([str(key[0])+', '+str(key[1])+': '+str(value) for key, value in tastes.items()])
-    sticky = preferences['sticky_weights']
-    sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
-    sticky = ', '.join([str(key) + ': ' + str(value) for key, value in sticky.items()])
+    ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
     if form.validate_on_submit():
         if form.picture.data:
             picture_file = save_picture(form.picture.data)
@@ -100,8 +92,8 @@ def account():
         form.email.data = current_user.email
         form3 = load_harmony_form(AdvancedHarmonyForm(), current_user)
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
-    return render_template('account.html', title='Account', image_file=image_file, form=form, form2=form2, form3=form3,
-                           form4=form4, sidebar=True, account=True, ing_weights=ing_weights, tastes=tastes,
+    return render_template('account.html', title='Account', image_file=image_file, form=form, form2=form2,
+                           form3=form3, form4=form4, sidebar=True, account=True, ing_weights=ing_weights, tastes=tastes,
                            sticky_weights=sticky)
 
 

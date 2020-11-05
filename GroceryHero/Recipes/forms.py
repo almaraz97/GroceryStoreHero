@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from werkzeug.routing import ValidationError
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, FloatField, FieldList, FormField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, number_range
 
 
 class Measurements:
@@ -55,9 +55,39 @@ class Measurements:
             else:
                 raise AssertionError('Must agree in Generic unit')
 
-        self.value = self.Convert[self.unit] * self.value  # converted to lowest
-        other.value = other.Convert[other.unit] * other.value  # converted to lowest
+        self.value = self.Convert[self.unit] * self.value  # convert to lowest
+        other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value + other.value
+        if self.type == 'Volume':
+            volumes = self.Metric_Volumes if self.metric else self.Volumes
+            for volume in volumes:  # Go up through conversion until whole number
+                if int(total / self.Convert[volume]) >= 1:
+                    total = total / self.Convert[volume]
+                    return Measurements(round(total, 2), unit=volume)
+        else:
+            weights = self.Metric_Weights if self.metric else self.Weights
+            for weight in weights:
+                if int(total / self.Convert[weight]) >= 1:
+                    total = total / self.Convert[weight]
+                    return Measurements(round(total, 2), unit=weight)
+
+    def __sub__(self, other, rounding=2):
+        if not isinstance(other, Measurements):
+            raise AssertionError('Must be of class Measurements')
+        if not self.metric == other.metric:
+            raise AssertionError('Must agree in measurement system')
+        if self.type != other.type:
+            AssertionError('Cannot add objects of different measure types')
+        if self.type == 'Generic':
+            if self.unit == other.unit:
+                total = self.value - other.value
+                return Measurements(round(total, rounding), unit=self.unit)
+            else:
+                raise AssertionError('Must agree in Generic unit')
+
+        self.value = self.Convert[self.unit] * self.value  # convert to lowest
+        other.value = other.Convert[other.unit] * other.value  # convert to lowest
+        total = self.value - other.value
         if self.type == 'Volume':
             volumes = self.Metric_Volumes if self.metric else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
@@ -126,10 +156,16 @@ def Frac_Number_Validator(form, field):
             raise ValidationError('')
 
 
+def my_float_check(form, field): ## Not working
+    print("ITS CHECKED")
+    if not isinstance(field.data, float):
+        raise ValidationError('Enter a valid number')
+
+
 class QuantityFormNoCSFR(FlaskForm):
     # class Meta:
     #     csrf = False
-    ingredient_quantity = StringField('Quantity', default=1.0, validators=[DataRequired()])
+    ingredient_quantity = FloatField('Quantity', default=1.0, validators=[DataRequired(), number_range(max=999)])
     ingredient_type = SelectField("Measurement", choices=Measurements.Measures, default='Unit')
 
 

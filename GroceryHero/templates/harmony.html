@@ -2,130 +2,127 @@
 {% block content %}
 
 <article class="media content-section">
-    {{ form1.hidden_tag() }}
+    {{ form.hidden_tag() }}
     <form action="" method="POST" class="m-2">
-        {{ form1.hidden_tag() }}
-        <fieldset>
-        <!--First Section-->
-        <div class="row mb-2">
+    <fieldset>
+        <!--Second Section-->
+        <div class="row mb-4 d-flex justify-content-center">
 
-            <div class="input-group col-4 row m-0 p-0">
-                <p class="col-12">Recipe Group Weights</p>
-                <div class="input-group col-12 m-0 p-0 row">
-                    <div class="col-12">
-                        <textarea rows="2" class="form-control" readonly>Current Pair Weights:&#013;{{ tastes }}</textarea>
-                    </div>
-                    <div class="col-12">
-                        {{ form2.pairs(class="custom-select") }}
-                    </div>
-                    <div class="col-12">
-                        {{ form2.pair_weight(class="custom-select") }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group col-4 row m-0 p-0">
-                <p class="col-12">Ingredient Weight</p>
-                {% if items|length > 0  %}
-                        {% set items = items|join(', ') %}
-                {% else %}
-                    {% set items = '' %}
-                {% endif %}
-                <div class="input-group m-0 p-0 row">
-                    <div class="col-12">
-                        <textarea rows="2" class="form-control" readonly>Current Weights:&#013;{{ ing_weights }}</textarea>
-                    </div>
-                    <div class="col-12">
-                        {{ form2.ingredient(class="custom-select") }}
-                    </div>
-                    <div class="col-12">
-                        {{ form2.ingredient_weights(class="custom-select") }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group col-4 row m-0 p-0">
-                <p class="col-12">Sticky Weights</p>
-                <div class="input-group m-0 p-0">
-                    <div class="col-12">
-                        <textarea rows="2" class="form-control" readonly>Current Weights:&#013;{{ sticky_weights }}</textarea>
-                    </div>
-                    <div class="col-12">
-                        {{ form2.ingredient2(class="custom-select") }}
-                    </div>
-                    <div class="col-12">
-                        {{ form2.sticky_weights(class="custom-select") }}
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        <!--Second section-->
-        <div class="mt-3 mb-2 row">
-
-            <div class="input-group col-6">
-                <p>Ingredient Excludes</p>
-                <div class="input-group mb-2 row">
-                    <div class="col pr-1">
-                        {{ form2.ingredient_ex(class="custom-select", size=5) }}
-                    </div>
-                    <div class="col pl-1 pr-0">
-                        {{ form2.ingredient_rem(class="custom-select", size=5) }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group mb-2 col-6">
-                <p>Recipes to Exclude</p>
-                <div class="input-group">
-                    {{ form1.excludes(class="custom-select", size=5) }}
-                </div>
-            </div>
-        </div>
-        <!--Third Section-->
-        <div class="row mb-3">
             <div class="input-group col-2 mr-0 ">
-                <p>Num Group</p>
+                <p>Num/Group</p>
                 <div class="input-group">
-                    {{ form1.groups(class="custom-select") }}
+                    {{ form.basic.groups(class="custom-select") }}
                 </div>
             </div>
             <div class="input-group col-2 ">
                 <p>Max Sim</p>
                 <div class="input-group">
-                    {{ form1.similarity(class="custom-select") }}
+                    {{ form.basic.similarity(class="custom-select") }}
                 </div>
             </div>
-            <div class="input-group col-2 ">
-                 <p>Recommends</p>
-                 <div class="input-group">
-                     {{ form2.recommend_num(class="custom-select") }}
-                 </div>
-            </div>
+
             <div class="input-group col-2 ">
                  <p>History Ex</p>
                <div class="input-group">
-                 {{ form2.history_exclude(class="custom-select") }}
+                 {{ form.advanced.history_exclude(class="custom-select") }}
                </div>
             </div>
+
             <div class="input-group col-2">
                  <p>Mode</p>
                <div class="input-group">
-                 {{ form2.algorithm(class="custom-select") }}
+                 {{ form.advanced.algorithm(class="custom-select") }}
                </div>
             </div>
+
             <div class="input-group col-2 ">
                  <p>Scoring</p>
                  <div class="input-group">
-                    {{ form2.modifier(class="custom-select") }}
+                    {{ form.advanced.modifier(class="custom-select") }}
                  </div>
             </div>
+
         </div>
-    {{ form1.submit(class="btn btn-success btn-sm btn-block mt-3") }}
+    <!-- Harmony Settings -->
+        <legend class="border-bottom mb-4">Full Harmony Tool</legend>
+        <div class="row mb-3">
+            <div class="col-4">
+                <!--show on not small-->
+                <div class="list-group d-none d-md-block d-lg-block d-xl-block" id="list-tab" role="tablist">
+                    <a class="list-group-item list-group-item-action active" id="list-pair-list" data-toggle="list" href="#list-pair" role="tab" aria-controls="pair">Recipe Group Weights</a>
+                    <a class="list-group-item list-group-item-action" id="list-ingredient-list" data-toggle="list" href="#list-ingredient" role="tab" aria-controls="ingredient">Ingredient Weights</a>
+                    <a class="list-group-item list-group-item-action" id="list-exclude-list" data-toggle="list" href="#list-exclude" role="tab" aria-controls="exclude">Ingredient Excludes</a>
+                    <a class="list-group-item list-group-item-action" id="list-sticky-list" data-toggle="list" href="#list-sticky" role="tab" aria-controls="sticky">Sticky Weights</a>
+                </div>
+                <!--show only on small-->
+                <div class="list-group d-block d-sm-none" id="list-tab" role="tablist">
+                    <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-pair-list" data-toggle="list" href="#list-pair" role="tab" aria-controls="pair"><img src="{{ url_for('static', filename='icons/Group_weights.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                    <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-ingredient-list" data-toggle="list" href="#list-ingredient" role="tab" aria-controls="ingredient"><img src="{{ url_for('static', filename='icons/Ing_weight.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                    <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-exclude-list" data-toggle="list" href="#list-exclude" role="tab" aria-controls="exclude"><img src="{{ url_for('static', filename='icons/Exclude.png')  }}" height="42px" width="40px" class="p-0 m-1"></a>
+                    <a class="list-group-item list-group-item-action justify-content-center d-flex" id="list-sticky-list" data-toggle="list" href="#list-sticky" role="tab" aria-controls="sticky"><img src="{{ url_for('static', filename='icons/Sticky_weights.png')  }}" height="50px" width="50px" class="p-0 m-0"></a>
+                </div>
+            </div>
+            <!--Forms within each tab-->
+            <div class="col-8">
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="list-pair" role="tabpanel" aria-labelledby="list-pair-list">
+                        <textarea rows="3" class="form-control" readonly>Current Recipe Pair Weights:&#013;{{ tastes }}</textarea>
+                        <div class="row">
+                            <div class="col-9 pr-1">
+                                {{ form.advanced.pairs(class="custom-select mb-2 mt-3") }}
+                            </div>
+                            <div class="col pl-1">
+                                {{ form.advanced.pair_weight(class="custom-select mt-3") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="list-ingredient" role="tabpanel" aria-labelledby="list-ingredient-list">
+                        {% if items|length > 0  %}
+                                {% set items = items|join(', ') %}
+                        {% else %}
+                            {% set items = '' %}
+                        {% endif %}
+                        <textarea rows="3" class="form-control" readonly>Current Weights:&#013;{{ ing_weights }}</textarea>
+                        <div class="row">
+                            <div class="col pr-1">
+                                {{ form.advanced.ingredient(class="custom-select mb-2 mt-3") }}
+                            </div>
+                            <div class="col pl-1">
+                                {{ form.advanced.ingredient_weights(class="custom-select mb-2 mt-3") }}
+                            </div>
+                        </div>
+                        <div class="pb-2">
+                            {{ form.advanced.delete_weights(class="btn btn-danger btn-sm", style="float:right;") }}
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="list-exclude" role="tabpanel" aria-labelledby="list-exclude-list">
+                        <div class="row">
+                            <div class="col pr-1">
+                                {{ form.advanced.ingredient_ex(class="custom-select mb-2", size=7) }}
+                            </div>
+                            <div class="col pl-1">
+                                {{ form.advanced.ingredient_rem(class="custom-select mb-2", size=7) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="list-sticky" role="tabpanel" aria-labelledby="list-sticky-list">
+                        <textarea rows="3" class="form-control" readonly>Current Weights:&#013;{{ sticky_weights }}</textarea>
+                        <div class="row">
+                            <div class="col pr-1">
+                                {{ form.advanced.ingredient2(class="custom-select mb-2 mt-3") }}
+                            </div>
+                            <div class="col pl-1">
+                                {{ form.advanced.sticky_weights(class="custom-select mb-2 mt-3") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{ form.submit(class="btn btn-success btn-lg mt-4") }}
     </fieldset>
     </form>
 </article>
 
-<h3 class="mt-4">Recommendations</h3>
 {% endblock content %}
 

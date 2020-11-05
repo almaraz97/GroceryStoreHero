@@ -19,10 +19,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable=False)
     recipes = db.relationship('Recipes', backref='author', lazy=True)
     aisles = db.relationship('Aisles', backref='author', lazy=True)
-    """Rec={str(list()): score}  taste{str(list()): similarity}  weight{ing:val}  rec_ids{recipe.title: recipe.id}"""
+    """Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}"""
     harmony_preferences = db.Column(db.JSON, nullable=True,
                                     default={'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0,
-                                             'recommended': {},'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {},
+                                             'recommended': {}, 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {},
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)
@@ -33,6 +33,7 @@ class User(db.Model, UserMixin):
     history = db.Column(db.JSON, nullable=False, default=[])  # Eating history
     friend_requests = db.Column(db.JSON, nullable=False, default=[])
     friends = db.Column(db.JSON, nullable=False, default=[])
+    pantry = db.Column(db.JSON, nullable=False, default={})
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
@@ -64,6 +65,7 @@ class Recipes(db.Model):  # Add picture of recipe in recipe page
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
+    # servings = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
@@ -90,6 +92,23 @@ class Aisles(db.Model):
         if isinstance(other, Aisles):
             return self.title == other.title and self.content == other.content
         return False
+
+# class Pantry(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     title = db.Column(db.String(50), nullable=False)
+#     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+#     content = db.Column(db.Text, nullable=False)
+#     {'Category1', ['measurementObj', 'measurementObj'], 'Category2', ['measurementObj', 'measurementObj']}
+#     pantry = db.Column(db.JSON, nullable=False, default={})  # filled with measurement type objects
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#
+#     def __repr__(self):
+#         return f"Pantry('{self.title}', '{self.content}')"
+#
+#     def __eq__(self, other):
+#         if isinstance(other, Pantry):
+#             return self.title == other.title and self.content == other.content
+#         return False
 
 # toy_user = User()
 # toy_user.recipes = [Recipes(title='Burgers', quantity=None, notes=None, link=None, in_menu=True),

@@ -1,0 +1,49 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1 class="mb-3">Your Pantry:</h1>
+    {% if current_user.is_authenticated %}
+        <div class="content-section pl-3">
+<!--            <div class="mb-4 d-none d-md-block d-lg-block d-xl-block">-->
+                <h4 style="display:inline;">Pantry Shelves</h4>
+                <div style="float:right" class="justify-content-right d-flex">
+<!--                  <form action="#">-->
+<!--                      <button class="btn btn-outline-success btn-sm mr-2">Add Extras</button>-->
+<!--                  </form>-->
+                  <form action="#">
+                      <button class="btn btn-outline-danger btn-sm">Delete Shelf</button>
+                  </form>
+                </div>
+<!--            </div>-->
+<!--            Shelves section MOBILE-->
+<!--            <div class="mb-3 d-block d-sm-none row">-->
+<!--               <h3 class="col-12 mt-2 mb-2 text-center">Pantry Shelves</h3>-->
+<!--               <div class="border-bottom pb-1 col-12 justify-content-center d-flex">-->
+<!--                  <form class="mb-2" action="#">-->
+<!--                      <button class="btn btn-outline-success btn-sm">Add Shelf</button>-->
+<!--                  </form>-->
+<!--                  <form class="ml-2" action="#">-->
+<!--                      <button class="btn btn-outline-danger btn-sm">Clear Shelves</button>-->
+<!--                  </form>-->
+<!--               </div>-->
+<!--            </div>-->
+            {% if names is not defined or names|length < 1 %}
+            <div class="card my-3">
+                <div class="card-header p-0" id="headingMenu">
+                    <h5 class="mb-0">
+                        <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
+                           {% if current_user.is_authenticated %}
+                             <a style="text-decoration:none; color: grey;" href="{{ url_for('pantry.new_shelf') }}">You have no shelves yet. Click to add a shelf.</a>
+                           {% else %}
+                             <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no shelves yet. Login to add an shelf.</a>
+                           {% endif %}
+                        </button>
+                    </h5>
+                </div>
+            </div>
+        {% else %}
+            <h4>Other (unsorted)</h4>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock content %}
+

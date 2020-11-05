@@ -1,5 +1,5 @@
 from flask import (render_template, url_for, flash,
-                   redirect, request, abort, Blueprint)
+                   redirect, request, abort, Blueprint, Response)
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import update_grocery_list, ensure_harmony_keys, get_harmony_settings
 from GroceryHero.Users.forms import HarmonyForm
@@ -27,9 +27,12 @@ def recipes_page(possible=0, recommended=None):
         recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
         form = HarmonyForm()  # Recipe Harmony Tool Form
         form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
+        modifier = current_user.harmony_preferences['modifier']
+        form.similarity.choices = range(0, 60, 10) if modifier == 'True' else [x for x in range(50, 105, 5)] + [
+            'No Limit']
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
-
+        recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
         if request.method == 'GET':
             check_preferences(current_user)
             preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
@@ -38,8 +41,10 @@ def recipes_page(possible=0, recommended=None):
             possible = preferences['possible']
             if preferences['recommended'] and preferences['recommended'] != '':  # If saved recommended is not empty
                 recommended = {tuple(group.split(', ')): preferences['recommended'][group] for
-                               group in preferences['recommended']}
-
+                               group in preferences['recommended'] if tuple(group.split(', '))}
+                # todo might be redundant, (prevent deleted recipes from being linked in a recommended)
+                recommended = {key: value for key, value in recommended.items() if
+                               all(x in [r.title for r in recipe_list] for x in key)}
         elif request.method == 'POST':  # Harmony or search button was pressed  # todo only on form submit
             preferences = get_harmony_settings(current_user.harmony_preferences)
             recipes = {r.title: r.quantity.keys() for r in recipe_list}
@@ -47,7 +52,7 @@ def recipes_page(possible=0, recommended=None):
             recommended, possible = recipe_stack(recipes, count, max_sim=form.similarity.data,
                                                  excludes=form.excludes.data + recipe_history, includes=in_menu,
                                                  limit=500_000, **preferences)
-            in_menu = None if len(in_menu) < 1 else in_menu
+            in_menu = None if len(in_menu) < 1 else in_menu  # Don't show menu items in recommendation groups
             if in_menu is not None:
                 for group in list(recommended.keys()):
                     recommended[tuple([x for x in group if x not in in_menu])] = recommended[group]
@@ -61,7 +66,7 @@ def recipes_page(possible=0, recommended=None):
             current_user.harmony_preferences = preference
             db.session.commit()
         return render_template('recipes.html', title='Recipes', cards=recipe_list,
-                               recipe_ids={recipe.title: recipe.id for recipe in recipe_list},
+                               recipe_ids=recipe_ids,
                                search_recipes=sorted(recipe_list, key=lambda x: x.title),
                                sidebar=True, combos=possible, recommended=recommended, form=form)
     return render_template('recipes.html', recipes=None, all_recipes=None, title='Recipes', sidebar=False, combos=0,
@@ -75,7 +80,7 @@ def new_recipe():  # todo could use session to transfer recipe to quantity page
         return redirect(url_for('main.account'))
     form = RecipeForm()
     if form.validate_on_submit():  # Send data to quantity page
-        ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
+        ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != ''])
         quantity = {ingredient: [1, 'Unit'] for ingredient in ingredients}
         notes = form.notes.data.replace('/', '\\')  # This gets sent through to the next route
         recipe = json.dumps({'title': form.title.data, 'quantity': quantity, 'notes': notes})
@@ -106,19 +111,38 @@ def new_recipe_quantity(recipe):
                            recipe=recipe)
 
 
-@recipes.route('/post/<int:recipe_id>')
+@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
 @login_required
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
     if recipe_post.author != current_user:
         abort(403)
-    quantity = {ingredient: [int(recipe_post.quantity[ingredient][0]),
-                             recipe_post.quantity[ingredient][1]] if
-    float(recipe_post.quantity[ingredient][0]).is_integer() else
-    [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
+    quantity = {ingredient: [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]] if
+                             float(recipe_post.quantity[ingredient][0]).is_integer() else
+                             [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
                 for ingredient in recipe_post.quantity.keys()}
     recipe_post.quantity = quantity
+    if request.method == 'POST':
+        print('Hello')
+        title = recipe_post.title
+        recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+        return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+                                                                 f"attachment; filename={title}.txt"})
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
+
+
+# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+# @login_required
+# def export(recipe_id):
+#     recipe_post = Recipes.query.get_or_404(recipe_id)
+#     if recipe_post.author != current_user:
+#         abort(403)
+#     else:
+#         title = recipe_post.title
+#         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+#         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+#                                                                      f"attachment; filename={title}.txt"})
+#     return redirect(url_for('recipe_single', recipe_id=recipe_id))
 
 
 @recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
@@ -129,12 +153,12 @@ def update_recipe(recipe_id):
         abort(403)
     form = RecipeForm()
     if form.validate_on_submit():
-        ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',')]
-        quantity = {ingredient: recipe.quantity[ingredient] if ingredient in recipe.quantity else [1, 'Unit']
-                    for ingredient in ingredients}
+        ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',')])
+        quantity_dict = {ingredient: recipe.quantity[ingredient] if ingredient in recipe.quantity else [1, 'Unit']
+                         for ingredient in ingredients}
         notes = form.notes.data.replace('/', '\\')
         title = string.capwords(form.title.data.strip())
-        recipe = json.dumps({'title': title, 'quantity': quantity, 'notes': notes})
+        recipe = json.dumps({'title': title, 'quantity': quantity_dict, 'notes': notes})
         return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id, recipe=recipe))
     elif request.method == 'GET':
         form.title.data = recipe.title
@@ -155,13 +179,17 @@ def update_recipe_quantity(recipe_id, recipe):
     if form.is_submitted():
         title = recipe['title']
         notes = recipe['notes'].replace('\\', '/')
-        quantity = [pair['ingredient_quantity'] for pair in form.ingredient_forms.data]
+        try:
+            quantity = [float(pair['ingredient_quantity']) for pair in form.ingredient_forms.data]
+        except TypeError:  # todo ?improper way of handling bad input, csrf fieldlist in page ->validate_on_submit
+            flash('You must enter valid numbers', 'danger')
+            return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id, recipe=json.dumps(recipe)))
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
-        # Load previous data to update
+        # Get previous data to update
         recipe = Recipes.query.get_or_404(recipe_id)
         recipe.title = title
-        recipe.quantity = formatted
+        recipe.quantity = formatted  # Must be different to change to alphabetical
         recipe.notes = notes
         update_grocery_list(current_user)
         db.session.commit()
@@ -214,12 +242,28 @@ def add_to_menu(recipe_id):  # Adding from RHT recommendations
     return redirect(url_for('recipes.recipes_page'))
 
 
-@recipes.route('/recipes/add_menu', methods=['GET', 'POST'])  # Trying to get from recipe one-more
+@recipes.route('/recipes/multi_add_menu/', methods=['GET', 'POST'])  # From Recipe Harmony Tool Multi-select
 @login_required
 def multi_add_to_menu():
     for recipe_id in request.form.getlist('harmony'):
         recipe = Recipes.query.get_or_404(recipe_id)
-        if recipe.author != current_user:  # You can only update your own recipes # Might not be needed
+        if recipe.author != current_user:  # You can only add your own recipes # Might not be needed
+            abort(403)
+        recipe.in_menu = True
+    update_grocery_list(current_user)
+    db.session.commit()
+    return redirect(url_for('recipes.recipes_page'))
+
+
+@recipes.route('/recipes/multi_add_menu2/<ids>', methods=['GET', 'POST'])  # From Recipe Harmony Tool Multi-select
+@login_required
+def multi_add_to_menu2(ids=None):
+    ids = json.loads(ids)
+    if ids is None or ids == '':
+        return redirect(url_for('recipes.recipes_page'))  # Potential bug
+    for recipe_id in ids:
+        recipe = Recipes.query.get_or_404(recipe_id)
+        if recipe.author != current_user:  # You can only add your own recipes # Might not be needed
             abort(403)
         recipe.in_menu = True
     update_grocery_list(current_user)
@@ -239,19 +283,19 @@ def recipes_search(recommended=None, possible=0):
         ids = {recipe.title: recipe.id for recipe in recipe_list}
         cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
         # Sidebar form
-        form = HarmonyForm()
-        choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
-        form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
-        if request.method == 'POST':  # Load previous preferences/recommendations
-            preference = current_user.harmony_preferences  # Preference dictionary
-            form.similarity.data = preference['similarity']
-            form.groups.data = preference['groups']
-            possible = preference['possible']
-            if preference['recommended']:  # If saved recommended is not empty
-                recommended = {tuple(group.split(', ')): preference['recommended'][group] for
-                               group in preference['recommended']}
-        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
-                               sidebar=True, combos=possible, recommended=recommended, form=form)
+        # form = HarmonyForm()
+        # choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
+        # form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
+        # if request.method == 'POST':  # Load previous preferences/recommendations
+        #     preference = current_user.harmony_preferences  # Preference dictionary
+        #     form.similarity.data = preference['similarity']
+        #     form.groups.data = preference['groups']
+        #     possible = preference['possible']
+        #     if preference['recommended']:  # If saved recommended is not empty
+        #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
+        #                        group in preference['recommended']}
+        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec)
+        # form=form, sidebar=True, combos=possible, recommended=recommended,
 
 
 def check_preferences(user):

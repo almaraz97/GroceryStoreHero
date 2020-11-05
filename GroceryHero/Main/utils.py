@@ -158,12 +158,15 @@ def ensure_harmony_keys(user):
         db.session.commit()
 
 
-def get_harmony_settings(user_preferences):
+def get_harmony_settings(user_preferences, holds=None):
     settings = ['rec_limit', 'tastes', 'ingredient_weights', 'sticky_weights', 'ingredient_excludes', 'algorithm',
                 'modifier']
+    holds = [] if holds is None else holds
+    settings = [item for item in settings if item not in holds]
+
     preferences = {k: v for k, v in user_preferences.items() if k in settings}
-    rec_limit = int(preferences['rec_limit'])
-    preferences['rec_limit'] = rec_limit
+
+    preferences['rec_limit'] = int(preferences['rec_limit'])  # Convert to integer
 
     weights = preferences['ingredient_weights']
     weights = json.loads(weights) if isinstance(weights, str) else weights
@@ -190,26 +193,60 @@ def get_harmony_settings(user_preferences):
 
 
 def get_history_stats(user):
-    history = user.history
+    history = user.history  # Change user history
     if len(history) > 0:
-        history = [item for sublist in history for item in sublist]
-        # print(history)
+        # Make sure deleted recipes are not included in history  # todo remove deleted ids from history?
+        all_recipes_ids = [r.id for r in Recipes.query.filter_by(author=user).all()]
+        history = [item for sublist in history for item in sublist if item in all_recipes_ids]  # Flatten history
         history_set = set(history)
-        history_count = {}
-        for item in history_set:
-            history_count[item] = history.count(item)
-        sorted_history_count = sorted(history_count, key=lambda x: history_count[x])
-        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
+        history_count = {recipe: history.count(recipe) for recipe in history_set}
+        sorted_history_count = sorted(history_count, key=lambda x: history_count[x], reverse=True)  # By frequency
         keys = list(sorted_history_count)
-        # most_eaten = [Recipes.query.filter_by(id=keys[0]).first().title, history_count[keys[0]]]
+
+        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
         most_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[0]][0], history_count[keys[0]]]
         least_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[-1]][0], history_count[keys[-1]]]
-        # least_eaten = [Recipes.query.filter_by(id=keys[-1]).first().title, history_count[keys[-1]]]
-        eaten_ingredients = [recipe.quantity.keys() for recipe in recipes]
-        # print(eaten_ingredients)
-        most_ing = [[recipe.title for recipe in recipes if recipe.id == keys[0]][0], history_count[keys[0]]]
-        least_ing = []
+
+        eaten_ingredients = [i*list([recipe for recipe in recipes if recipe.id == id][0].quantity.keys())
+                             for id, i in history_count.items()]
+        eaten_ingredients = [item for sublist in eaten_ingredients for item in sublist]
+        eaten_ingredients_set = set(eaten_ingredients)
+        eaten_ingredients_count = {item: eaten_ingredients.count(item) for item in eaten_ingredients_set}
+        sorted_eaten_ingredients_count = sorted(eaten_ingredients_count, key=lambda x: eaten_ingredients_count[x], reverse=True)
+        keys_ingredients = list(sorted_eaten_ingredients_count)
+        most_ing = [keys_ingredients[0], eaten_ingredients_count[keys_ingredients[0]]]
+        least_ing = [keys_ingredients[-1], eaten_ingredients_count[keys_ingredients[-1]]]
     else:
         return None, None
-    return most_eaten, least_eaten
+    return most_eaten, least_eaten, most_ing, least_ing
 
+
+def update_pantry(user, recipes):
+    pantry = user.pantry
+    recipe_ingredients = []
+    for recipe in recipes:
+        for ing, M in recipe.quantity.items():
+            recipe_ingredients.append([ing, M[0], M[1]])
+    for R in recipe_ingredients:
+        for shelf in pantry:
+            if R in pantry[shelf]:
+                recipe_ing = Measurements(value=R[1], unit=R[2])
+                pantry_ing = [x for x in pantry[shelf] if pantry[shelf] == R]  # set?
+                pantry_ing = Measurements(value=pantry_ing[1][0], unit=pantry_ing[2][1])
+                pantry[shelf] = [x for x in pantry[shelf] if x not in R]
+                remaining = pantry_ing - recipe_ing
+                pantry[shelf] = pantry[shelf] + [remaining.value, remaining.unit]
+                break
+
+
+def show_harmony_weights(user, preferences):
+    ing_weights = preferences['ingredient_weights']
+    ing_weights = json.loads(ing_weights) if isinstance(ing_weights, str) else ing_weights
+    ing_weights = ', '.join([str(key) + ': ' + str(value) for key, value in ing_weights.items()])
+    tastes = preferences['tastes']
+    tastes = json.loads(tastes) if isinstance(tastes, str) else tastes  # Formatting for showing pairs to user
+    tastes = '\n'.join([str(key[0]) + ', ' + str(key[1]) + ': ' + str(value) for key, value in tastes.items()])
+    sticky = preferences['sticky_weights']
+    sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
+    sticky = ', '.join([str(key) + ': ' + str(value) for key, value in sticky.items()])
+    return ing_weights, tastes, sticky

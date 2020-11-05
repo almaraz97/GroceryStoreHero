@@ -84,14 +84,14 @@ class AdvancedHarmonyForm(FlaskForm):
     pair_weight = SelectField("Weight", choices=[1, 2, 3, 4, 5], default=1)
 
     ingredient = SelectMultipleField("Ingredient", choices=[])
-    ingredient_weights = SelectField("Weight", choices=[0.0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2.0], default=1)
+    ingredient_weights = SelectField("Weight", choices=[0.001, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 10.0], default=1.0)
     delete_weights = SubmitField('Delete All Weights')
 
     ingredient_ex = SelectMultipleField('Ingredients', choices=[])
     ingredient_rem = SelectMultipleField('Ingredients', choices=[])
 
     ingredient2 = SelectMultipleField("Ingredient", choices=[])
-    sticky_weights = SelectField("Weight", choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], default=0)
+    sticky_weights = SelectField("Weight", choices=[1.0, 2.0, 3.0, 4.0, 5.0], default=0)
 
     history_exclude = SelectField("Menu Weight", choices=[0, 1, 2, 3, 4, 5], default=0)
 
@@ -104,7 +104,7 @@ class AdvancedHarmonyForm(FlaskForm):
 
 
 class FullHarmonyForm(FlaskForm):
-    basic = FieldList(FormField(HarmonyForm))
-    advanced = FieldList(FormField(AdvancedHarmonyForm))
+    basic = FormField(HarmonyForm)
+    advanced = FormField(AdvancedHarmonyForm)
     submit = SubmitField('Submit')
 

@@ -2,20 +2,20 @@
 {% block content %}
 <h1 class="mb-3">Your Recipes:</h1>
     {% if current_user.is_authenticated %}
-        <!--Drop down menu search bar-->
-        <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <button class="input-group-text" for="inputGroupSelect01">Select</button>
-                </div>
-                <select class="custom-select" id="inputGroupSelect01" name="search">
-                        <option selected>Recipe Options</option>
-                    {% for recipe in search_recipes %}
-                        <option value="{{ recipe.title }}">{{ recipe.title }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </form>
+<!--        &lt;!&ndash;Drop down menu search bar&ndash;&gt;-->
+<!--        <form action="{# url_for('recipes.recipes_search') #}" method="POST">-->
+<!--            <div class="input-group mb-3">-->
+<!--                <div class="input-group-prepend">-->
+<!--                    <button class="input-group-text" for="inputGroupSelect01">Select</button>-->
+<!--                </div>-->
+<!--                <select class="custom-select" id="inputGroupSelect01" name="search">-->
+<!--                        <option selected>Recipe Options</option>-->
+<!--                    {#% for recipe in search_recipes %#}-->
+<!--                        <option value="{#{ recipe.title }#}">{#{ recipe.title }#}</option>-->
+<!--                    {#% endfor %#}-->
+<!--                </select>-->
+<!--            </div>-->
+<!--        </form>-->
         <!--Search bar with button-->
         <div style="margin-bottom: 15px;">
         <form action="{{ url_for('recipes.recipes_search') }}" method="POST">

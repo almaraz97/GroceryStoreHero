@@ -84,29 +84,26 @@ def import_files(file, import_type):
 def load_harmony_form(form, user):
     recipes = Recipes.query.filter_by(author=current_user).all()
     ingredients = [recipe.quantity.keys() for recipe in recipes]
+    ingredients = sorted(set([item for sublist in ingredients for item in sublist]))
     # Recommendation number
     form.recommend_num.data = user.harmony_preferences['rec_limit']
     # Recipe pair weights
     form.pairs.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
                                            sorted(set([recipe.title for recipe in recipes])))]
     # Ingredient weights
-    form.ingredient.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
-                                                sorted(set([item for sublist in ingredients for item in sublist])))]
+    form.ingredient.choices = [(x, x) for x in (['--select options (ctl+click)--'] + ingredients)]
     # Sticky weights
-    form.ingredient2.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
-                                                 sorted(set([item for sublist in ingredients for item in sublist])))]
+    form.ingredient2.choices = [(x, x) for x in (['--select options (ctl+click)--'] + ingredients)]
     # Exclude ingredients
     current_excludes = user.harmony_preferences['ingredient_excludes']
     form.ingredient_ex.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
-                                                   sorted(set([item for sublist in ingredients for item in sublist])))
-                                  if x not in current_excludes]
+                                                   ingredients) if x not in current_excludes]
     form.ingredient_rem.choices = [(x, x) for x in ['--to put back (ctl+click)--'] +
                                    [item for item in current_excludes]]
     # Algorithm
     form.algorithm.data = user.harmony_preferences['algorithm']
     # Modifier
     form.modifier.data = user.harmony_preferences['modifier']
-    print(form.modifier.data)
     return form
 
 
@@ -114,7 +111,6 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
     dictionary = user.harmony_preferences.copy()
     dictionary['rec_limit'] = form.recommend_num.data
     dictionary['algorithm'] = form.algorithm.data
-    print(form.modifier.data)
     dictionary['modifier'] = form.modifier.data
     # Ingredient weights
     if isinstance(dictionary['ingredient_weights'], str):  # Load old (If the entries are JSON for some reason?)
@@ -139,16 +135,18 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
         for combo in itertools.combinations(form.pairs.data, 2):
             combo = str(str(combo[0]) + ', ' + str(combo[1]))
             if combo not in dictionary['tastes']:  # Not in preferences yet
-                if float(form.ingredient_weights.data) == 1.0:  # Don't add redundant weight
+                if float(form.pair_weight.data) == 1.0:  # Don't add redundant weight
                     pass
                 else:
                     dictionary['tastes'][combo] = str(form.pair_weight.data)
+                    print(dictionary['tastes'])
             else:  # Weight is changing
-                if float(form.ingredient_weights.data) == 1.0:  # Remove from preferences since redundant
+                if float(form.pair_weight.data) == 1.0:  # Remove from preferences since redundant
                     del dictionary['tastes'][combo]
                 else:  # Else change the weight
                     dictionary['tastes'][combo] = str(form.pair_weight.data)
         dictionary['tastes'] = json.dumps(dictionary['tastes'])  # todo why dump here and load earlier?
+        print(dictionary['tastes'])
     # Sticky weights
     if isinstance(dictionary['sticky_weights'], str):  # Load old
         dictionary['sticky_weights'] = json.loads(dictionary['sticky_weights'])
