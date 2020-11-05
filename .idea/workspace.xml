@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="" />
+    <list default="true" id="93d9dae0-29f3-4667-beed-5d330997606e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GroceryStoreHero.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Main/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Main/routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Main/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Main/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Pantry/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Pantry/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Pantry/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Pantry/routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Recipes/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Recipes/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/Recipes/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/Recipes/routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/site.db" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/site.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/account.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/account.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/layout.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/pantry.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/pantry.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GroceryHero/templates/stats.html" beforeDir="false" afterPath="$PROJECT_DIR$/GroceryHero/templates/stats.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FavoritesManager">
+    <favorites_list name="GroceryStoreHero" />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NamedScopeManager">
+    <scope name="Project" pattern="file[GroceryStoreHero]:GroceryHero//*" />
   </component>
   <component name="ProjectId" id="1jCeW2VT0wCeAmyJvzfpokeS8wc" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -20,6 +42,31 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="TODO_SCOPE" value="Project" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunManager">
+    <configuration name="GroceryHero" type="PythonConfigurationType" factoryName="Python">
+      <module name="GroceryStoreHero" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/venv/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -33,5 +80,43 @@
       <updated>1603312528185</updated>
     </task>
     <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604604998559">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="147" y="46" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.768@0.0.1366.768" timestamp="1604604998559" />
+    <state x="328" y="0" key="CommitChangelistDialog2" timestamp="1604605481914">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="328" y="0" key="CommitChangelistDialog2/0.0.1366.768@0.0.1366.768" timestamp="1604605481914" />
+    <state width="420" height="439" key="GridCell.Tab.0.bottom" timestamp="1604605052323">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="420" height="439" key="GridCell.Tab.0.bottom/0.0.1366.768@0.0.1366.768" timestamp="1604605052323" />
+    <state width="420" height="439" key="GridCell.Tab.0.center" timestamp="1604605052321">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="420" height="439" key="GridCell.Tab.0.center/0.0.1366.768@0.0.1366.768" timestamp="1604605052321" />
+    <state width="420" height="439" key="GridCell.Tab.0.left" timestamp="1604605052320">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="420" height="439" key="GridCell.Tab.0.left/0.0.1366.768@0.0.1366.768" timestamp="1604605052320" />
+    <state width="420" height="439" key="GridCell.Tab.0.right" timestamp="1604605052322">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state width="420" height="439" key="GridCell.Tab.0.right/0.0.1366.768@0.0.1366.768" timestamp="1604605052322" />
+    <state x="192" y="23" key="SettingsEditor" timestamp="1604604443660">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="192" y="23" key="SettingsEditor/0.0.1366.768@0.0.1366.768" timestamp="1604604443660" />
+    <state x="363" y="141" width="639" height="486" key="find.popup" timestamp="1604604076298">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="363" y="141" width="639" height="486" key="find.popup/0.0.1366.768@0.0.1366.768" timestamp="1604604076298" />
+    <state x="283" y="49" key="scopes" timestamp="1604605125718">
+      <screen x="0" y="0" width="1366" height="768" />
+    </state>
+    <state x="283" y="49" key="scopes/0.0.1366.768@0.0.1366.768" timestamp="1604605125718" />
   </component>
 </project>

@@ -4,15 +4,17 @@
     {% if current_user.is_authenticated %}
         <div class="content-section pl-3">
 <!--            <div class="mb-4 d-none d-md-block d-lg-block d-xl-block">-->
+            <div class="mb-4">
                 <h4 style="display:inline;">Pantry Shelves</h4>
                 <div style="float:right" class="justify-content-right d-flex">
 <!--                  <form action="#">-->
 <!--                      <button class="btn btn-outline-success btn-sm mr-2">Add Extras</button>-->
 <!--                  </form>-->
-                  <form action="#">
+                  <form action="{{ url_for('pantry.delete_shelf') }}">
                       <button class="btn btn-outline-danger btn-sm">Delete Shelf</button>
                   </form>
                 </div>
+            </div>
 <!--            </div>-->
 <!--            Shelves section MOBILE-->
 <!--            <div class="mb-3 d-block d-sm-none row">-->
@@ -26,7 +28,7 @@
 <!--                  </form>-->
 <!--               </div>-->
 <!--            </div>-->
-            {% if names is not defined or names|length < 1 %}
+            {% if shelves is not defined or shelves|length < 1 %}
             <div class="card my-3">
                 <div class="card-header p-0" id="headingMenu">
                     <h5 class="mb-0">
@@ -41,7 +43,36 @@
                 </div>
             </div>
         {% else %}
-            <h4>Other (unsorted)</h4>
+            <div class="mb-3">
+            {% for shelf in shelves %}
+                <div class="card">
+                    <!--Button-->
+                    <div class="card-body bg-success p-0" id="{{ shelf }}">
+                        <h5 class="mb-0">
+                            <button style=".collapse" class="btn btn-success btn-block pl-0" data-toggle="collapse" data-target="#collapse{{ shelf }}"  aria-controls="collapse{{ shelf }}">
+                           {{ shelf }}
+                           </button>
+                        </h5>
+                    </div>
+                    <!--Info section-->
+                    <div id="collapse{{ shelf }}" class="collapse {% if shelves[shelf]|length > 0%}show{% endif %}" aria-labelledby="heading{{ shelf }}" data-parent="#accordion">
+                        <div class="card-body mt-3 ml-4">
+<!--                             <div class="border-bottom mr-3 mb-1 pb-1 pt-0">-->
+<!--                                <a>Items:</a>-->
+<!--                             </div>-->
+                             <ul>
+                            {% if shelves[shelf]|length < 1%}
+                                 <li>This shelf is empty</li>
+                             {% endif %}
+                            {% for ingredient in shelves[shelf] %}
+                                <li>{{ ingredient }} <i style="font-size: 14px;">{{ shelves[shelf][ingredient].value }} {{ shelves[shelf][ingredient].unit.lower() }}{% if shelves[shelf][ingredient].value != 1 %}s{% endif %}</i></li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
         {% endif %}
     </div>
     {% endif %}

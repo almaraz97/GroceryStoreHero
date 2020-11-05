@@ -207,12 +207,13 @@ def get_history_stats(user):
         most_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[0]][0], history_count[keys[0]]]
         least_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[-1]][0], history_count[keys[-1]]]
 
-        eaten_ingredients = [i*list([recipe for recipe in recipes if recipe.id == id][0].quantity.keys())
+        eaten_ingredients = [i * list([recipe for recipe in recipes if recipe.id == id][0].quantity.keys())
                              for id, i in history_count.items()]
         eaten_ingredients = [item for sublist in eaten_ingredients for item in sublist]
         eaten_ingredients_set = set(eaten_ingredients)
         eaten_ingredients_count = {item: eaten_ingredients.count(item) for item in eaten_ingredients_set}
-        sorted_eaten_ingredients_count = sorted(eaten_ingredients_count, key=lambda x: eaten_ingredients_count[x], reverse=True)
+        sorted_eaten_ingredients_count = sorted(eaten_ingredients_count, key=lambda x: eaten_ingredients_count[x],
+                                                reverse=True)
         keys_ingredients = list(sorted_eaten_ingredients_count)
         most_ing = [keys_ingredients[0], eaten_ingredients_count[keys_ingredients[0]]]
         least_ing = [keys_ingredients[-1], eaten_ingredients_count[keys_ingredients[-1]]]
@@ -221,22 +222,53 @@ def get_history_stats(user):
     return most_eaten, least_eaten, most_ing, least_ing
 
 
-def update_pantry(user, recipes):
+def update_pantry(user, recipes):  # From the clear menu using recipes
     pantry = user.pantry
+    print(pantry)
     recipe_ingredients = []
     for recipe in recipes:
         for ing, M in recipe.quantity.items():
             recipe_ingredients.append([ing, M[0], M[1]])
-    for R in recipe_ingredients:
-        for shelf in pantry:
-            if R in pantry[shelf]:
-                recipe_ing = Measurements(value=R[1], unit=R[2])
-                pantry_ing = [x for x in pantry[shelf] if pantry[shelf] == R]  # set?
-                pantry_ing = Measurements(value=pantry_ing[1][0], unit=pantry_ing[2][1])
-                pantry[shelf] = [x for x in pantry[shelf] if x not in R]
-                remaining = pantry_ing - recipe_ing
-                pantry[shelf] = pantry[shelf] + [remaining.value, remaining.unit]
+
+    for ing in recipe_ingredients:  # See what's being used
+        item = ing[0]
+        for shelf in pantry:  # Look for it in each shelf
+            if item in pantry[shelf] and ing[2] == pantry[shelf][item][1]:  # Make sure measurements agree
+                recipe_ing = Measurements(value=ing[1], unit=ing[2])  # Get recipe ing that is being used
+                pantry_ing = Measurements(value=pantry[shelf][item][0], unit=pantry[shelf][item][1])  # Get pantry item
+                remaining = pantry_ing - recipe_ing  # Subtract the two
+                if remaining.value > 0:  # If there is anything remaining
+                    pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
+                else:
+                    del pantry[shelf][item]  # Ingredient is gone
                 break
+    print(pantry)
+    user.pantry = {}
+    db.session.commit()  # todo why does it need 2 commits to update value?
+    user.pantry = pantry
+    db.session.commit()
+
+
+def add_pantry(user, ingredients, shelf, add):
+    pantry = user.pantry
+    for ing in ingredients:
+        if ing in pantry[shelf]:
+            item_a = Measurements(value=pantry[shelf][ing][0], unit=pantry[shelf][ing][1])
+            item_b = Measurements(value=ingredients[ing][0], unit=ingredients[ing][1])
+            total = item_a + item_b if add else item_a - item_b
+            if total.value <= 0:
+                del pantry[shelf][ing]
+            else:
+                pantry[shelf][ing] = [total.value, total.unit]
+        else:  # Ingredient does not exist
+            if not add:  # is being removed
+                pass
+            else:
+                pantry[shelf][ing] = ingredients[ing]
+    user.pantry = {}
+    db.session.commit()  # todo why does it need 2 commits to update value?
+    user.pantry = pantry
+    db.session.commit()
 
 
 def show_harmony_weights(user, preferences):

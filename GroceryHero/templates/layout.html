@@ -39,7 +39,7 @@
                                 <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Upgrade</a>
                             {% endif %}
                             <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
-                            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">New Shelf</a> <!--todo correct url_for-->
+                            <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
                             <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
                             <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
                         {% else %}
@@ -61,7 +61,7 @@
                     <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>
                 {% endif %}
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisles.png')  }}" height="35px" width="35px"></a>
-                <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a> <!--todo correct url_for-->
+                <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a> <!--todo correct url_for-->
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>
             {% else %}
@@ -179,16 +179,59 @@
                             {{ form.hidden_tag() }}
                             <form action="" method="POST">
                                 <fieldset>
+                                {{ form.csrf_token() }}
                                     {{ form.name.label(class="form-control-label") }}
-                                    {{ form.name(class="custom-select") }}
+                                    {% if form.name.errors %}
+                                        {{ form.name(class="custom-select is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.name.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.name(class="custom-select") }}
+                                    {% endif %}
+
                                     {{ form.content.label(class="form-control-label mt-3") }}
-                                    {{ form.content(class="custom-select") }}
+                                    {% if form.content.errors %}
+                                        {{ form.content(class="custom-select is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.content.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.content(class="custom-select") }}
+                                    {% endif %}
+
                                     {{ form.ingredient_quantity.label(class="form-control-label mt-3") }}
-                                    {{ form.ingredient_quantity(class="form-control") }}
+                                    {% if form.ingredient_quantity.errors %}
+                                        {{ form.ingredient_quantity(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.ingredient_quantity.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.ingredient_quantity(class="form-control") }}
+                                    {% endif %}
+
                                     {{ form.ingredient_type.label(class="form-control-label mt-3") }}
-                                    {{ form.ingredient_type(class="custom-select") }}
+                                    {% if form.ingredient_type.errors %}
+                                        {{ form.ingredient_type(class="custom-select is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.ingredient_type.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.ingredient_type(class="custom-select") }}
+                                    {% endif %}
                                 </fieldset>
-                                {{ form.submit(class="btn btn-success btn-sm btn-block mt-4 mb-3") }}
+                                <div class="d-flex mb-3 mt-1">
+                                    {{ form.add(class="btn btn-success btn-sm btn-block mt-3") }}
+                                    {{ form.remove(class="btn btn-danger btn-sm btn-block mt-3 ml-2") }}
+                                </div>
                             </form>
                     {% elif harmony %}
                         <h3>Full Harmony Tool</h3>
@@ -289,7 +332,33 @@
                                                                 {% endfor %}
                                                             </ul>
                                                             <div class="mx-5 mb-2 pt-0 ">
-                                                                <button class="m-0 p-0 btn-block btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal3">Too similar</button>
+                                                                <button class="m-0 p-0 btn-block btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#change{{ids}}">Too similar?</button>
+                                                            </div>
+                                                                <!-- Modal to rate recommendation similarity-->
+                                                            <div class="modal fade" id="change{{ids}}" tabindex="-1" role="dialog" aria-labelledby="changeLabel{{ids}}" aria-hidden="true">
+                                                                <div class="modal-dialog" role="document">
+                                                                  <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                      <h5 class="modal-title" id="changeLabel{{ids}}">How similar are these recipes?</h5>
+                                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                      </button>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                      <form action="" method="POST">
+                                                                            <div class="btn-group mr-5 pr-4" role="group">
+                                                                                <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=1) }}" type="submit" class="btn btn-success">1</button>
+                                                                                <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=2) }}" type="submit" class="btn btn-warning">2</button>
+                                                                                <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=3) }}" type="submit" class="btn btn-warning">3</button>
+                                                                                <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=4) }}" type="submit" class="btn btn-warning">4</button>
+                                                                                <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=5) }}" type="submit" class="btn btn-danger">5</button>
+                                                                            </div>
+                                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+<!--                                                                            <input class="btn btn-danger" type="submit" value="Change">-->
+                                                                      </form>
+                                                                    </div>
+                                                                  </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -316,26 +385,7 @@
                 {% endif %}
             </div>
         </nav>
-            <!-- Modal to clear extras-->
-    <div class="modal fade" id="deleteModal3" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel3" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="deleteModalLabel3">How similar are these?</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-footer">
-                <p class="text-muted"></p>
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <form action="#" method="POST">  <!--todo have url_for here -->
-                <input class="btn btn-danger" type="submit" value="Delete">
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+
 </main>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

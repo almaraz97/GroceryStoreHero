@@ -1,3 +1,5 @@
+import itertools
+
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response)
 from flask_login import current_user, login_required
@@ -255,7 +257,7 @@ def multi_add_to_menu():
     return redirect(url_for('recipes.recipes_page'))
 
 
-@recipes.route('/recipes/multi_add_menu2/<ids>', methods=['GET', 'POST'])  # From Recipe Harmony Tool Multi-select
+@recipes.route('/recipes/multi_add_menu2/<ids>', methods=['GET', 'POST'])  # From Recipe Harmony Tool <ul> group
 @login_required
 def multi_add_to_menu2(ids=None):
     ids = json.loads(ids)
@@ -298,6 +300,33 @@ def recipes_search(recommended=None, possible=0):
         # form=form, sidebar=True, combos=possible, recommended=recommended,
 
 
+@recipes.route('/recipe_similarity/<ids>/<sim>', methods=['GET', 'POST'])
+@login_required
+def recipe_similarity(ids, sim):
+    ids = json.loads(ids)
+    recipe_names = [Recipes.query.filter_by(id=ID).first().title for ID in ids]
+    recipe_names = [x for x in recipe_names if x is not None]
+    dictionary = current_user.harmony_preferences.copy()
+    if isinstance(dictionary['tastes'], str):  # If the entries are JSON for some reason?
+        dictionary['tastes'] = json.loads(dictionary['tastes'])
+    for combo in itertools.combinations(recipe_names, 2):
+        combo = str(str(combo[0]) + ', ' + str(combo[1]))
+        if combo not in dictionary['tastes']:  # Not in preferences yet
+            if float(sim) == 1.0:  # Don't add redundant weight
+                pass
+            else:
+                dictionary['tastes'][combo] = str(sim)
+        else:  # Weight is changing
+            if float(sim) == 1.0:  # Remove from preferences since redundant
+                del dictionary['tastes'][combo]
+            else:  # Else change the weight
+                dictionary['tastes'][combo] = str(sim)
+    dictionary['tastes'] = json.dumps(dictionary['tastes'])
+    current_user.harmony_preferences = dictionary
+    db.session.commit()
+    return redirect(url_for('recipes.recipes_page'))
+
+
 def check_preferences(user):
     ensure_harmony_keys(user)
     # checks = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
@@ -310,6 +339,7 @@ def check_preferences(user):
     if user.extras == '' or user.extras is None:
         user.extras = []
     db.session.commit()
+
 
 # def transfer_site_changes():
 #     for recipe in Recipes.query.all():

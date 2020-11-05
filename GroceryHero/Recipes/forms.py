@@ -101,6 +101,11 @@ class Measurements:
                     total = total / self.Convert[weight]
                     return Measurements(round(total, 2), unit=weight)
 
+    def __eq__(self, other):  # todo should I include value as part of equivalence?
+        if not isinstance(other, Measurements):
+            raise AssertionError('Must be of class Measurements')
+        return self.type == other.type and self.metric == other.metric
+
     def __repr__(self):
         if self.value != 1:
             return f'{self.value} {self.unit}s'

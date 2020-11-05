@@ -120,7 +120,7 @@
                             <h5 class="m-0">{{ key }}</h5>  <!-- Aisle name -->
                             <ul class="mt-2 mb-3 ml-1">
                                 {% for item in groceries[key] %}
-                                    {% if item[-1] == 1 %}
+                                    {% if item[-1] == 1 %} <!--Are they struck out or not-->
                                         <s>
                                            <li class="groceries text-muted" style="text-decorator-color: text-muted; cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                                              <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>

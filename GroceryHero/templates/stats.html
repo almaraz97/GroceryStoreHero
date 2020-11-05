@@ -4,9 +4,12 @@
 <article class="media content-section">
    <div>
       <h4 class="border-bottom">Harmony Stats</h4>
-         <p class="mb-3">Entire Recipe List- {{ harmony }}%
-         <br>Average Menu Harmony- {{ avg_harmony }}%</p>
-      <h4 class="mt-2">Total Recipe Consumption Frequency Chart </h4>
+      <ul class="mb-3">
+         <li>Entire Recipe List- {{ harmony }}%</li>
+         <li>Average Menu Harmony- {{ avg_harmony }}%</li>
+         <li>Average Menu Size {{ average_menu_len }}</li>
+      </ul>
+      <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
@@ -21,7 +24,7 @@
             </tr>
          {% endfor %}
       </table>
-      <h4 class="">Ingredient Frequency Chart</h4>
+      <h4 class="mb-3">Ingredient Frequency Chart</h4>
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
