@@ -34,6 +34,7 @@ add similarity rating button for recipe recommendation
 # todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
 # todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
+# todo add RHT switchables. Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
 # Soon
 # todo Allow fractions for quantity page
 # todo figure our JSON situation from harmony preferences JSON column coming in and out

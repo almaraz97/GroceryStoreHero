@@ -10,7 +10,7 @@
         </div>
     </div>
         <legend class="border-bottom mb-4" style="display:inline;">Account Info
-            <button class="btn btn-danger btn-sm" style="float: right; display:inline;" data-toggle="modal" data-target="#deleteModal">Delete</button>
+            <button class="btn btn-outline-danger btn-sm" style="float: right; display:inline;" data-toggle="modal" data-target="#deleteModal">Delete</button>
         </legend>
         <form method="POST" action="" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
@@ -52,7 +52,7 @@
                 </div>
             </fieldset>
             <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
+                {{ form.submit(class="btn btn-info") }}
             </div>
         </form>
 </div>
@@ -177,7 +177,7 @@
             </div>
         </div>
     </div>
-        {{ form3.submit(class="btn btn-outline-info mt-2 mb-3") }}
+        {{ form3.submit(class="btn btn-info mt-2 mb-3") }}
     </form>
 </div>
 <!-- Modal -->
