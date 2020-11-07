@@ -158,7 +158,6 @@ dmypy.json
 .idea/**/gradle.xml
 .idea/**/libraries
 
-
 # CMake
 cmake-build-*/
 
