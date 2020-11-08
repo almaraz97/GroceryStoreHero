@@ -194,6 +194,7 @@ def get_harmony_settings(user_preferences, holds=None):
 
 def get_history_stats(user):
     history = user.history  # Change user history
+    print(history)
     if len(history) > 0:
         # Make sure deleted recipes are not included in history  # todo remove deleted ids from history?
         all_recipes_ids = [r.id for r in Recipes.query.filter_by(author=user).all()]
@@ -218,7 +219,7 @@ def get_history_stats(user):
         most_ing = [keys_ingredients[0], eaten_ingredients_count[keys_ingredients[0]]]
         least_ing = [keys_ingredients[-1], eaten_ingredients_count[keys_ingredients[-1]]]
     else:
-        return None, None
+        return ['N/A', 'N/A'], ['N/A', 'N/A'], ['N/A', 'N/A'], ['N/A', 'N/A']
     return most_eaten, least_eaten, most_ing, least_ing
 
 

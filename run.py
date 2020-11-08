@@ -4,7 +4,7 @@ import os
 
 app = create_app()
 
-server = True if os.environ.get('SERVER') == 'True' else False
+server = False if os.environ.get('SERVER') == 'True' else True
 
 if __name__ == '__main__':
     app.run(debug=server)

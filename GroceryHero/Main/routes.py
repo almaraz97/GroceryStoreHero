@@ -73,6 +73,8 @@ def home():
             harmony = 5  # list(harmony.values())[0]
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
+        print(statistics)
+        print(type(statistics))
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics)

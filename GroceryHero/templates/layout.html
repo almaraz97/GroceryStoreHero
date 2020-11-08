@@ -164,13 +164,15 @@
                             </ul>
                         {% endif %}
                         <h4 class="mt-3"><a href="{{ url_for('main.stats') }}">Miscellaneous</a></h4>
-                        {% if statistics is defined %}
+                        {% if statistics is defined and statistics[0]|length > 0 %}
                             <ul class='text-muted mt-0 mb-2'>
                                 <li class='text-muted mt-0'>Most eaten recipe: {{ statistics[0][0] }} ({{ statistics[0][1] }})</li>
                                 <li class='text-muted mt-0'>Least eaten recipe: {{ statistics[1][0] }} ({{ statistics[1][1] }})</li>
                                 <li class='text-muted mt-0'>Most used ingredient: {{ statistics[2][0] }} ({{ statistics[2][1] }})</li>
                                 <li class='text-muted mt-0'>Least used ingredient: {{ statistics[3][0] }} ({{ statistics[3][1] }})</li>
                             </ul>
+                        {% else %}
+                            <p>This will appear after you eat your first weeks' meals.</p>
                         {% endif %}
                     {% elif pantry is defined %}
                     <h3>Add Items to Pantry</h3>
