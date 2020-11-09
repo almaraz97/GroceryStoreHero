@@ -148,7 +148,7 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
      # max_sim = int(max_sim)/100 if isinstance(max_sim, int) else None
     excludes = None if not excludes else excludes  # Comes in as 0 or not
     includes = [] if not includes else includes
-    modifier = 1 / (1*(count + len(includes)) + 1) if modifier == 'Graded' else 1.0
+    modifier = 1 / (count + len(includes) + 1) if modifier == 'Graded' else 1.0
     ingredient_weights = None if not ingredient_weights else ingredient_weights
     tastes = None if not tastes else tastes
     # Recipes in, unique scored combos out

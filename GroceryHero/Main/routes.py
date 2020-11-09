@@ -153,8 +153,8 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
     clears = len(history)
     if len(history) > 0:
         rules = apriori_test(current_user)
-        for rule in rules:
-            print(rule)
+        # for rule in rules:
+        #     print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         # print(listRules)
         average_menu_len = sum([len(x) for x in history])/len(history)
@@ -184,10 +184,11 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         all_recipes = Recipes.query.filter_by(author=current_user).all()
         harmony = round((norm_stack({r.title: r.quantity.keys() for r in all_recipes}) * 100), 5)
         avg_harmony = []
-        for batch in history2:
+        for batch in history2:  # todo integrate user harmony preferences (modifier at least)
             if len(batch) > 1:
-                h = (norm_stack({recipe.title: recipe.quantity for recipe in
-                                Recipes.query.filter(Recipes.id.in_(batch)).all()})**(1/(len(batch)*2-3)))*100
+                recs = {recipe.title: recipe.quantity for recipe in Recipes.query.filter(Recipes.id.in_(batch)).all()}
+                modifier = 1 / (len(recs) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
+                h = (norm_stack(recs)**modifier)*100
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony)/len(avg_harmony), 5)
     else:

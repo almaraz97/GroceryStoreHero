@@ -5,9 +5,9 @@
    <div>
       <h4 class="border-bottom">Harmony Stats</h4>
       <ul class="mb-3">
-         <li>Entire Recipe List- {{ harmony }}%</li>
-         <li>Average Menu Harmony- {{ avg_harmony }}%</li>
-         <li>Average Menu Size- {{ average_menu_len }}</li>
+         <li>Entire Recipe List Harmony- {{ harmony }}%</li>
+         <li>Average Menu Harmony- {{ avg_harmony|round(2) }}%</li>
+         <li>Average Menu Size- {{ average_menu_len|round(2) }}</li>
          <li>Number of Menu Clears- {{ clears }}</li>
       </ul>
       <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
