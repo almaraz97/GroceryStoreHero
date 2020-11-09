@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-3">Your Statistics:</h1>
+<h1 class="mb-3">Your Advanced Statistics:</h1>
 <article class="media content-section">
    <div>
       <h4 class="border-bottom">Harmony Stats</h4>
@@ -10,6 +10,7 @@
          <li>Average Menu Size {{ average_menu_len }}</li>
       </ul>
       <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
+      <div style="height:200px; overflow:auto" class="mb-3">
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
@@ -24,7 +25,9 @@
             </tr>
          {% endfor %}
       </table>
+      </div>
       <h4 class="mb-3">Ingredient Frequency Chart</h4>
+      <div style="height:200px; overflow:auto" class="mb-3">
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe</th>
@@ -39,7 +42,9 @@
             </tr>
          {% endfor %}
       </table>
+      </div>
       <h4 class="border-bottom">Recipe Pair Frequency</h4>
+      <div style="height:200px; overflow:auto" class="mb-3">
       <table class="table table-border table-hover table-sm ml-2">
          <tr class="bg-success">
             <th style="color:white">Recipe Combination</th>
@@ -51,12 +56,15 @@
                {% for recipe in item[0] %}
                   {% set group = group.append(recipe) %}
                {% endfor %}
+               {% set group = group|join(' + ') %}
                <td>{{ group }}</td>
                <td>{{ item[1] }}</td>
             </tr>
          {% endfor %}
       </table>
+      </div>
       <h4 class="border-bottom">Recipe Dimensionality (UMAP)</h4>
+      <p class="mb-3">To be added.</p>
    </div>
 </article>
 {% endblock content %}
