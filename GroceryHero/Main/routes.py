@@ -8,7 +8,7 @@ from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, ensure_harmony_keys, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, update_pantry)
+                                    show_harmony_weights, update_pantry, apriori_test)
 from GroceryHero import db
 
 main = Blueprint('main', __name__)
@@ -153,6 +153,9 @@ def harmony_tool2(preferences):
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
     history = current_user.history
     if len(history) > 0:
+        rules = apriori_test(current_user)
+        # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
+        # print(listRules)
         average_menu_len = sum([len(x) for x in history])/len(history)
         all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]  # todo remove old ids?
         # Recipe History/Frequency
@@ -187,10 +190,10 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony)/len(avg_harmony), 5)
     else:
-        history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony, average_menu_len = [None]*6
+        history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony, average_menu_len = [None]*7
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony, average_menu_len=average_menu_len)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules)
 
 
 @main.route('/extras', methods=['GET', 'POST'])

@@ -1,5 +1,5 @@
 import json
-
+from apyori import apriori
 from GroceryHero import db
 from GroceryHero.Recipes.forms import Measurements
 from GroceryHero.models import Recipes, Aisles
@@ -219,13 +219,12 @@ def get_history_stats(user):
         most_ing = [keys_ingredients[0], eaten_ingredients_count[keys_ingredients[0]]]
         least_ing = [keys_ingredients[-1], eaten_ingredients_count[keys_ingredients[-1]]]
     else:
-        return ['N/A', 'N/A'], ['N/A', 'N/A'], ['N/A', 'N/A'], ['N/A', 'N/A']
+        return ['N/A', None], ['N/A', None], ['N/A', None], ['N/A', None]
     return most_eaten, least_eaten, most_ing, least_ing
 
 
 def update_pantry(user, recipes):  # From the clear menu using recipes
     pantry = user.pantry
-    print(pantry)
     recipe_ingredients = []
     for recipe in recipes:
         for ing, M in recipe.quantity.items():
@@ -243,7 +242,6 @@ def update_pantry(user, recipes):  # From the clear menu using recipes
                 else:
                     del pantry[shelf][item]  # Ingredient is gone
                 break
-    print(pantry)
     user.pantry = {}
     db.session.commit()  # todo why does it need 2 commits to update value?
     user.pantry = pantry
@@ -283,3 +281,22 @@ def show_harmony_weights(user, preferences):
     sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
     sticky = ', '.join([str(key) + ': ' + str(value) for key, value in sticky.items()])
     return ing_weights, tastes, sticky
+
+
+def apriori_test(user, min_support=None):
+    recipes = []
+    for week in user.history:
+        # temp = [recipe.title for recipe in
+        # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history]]
+        temp = []
+        for item in week:
+            recipe = Recipes.query.filter_by(id=item).first()
+            if recipe is not None:
+                temp.append(recipe.title)
+        if len(temp) > 0:
+            recipes.append(temp)
+    # recipes = [temp for temp in []]
+    min_support = 2/len(recipes) if min_support is None else min_support
+    return list(apriori(recipes, min_support=min_support, min_lift=1.1))
+
+

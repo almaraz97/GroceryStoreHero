@@ -40,8 +40,23 @@
          {% endfor %}
       </table>
       <h4 class="border-bottom">Recipe Pair Frequency</h4>
+      <table class="table table-border table-hover table-sm ml-2">
+         <tr class="bg-success">
+            <th style="color:white">Recipe Combination</th>
+            <th style="color:white">Frequency</th>
+         </tr>
+         {% for item in frequency_pairs %}
+            <tr>
+               {% set group = [] %}
+               {% for recipe in item[0] %}
+                  {% set group = group.append(recipe) %}
+               {% endfor %}
+               <td>{{ group }}</td>
+               <td>{{ item[1] }}</td>
+            </tr>
+         {% endfor %}
+      </table>
       <h4 class="border-bottom">Recipe Dimensionality (UMAP)</h4>
-      <h4 class="border-bottom">Average Menu Size</h4>
    </div>
 </article>
 {% endblock content %}
