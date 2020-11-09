@@ -73,8 +73,6 @@ def home():
             harmony = 5  # list(harmony.values())[0]
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
-        print(statistics)
-        print(type(statistics))
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics)
@@ -152,8 +150,11 @@ def harmony_tool2(preferences):
 @main.route('/stats', methods=['GET', 'POST'])
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
     history = current_user.history
+    clears = len(history)
     if len(history) > 0:
         rules = apriori_test(current_user)
+        for rule in rules:
+            print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         # print(listRules)
         average_menu_len = sum([len(x) for x in history])/len(history)
@@ -190,10 +191,12 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony)/len(avg_harmony), 5)
     else:
-        history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony, average_menu_len = [None]*7
+        history_count_names, ingredient_history, ingredient_count, \
+        harmony, avg_harmony, average_menu_len, rules = [None] * 7
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
+                           clears=clears)
 
 
 @main.route('/extras', methods=['GET', 'POST'])

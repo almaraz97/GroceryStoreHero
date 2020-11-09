@@ -7,7 +7,8 @@
       <ul class="mb-3">
          <li>Entire Recipe List- {{ harmony }}%</li>
          <li>Average Menu Harmony- {{ avg_harmony }}%</li>
-         <li>Average Menu Size {{ average_menu_len }}</li>
+         <li>Average Menu Size- {{ average_menu_len }}</li>
+         <li>Number of Menu Clears- {{ clears }}</li>
       </ul>
       <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
       <div style="height:200px; overflow:auto" class="mb-3">
@@ -58,7 +59,7 @@
                {% endfor %}
                {% set group = group|join(' + ') %}
                <td>{{ group }}</td>
-               <td>{{ item[1] }}</td>
+               <td>{{ item[1]|round(3) }}</td>
             </tr>
          {% endfor %}
       </table>
