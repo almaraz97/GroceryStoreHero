@@ -16,27 +16,30 @@ pantry = Blueprint('pantry', __name__)
 @pantry.route('/pantry', methods=['GET', 'POST'])
 def pantry_page():
     form = PantryBarForm()
-    if current_user.pantry is None:
-        current_user.pantry = {}
-        db.session.commit()
-    all_pantry = current_user.pantry
-    # # {Shelf: {Ingredient: [quantity, unit],...},...}
-    all_pantry = {name: {ing: Measurements(value=int(L[0]) if float(L[0]).is_integer() else L[0], unit=L[1])
-                      for ing, L in all_pantry[name].items()}
-               for name, ing in all_pantry.items()}
-    # Sidebar adding choices
-    ingredients = [recipe.quantity.keys() for recipe in Recipes.query.filter_by(author=current_user)]  # Ingredients
-    ingredients = ingredients + [current_user.pantry[item] for item in [key for key in current_user.pantry]]
-    form.content.choices = [(x, x) for x in sorted(set(item for sublist in ingredients for item in sublist))]
-    form.name.choices = [(x, x) for x in all_pantry.keys()]
-    if form.validate_on_submit():
-        shelf = form.name.data
-        ingredients = {ing: [form.ingredient_quantity.data, form.ingredient_type.data] for ing in form.content.data}
-        add_pantry(current_user, ingredients, shelf, form.add.data)
+    if current_user.is_authenticated:
+        if current_user.pantry is None:
+            current_user.pantry = {}
+            db.session.commit()
         all_pantry = current_user.pantry
+        # # {Shelf: {Ingredient: [quantity, unit],...},...}
         all_pantry = {name: {ing: Measurements(value=int(L[0]) if float(L[0]).is_integer() else L[0], unit=L[1])
-                             for ing, L in all_pantry[name].items()}
-                      for name, ing in all_pantry.items()}
+                          for ing, L in all_pantry[name].items()}
+                   for name, ing in all_pantry.items()}
+        # Sidebar adding choices
+        ingredients = [recipe.quantity.keys() for recipe in Recipes.query.filter_by(author=current_user)]  # Ingredients
+        ingredients = ingredients + [current_user.pantry[item] for item in [key for key in current_user.pantry]]
+        form.content.choices = [(x, x) for x in sorted(set(item for sublist in ingredients for item in sublist))]
+        form.name.choices = [(x, x) for x in all_pantry.keys()]
+        if form.validate_on_submit():
+            shelf = form.name.data
+            ingredients = {ing: [form.ingredient_quantity.data, form.ingredient_type.data] for ing in form.content.data}
+            add_pantry(current_user, ingredients, shelf, form.add.data)
+            all_pantry = current_user.pantry
+            all_pantry = {name: {ing: Measurements(value=int(L[0]) if float(L[0]).is_integer() else L[0], unit=L[1])
+                                 for ing, L in all_pantry[name].items()}
+                          for name, ing in all_pantry.items()}
+    else:
+        all_pantry = []
     return render_template('pantry.html', title='Pantry', sidebar=True, pantry=True, form=form, shelves=all_pantry)
 
 
