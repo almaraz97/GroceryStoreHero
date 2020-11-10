@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from werkzeug.routing import ValidationError
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, FloatField, FieldList, FormField
-from wtforms.validators import DataRequired, number_range
+from wtforms.validators import InputRequired, DataRequired, number_range
 
 
 class Measurements:
@@ -138,44 +138,26 @@ class RecipeForm(FlaskForm):
     submit = SubmitField('Next')
 
 
-def Frac_Number_Validator(form, field):
-    try:
-        float(field.data)
-    except ValueError:
-        if field.data.count('/') == 1 and ''.join(i for i in field.data if i not in ['/', ' ']).isnumeric():
-            pass
-        else:
-            raise ValidationError('Enter a number or a fraction')
+class QuantityForm(FlaskForm):
+    ingredient_quantity = StringField('Quantity', default=1.0, validators=[InputRequired()])
+    ingredient_type = SelectField("Measurement", choices=[(x, x) for x in Measurements.Measures], default='Unit')
 
-    if field.data.count('/') == 1 and ''.join(i for i in field.data if i not in ['/', ' ']).isnumeric():  # div and num
-        num = field.data.split('/')
-        return float(num[0]) / float(num[1])
-    elif field.data.isnumeric():
-        float(field.data)
-    elif field.data.count('/') != 1:  #
-        raise ValidationError('Not')
-    else:
-        try:
-            return float(field.data)
+    @staticmethod
+    def validate_ingredient_quantity(self, field):
+        try:  # is just a float
+            float(field.data)
         except ValueError:
-            raise ValidationError('')
-
-
-def my_float_check(form, field): ## Not working
-    print("ITS CHECKED")
-    if not isinstance(field.data, float):
-        raise ValidationError('Enter a valid number')
-
-
-class QuantityFormNoCSFR(FlaskForm):
-    # class Meta:
-    #     csrf = False
-    ingredient_quantity = FloatField('Quantity', default=1.0, validators=[DataRequired(), number_range(max=999)])
-    ingredient_type = SelectField("Measurement", choices=Measurements.Measures, default='Unit')
+            try:  # May be correct format for division
+                if '/' not in field.data or field.data.count('/') > 1:  # No division or too many
+                    raise ValidationError('Enter a number or a fraction')
+                else:  # See if other values are floats
+                    temp = [float(x) for x in field.data.split('/')]
+            except ValueError:
+                raise ValidationError('Enter a number or a fraction')
 
 
 class FullQuantityForm(FlaskForm):
     ingredients = []
-    ingredient_forms = FieldList(FormField(QuantityFormNoCSFR), min_entries=1)
+    ingredient_forms = FieldList(FormField(QuantityForm), min_entries=1)
     notes = ''
     submit = SubmitField('Submit')

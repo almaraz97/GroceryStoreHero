@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import SubmitField, SelectMultipleField, StringField
+from wtforms.validators import DataRequired
 
 
 class ImportForm(FlaskForm):
@@ -15,10 +16,17 @@ class ExportForm(FlaskForm):
 
 
 class ExtrasForm(FlaskForm):
-    content = SelectMultipleField('Ingredients', choices=[], default=['<--Choose-->'])
+    multi = SelectMultipleField('Ingredients', choices=[], default=['<--Choose-->'])
     other = StringField(label='Other (separate with commas)')
     submit = SubmitField('Next')
 
-# class AddExtrasForm(FlaskForm):
-#     aisle_forms = FieldList(FormField(ExtrasForm), min_entries=1)
-#     submit = SubmitField('Add')
+    def validate(self, extra_validators=None):
+        if super().validate(extra_validators):
+            # Check at least one form is filled
+            if not (self.multi.data or self.other.data):
+                self.multi.errors.append('At least one field must have a value')
+                return False
+            else:
+                return True
+        return False
+

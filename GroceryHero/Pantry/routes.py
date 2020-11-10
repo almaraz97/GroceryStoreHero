@@ -23,8 +23,8 @@ def pantry_page():
         all_pantry = current_user.pantry
         # # {Shelf: {Ingredient: [quantity, unit],...},...}
         all_pantry = {name: {ing: Measurements(value=int(L[0]) if float(L[0]).is_integer() else L[0], unit=L[1])
-                          for ing, L in all_pantry[name].items()}
-                   for name, ing in all_pantry.items()}
+                             for ing, L in all_pantry[name].items()}
+                      for name, ing in all_pantry.items()}
         # Sidebar adding choices
         ingredients = [recipe.quantity.keys() for recipe in Recipes.query.filter_by(author=current_user)]  # Ingredients
         ingredients = ingredients + [current_user.pantry[item] for item in [key for key in current_user.pantry]]
@@ -40,6 +40,7 @@ def pantry_page():
                           for name, ing in all_pantry.items()}
     else:
         all_pantry = []
+        form.content.choices = [('No Ingredients Yet', 'No Ingredients Yet')]
     return render_template('pantry.html', title='Pantry', sidebar=True, pantry=True, form=form, shelves=all_pantry)
 
 

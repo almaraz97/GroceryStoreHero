@@ -1,49 +1,78 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="content-section">
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
-            <!--Ingredients user wants as extras-->
-            {% if ingredients is defined %}
-                <h5>Which items you would like to add?</h5>
-                {% if form.content.choices|length >10 %}
-                    {{ form.content(class="custom-select mt-3", size=10) }}
-                {% else %}
-                    {{ form.content(class="custom-select mt-3", size=form.content.choices|length) }}
-                {% endif %}
-                <h5 class="mt-3">Other (separate with commas)</h5>
-                {{ form.other(class="form-control form-control-lg mt-3") }}
-            <!--Quantity and units for ingredients user wants as extras-->
-            {% elif add is defined %}
-                {% set index = namespace(value=0) %} <!--Index for ingredient name indexing-->
-                {% for input_form in form.ingredient_forms %}
-                        {{ input_form.hidden_tag() }}
-                    <div class="form-inline form-row mb-3">
-                        <h5 class="col">{{ form.ingredients[index.value] }}</h5>
-                        {% if input_form.ingredient_quantity.errors %} <!-- will errors show? -->
-                            {{ input_form.ingredient_quantity(class="form-control is-invalid", placeholder="Enter Quantity") }}
-                            <div class="invalid-feedback">
-                                {% for error in input_form.ingredient_quantity.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="col">
-                                {{ input_form.ingredient_quantity(class="form-control") }}
-                            </div>
-                        {% endif %}
-                        <!--Ingredient Type form-->
-                        <div class="col">
-                            {{ input_form.ingredient_type(class="custom-select") }}
-                        </div>
-                    </div>
-                    {% set index.value = index.value + 1 %}
+  <form method="POST" action="">
+    {{ form.hidden_tag() }}
+    <fieldset class="form-group">
+      <legend class="border-bottom mb-4">{{ legend }}</legend>
+      <!--Ingredients from multi-select-->
+      {% if ingredients is defined %}  <!--Show multiselect when selecting what to add-->
+        <h5>Which items you would like to add?</h5>
+        {% if form.multi.choices|length >10 %}  <!--Expand window if needed-->
+          {% if form.multi.errors %}
+            {{ form.multi(class="custom-select is-invalid mt-3", size=10) }}
+              <div class="invalid-feedback">
+                {% for error in form.multi.errors %}
+                  <span>{{ error }}</span>
                 {% endfor %}
+              </div>
+          {% else %}
+              {{ form.multi(class="custom-select mt-3", size=10) }}
+          {% endif %}
+        {% else %}
+          {% if form.multi.errors %}
+            {{ form.multi(class="custom-select is-invalid mt-3", size=form.multi.choices|length) }}
+              <div class="invalid-feedback">
+                {% for error in form.multi.errors %}
+                  <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+          {% else %}
+            {{ form.multi(class="custom-select mt-3", size=form.multi.choices|length) }}
+          {% endif %}
+      {% endif %}
+      <h5 class="mt-3">Other (separate with commas)</h5>
+      {% if form.other.errors %}
+        {{ form.other(class="form-control form-control-lg mt-3") }}
+          <div class="invalid-feedback">
+            {% for error in form.other.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
+          </div>
+      {% else %}
+        {{ form.other(class="form-control form-control-lg mt-3") }}
+      {% endif %}
+      <!--Pt.2 Quantity and units for ingredients user wants as extras-->
+      {% elif add is defined %}
+        {% set index = namespace(value=0) %} <!--Index for ingredient name indexing-->
+        {% for input_form in form.ingredient_forms %}
+          {{ input_form.hidden_tag() }}
+          <div class="form-inline form-row mb-3">
+            <h5 class="col">{{ form.ingredients[index.value] }}</h5>
+            {% if input_form.ingredient_quantity.errors %} <!-- will errors show? -->
+              <div class="col">
+                {{ input_form.ingredient_quantity(class="form-control is-invalid", placeholder="Enter Quantity") }}
+                <div class="invalid-feedback">
+                  {% for error in input_form.ingredient_quantity.errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              <div class="col">
+                {{ input_form.ingredient_quantity(class="form-control") }}
+              </div>
             {% endif %}
-        </fieldset>
-        {{ form.submit(class="btn btn-outline-info") }}
-    </form>
+            <!--Ingredient Type form-->
+            <div class="col">
+              {{ input_form.ingredient_type(class="custom-select") }}
+            </div>
+          </div>
+          {% set index.value = index.value + 1 %}
+        {% endfor %}
+      {% endif %}
+    </fieldset>
+    {{ form.submit(class="btn btn-outline-info") }}
+  </form>
 </div>
 {% endblock content %}

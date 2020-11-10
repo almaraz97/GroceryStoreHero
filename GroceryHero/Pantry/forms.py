@@ -7,7 +7,7 @@ from GroceryHero.Recipes.forms import Measurements as M
 
 class PantryBarForm(FlaskForm):
     name = SelectField("Name", choices=['No Shelves Yet'], default=['Select a Shelf'])
-    content = SelectMultipleField("Ingredients", choices=['No Ingredients Yet'], default=['No Ingredients Yet'], validators=[InputRequired()])
+    content = SelectMultipleField("Ingredients", validators=[InputRequired()])
     ingredient_quantity = FloatField('Quantity', default=1.0, validators=[InputRequired()])
     ingredient_type = SelectField("Measurement", choices=[(x, x) for x in M.Measures], default='Unit')
     add = SubmitField('Add')

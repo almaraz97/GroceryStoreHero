@@ -3,7 +3,7 @@ import string
 from flask import render_template, url_for, redirect, Blueprint, request, abort, flash
 from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
-from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
+from GroceryHero.Recipes.forms import Measurements, FullQuantityForm, QuantityForm
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
@@ -26,11 +26,11 @@ bug when deleted, add "add all" for a recipe recommendation (ul ids instead of l
 add similarity rating button for recipe recommendation
 """
 
+
 # This update
-# todo add all_ingredients column to fill pantry and aisles from?
-# todo add Measurement equivalence as part of object adding logic
 # todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
-# todo put statistics inside scroll box to shorten page
+# todo ?add all_ingredients column to fill pantry and aisles from?
+# todo add Measurement equivalence as part of object adding logic
 # todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
 # todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
@@ -125,10 +125,11 @@ def harmony_tool2(preferences):
     recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
     recipes = {r.title: r.quantity.keys() for r in recipe_list}
     if preferences is not None:
-        preferences = {'advanced': {'pairs':None, 'pair_weight':None,'ingredient':None, 'ingredient_weights':None,
-                                    'ingredient_ex':None, 'ingredient_rem':None, 'ingredient2':None, 'sticky_weights':None,
-                                    'history_exclude':None, 'recommend_num':None, 'algorithm':None, 'modifier':None
-                                    }, 'basic': {'groups':None, 'excludes':None, 'similarity':None}}
+        preferences = {'advanced':
+                       {'pairs': None, 'pair_weight': None, 'ingredient': None, 'ingredient_weights': None,
+                        'ingredient_ex': None, 'ingredient_rem': None, 'ingredient2': None, 'sticky_weights': None,
+                        'history_exclude': None, 'recommend_num': None, 'algorithm': None, 'modifier': None
+                        }, 'basic': {'groups': None, 'excludes': None, 'similarity': None}}
         form = FullHarmonyForm(data=preferences)
     else:
         return redirect(url_for('harmony_tool2'))
@@ -157,7 +158,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         #     print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         # print(listRules)
-        average_menu_len = sum([len(x) for x in history])/len(history)
+        average_menu_len = sum([len(x) for x in history]) / len(history)
         all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]  # todo remove old ids?
         # Recipe History/Frequency
         history = [item for sublist in history for item in sublist if item in all_ids]  # Flatten ID list of lists
@@ -167,8 +168,9 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         for item in history_set:
             history_count[item] = history.count(item)
         history_count = sorted(history_count.items(), key=lambda x: x[1], reverse=True)
-        history_count_names = [list(x) for x in {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}.items()]
-        history_count_names = [x+[round(x[1]/len(history2), 4)] for x in
+        history_count_names = [list(x) for x in
+                               {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}.items()]
+        history_count_names = [x + [round(x[1] / len(history2), 4)] for x in
                                history_count_names]
         # Ingredient History/Frequency
         ingredient_history = [[x for x in Recipes.query.filter_by(id=k).first().quantity.keys()] * v for
@@ -179,7 +181,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         for item in ingredient_set:
             ingredient_count[item] = ingredient_history.count(item)
         ingredient_count = sorted(ingredient_count.items(), key=lambda x: x[1], reverse=True)
-        ingredient_count = [list(x)+[round(x[1]/len(history2), 4)] for x in ingredient_count]
+        ingredient_count = [list(x) + [round(x[1] / len(history2), 4)] for x in ingredient_count]
         # Total Harmony
         all_recipes = Recipes.query.filter_by(author=current_user).all()
         harmony = round((norm_stack({r.title: r.quantity.keys() for r in all_recipes}) * 100), 5)
@@ -188,9 +190,9 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
             if len(batch) > 1:
                 recs = {recipe.title: recipe.quantity for recipe in Recipes.query.filter(Recipes.id.in_(batch)).all()}
                 modifier = 1 / (len(recs) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
-                h = (norm_stack(recs)**modifier)*100
+                h = (norm_stack(recs) ** modifier) * 100
                 avg_harmony.append(h)
-        avg_harmony = round(sum(avg_harmony)/len(avg_harmony), 5)
+        avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5)
     else:
         history_count_names, ingredient_history, ingredient_count, \
         harmony, avg_harmony, average_menu_len, rules = [None] * 7
@@ -206,43 +208,45 @@ def add_to_extras():
     ingredients = [aisle.content.split(', ') for aisle in aisles]
     choices = sorted(set([item for sublist in ingredients for item in sublist if item]))
     form = ExtrasForm()
-    form.content.choices = [('', 'Ingredients Choices')] + [(choice, choice) for choice in choices]
-    if form.is_submitted():  # Form is submitted and not empty list
+    form.multi.choices = [('', 'Ingredients Choices')] + [(choice, choice) for choice in choices]
+    if form.validate_on_submit():  # Form is submitted and not empty list
         form.other.data.split(', ')
-        choices = form.content.data+[string.capwords(x.strip()) for x in form.other.data.split(', ') if x.strip() != '']
-        if choices == '':  # No selection
+        choices = form.multi.data
+        if form.other.data != '':
+            choices = choices + [string.capwords(x.strip()) for x in form.other.data.split(', ') if x.strip() != '']
+        if choices == '':  # No selection  # todo add this to
             return redirect(url_for('main.add_to_extras'))
-        if '' in choices:  # Default and maybe selections
-            choices.remove('')  # Remove default
-            if not choices:  # if the selection only included the empty value
-                return redirect(url_for('main.add_to_extras'))  # Reload page
+        # if '' in choices:  # Default and maybe selections
+        #     choices.remove('')  # Remove default
+        #     if not choices:  # if the selection only included the empty value
+        #         return redirect(url_for('main.add_to_extras'))  # Reload page
         choices = json.dumps(choices)
         return redirect(url_for('main.add_extras', ingredients=choices))
-    return render_template('add_extras.html', legend='Add Extras From Aisles', form=form, ingredients=True)
+    return render_template('add_extras.html', legend='Add Extras', form=form, ingredients=True)
 
 
 @main.route('/extras_add/<ingredients>', methods=['GET', 'POST'])
 def add_extras(ingredients):
     ingredients = json.loads(ingredients)
-    data = {'ingredient_forms': [{'ingredient_quantity': 1.0, 'ingredient_type': 'Unit'}
+    data = {'ingredient_forms': [{f'ingredient_quantity': 1.0, f'ingredient_type': 'Unit'}
                                  for _ in ingredients]}
     form = FullQuantityForm(data=data)  # List of dictionaries
     form.ingredients = ingredients
-    if form.is_submitted():
+    if form.validate_on_submit():
         # user.grocery_list [{'Another Name': [['Bread Crumbs', 1, 'Unit', 0], ...], 'Alex': []}, overlap[int]]
-        entries = []  # Extras list Format: [ [AisleName, [IngredientName, quantity, unit, BoolCheck]],...]
-        unsorted = []
+        # Extras list Format: [ [AisleName, [IngredientName, quantity, unit, BoolCheck]],...]
+        entries, unsorted = [], []
         aisles = Aisles.query.filter_by(user_id=current_user.id).all()
         for i, ingredient_form in enumerate(form.ingredient_forms):  # For item in user entered extras
             for j, aisle in enumerate(aisles):  # For aisle in user aisles
                 if form.ingredients[i] in aisle.content.split(', ') and j <= len(aisles):  # If ingredient in that aisle
                     entries.append([aisle.title, [form.ingredients[i],
-                                                  fraction_check(ingredient_form.ingredient_quantity.data, ingredients),
+                                                  convert_frac(ingredient_form.ingredient_quantity.data, ingredients),
                                                   ingredient_form.ingredient_type.data, 0]])  # Add to extras
                     break
                 else:  # All aisles have been searched, no matches
                     unsorted.append([form.ingredients[i],
-                                     fraction_check(ingredient_form.ingredient_quantity.data, ingredients),
+                                     convert_frac(ingredient_form.ingredient_quantity.data, ingredients),
                                      ingredient_form.ingredient_type.data, 0])
         for item in unsorted:
             entries.append(['Other (unsorted)', item])  # Add to extras
@@ -256,19 +260,12 @@ def add_extras(ingredients):
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
 
 
-def fraction_check(num, ingredients):  # todo
-    if num.count('/') == 1 and ''.join(i for i in num if i not in ['/', ' ']).isnumeric():
+def convert_frac(num, ingredients):  # form validator already checked for float or fraction
+    try:
+        return float(num)
+    except ValueError:
         num = num.split('/')
         return float(num[0]) / float(num[1])
-    elif num.count('/') != 1:
-        flash('Not a valid division')
-        return redirect(url_for('main.add_extras', ingredients=json.dumps(ingredients)))
-    else:
-        try:
-            return float(num)
-        except ValueError:
-            flash('Enter a number or a fraction')
-            return redirect(url_for('main.add_extras', ingredients=json.dumps(ingredients)))
 
 
 @main.route('/home/change_grocerylist', methods=['POST'])
