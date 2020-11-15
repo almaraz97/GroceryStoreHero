@@ -56,16 +56,18 @@ class Measurements:
 
     def __add__(self, other, rounding=2):
         self.compatibility(other)
-        self.value = self.Convert[self.unit] * self.value  # convert to lowest
-        other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value + other.value
         if self.type == 'Volume':
+            self.value = self.Convert[self.unit] * self.value  # convert to lowest
+            other.value = other.Convert[other.unit] * other.value  # convert to lowest
             volumes = self.Metric_Volumes if self.metric else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
+            self.value = self.Convert[self.unit] * self.value  # convert to lowest
+            other.value = other.Convert[other.unit] * other.value  # convert to lowest
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
@@ -77,16 +79,18 @@ class Measurements:
 
     def __sub__(self, other, rounding=2):
         self.compatibility(other)
-        self.value = self.Convert[self.unit] * self.value  # convert to lowest
-        other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value - other.value
         if self.type == 'Volume':
+            self.value = self.Convert[self.unit] * self.value  # convert to lowest
+            other.value = other.Convert[other.unit] * other.value  # convert to lowest
             volumes = self.Metric_Volumes if self.metric else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
+            self.value = self.Convert[self.unit] * self.value  # convert to lowest
+            other.value = other.Convert[other.unit] * other.value  # convert to lowest
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:

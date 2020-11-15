@@ -48,7 +48,7 @@ def aisle_grocery_sort(menu_list, aisles):
                         if i == len(merged[entry]):  # Break if final list item is appended to temp
                             break
                     if temp[index].type == merged[entry][i].type:  # If both same measurement type (Gen,Mass,Vol)
-                        if (temp[index].unit in Measurements.Generic) or (merged[entry][i].type in Measurements.Generic):  # If they're in generic, both must match
+                        if temp[index].unit in Measurements.Generic:  # If they're in generic, both must match
                             if temp[index].unit == merged[entry][i].unit:
                                 temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
                                 removals.append(i)  # Remove it later
