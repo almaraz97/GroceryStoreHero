@@ -36,7 +36,7 @@
                    {% if current_user.is_authenticated %}
                      <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.new_recipe') }}">You have no recipes yet. Click to add a recipe.</a>
                    {% else %}
-                     <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no recipes yet. Login to add an recipe.</a>
+                     <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no recipes yet. Login to add a recipe.</a>
                    {% endif %}
                 </button>
             </h5>

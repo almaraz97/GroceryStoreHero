@@ -8,7 +8,7 @@ from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, ensure_harmony_keys, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, update_pantry, apriori_test)
+                                    show_harmony_weights, update_pantry, apriori_test, convert_frac)
 from GroceryHero import db
 
 main = Blueprint('main', __name__)
@@ -23,20 +23,21 @@ Fix search bar in recipe page, Make cursor over cross off text, added harmony pa
 Made ingredients alphabetical in menu list, but only from here on and when updating a recipe
 add pantry functionality, add/remove shelf buttons like grocery-list buttons, download recipe single, fixed history,
 bug when deleted, add "add all" for a recipe recommendation (ul ids instead of li), pantry column;add;remove;clear,
-add similarity rating button for recipe recommendation
+add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation, 
+allowed fraction in form
 """
 
 
 # This update
+# todo move as much logic out of routes and into utils
 # todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
 # todo ?add all_ingredients column to fill pantry and aisles from?
 # todo add Measurement equivalence as part of object adding logic
 # todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
 # todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
-# todo add RHT switchables. Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
+# todo add RHT switchables- Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
 # Soon
-# todo Allow fractions for quantity page
 # todo figure our JSON situation from harmony preferences JSON column coming in and out
 # todo save the day a history clear was performed (can find average time before eating recipe again)
 # todo Javascript adding from RHT recommended
@@ -110,7 +111,7 @@ def harmony_tool():  # todo must use Javascript to reload page and enter previou
     preferences = get_harmony_settings(current_user.harmony_preferences)
     preferences['rec_limit'] = 'No Limit'
     ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
-    if request.method == 'POST':
+    if request.method == 'POST':  # Carry over preferences  # todo
         preferences['algorithm'] = form.advanced.algorithm.data
         preferences['modifier'] = form.advanced.modifier.data
         return redirect(url_for('main.harmony_tool2', preferences=preferences))
@@ -258,14 +259,6 @@ def add_extras(ingredients):
         db.session.commit()
         return redirect(url_for('main.home'))
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
-
-
-def convert_frac(num, ingredients):  # form validator already checked for float or fraction
-    try:
-        return float(num)
-    except ValueError:
-        num = num.split('/')
-        return float(num[0]) / float(num[1])
 
 
 @main.route('/home/change_grocerylist', methods=['POST'])

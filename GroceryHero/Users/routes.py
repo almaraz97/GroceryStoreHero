@@ -100,14 +100,14 @@ def account():
 @users.route('/delete_account/<int:token>', methods=['GET', 'POST'])
 @login_required
 def delete_account(token):
-    if token:
+    if token:  # todo why?
         recipes = Recipes.query.filter_by(author=current_user).all()
-        for recipe in recipes:
+        for recipe in recipes:  # delete recipes
             db.session.delete(recipe)
         aisles = Aisles.query.filter_by(author=current_user).all()
-        for aisle in aisles:
+        for aisle in aisles:  # delete aisles
             db.session.delete(aisle)
-        db.session.delete(current_user)
+        db.session.delete(current_user)  # delete user
         db.session.commit()
         flash('Your account has been deleted!', 'success')
         return redirect(url_for('main.home'))

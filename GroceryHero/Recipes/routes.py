@@ -30,8 +30,8 @@ def recipes_page(possible=0, recommended=None):
         form = HarmonyForm()  # Recipe Harmony Tool Form
         form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
         modifier = current_user.harmony_preferences['modifier']
-        form.similarity.choices = range(0, 60, 10) if modifier == 'True' else [x for x in range(50, 105, 5)] + [
-            'No Limit']
+        form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
+                                    [x for x in range(50, 105, 5)] + ['No Limit']
         form.similarity.default = 50
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]

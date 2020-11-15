@@ -17,9 +17,9 @@ def aisle_grocery_sort(menu_list, aisles):
     for dictionary in quantities:
         for key in dictionary:
             try:
-                merged[key].append(Measurements(value=dictionary[key][0], unit=dictionary[key][1]))
+                merged[key].append(Measurements(value=int(dictionary[key][0]), unit=dictionary[key][1]))
             except KeyError:
-                merged[key] = [Measurements(value=dictionary[key][0], unit=dictionary[key][1])]
+                merged[key] = [Measurements(value=int(dictionary[key][0]), unit=dictionary[key][1])]
     # print(merged)
     sorted_ingredients = {}  # AisleName as Key, list of ingredients as Value
     for aisle in aisles:
@@ -299,3 +299,9 @@ def apriori_test(user, min_support=None):
     return list(apriori(recipes, min_support=min_support, min_lift=1.1))
 
 
+def convert_frac(num, ingredients):  # form validator already checked for float or fraction
+    try:
+        return float(num)
+    except ValueError:
+        num = num.split('/')
+        return float(num[0]) / float(num[1])

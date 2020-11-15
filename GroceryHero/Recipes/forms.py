@@ -41,20 +41,21 @@ class Measurements:
             else:
                 self.type = 'Volume' if self.unit in self.Volumes else 'Weight'
 
-    def __add__(self, other, rounding=2):
+    def compatibility(self, other):
         if not isinstance(other, Measurements):
             raise AssertionError('Must be of class Measurements')
         if not self.metric == other.metric:
             raise AssertionError('Must agree in measurement system')
         if self.type != other.type:
-            AssertionError('Cannot add objects of different measure types')
-        if self.type == 'Generic':
-            if self.unit == other.unit:
-                total = self.value + other.value
-                return Measurements(round(total, rounding), unit=self.unit)
-            else:
-                raise AssertionError('Must agree in Generic unit')
+            AssertionError('Cannot merge objects of different measure type')
+        if (self.type == 'Generic') and (self.unit != other.unit):
+            raise AssertionError('Must agree in Generic unit')
 
+    def convert(self, other):  # todo add this to __add__ and __sub__
+        return self, other
+
+    def __add__(self, other, rounding=2):
+        self.compatibility(other)
         self.value = self.Convert[self.unit] * self.value  # convert to lowest
         other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value + other.value
@@ -64,27 +65,18 @@ class Measurements:
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     return Measurements(round(total, 2), unit=volume)
-        else:
+        elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
                     return Measurements(round(total, 2), unit=weight)
+        else:  # Generic type
+            total = self.value + other.value
+            return Measurements(round(total, rounding), unit=self.unit)
 
     def __sub__(self, other, rounding=2):
-        if not isinstance(other, Measurements):
-            raise AssertionError('Must be of class Measurements')
-        if not self.metric == other.metric:
-            raise AssertionError('Must agree in measurement system')
-        if self.type != other.type:
-            AssertionError('Cannot add objects of different measure types')
-        if self.type == 'Generic':
-            if self.unit == other.unit:
-                total = self.value - other.value
-                return Measurements(round(total, rounding), unit=self.unit)
-            else:
-                raise AssertionError('Must agree in Generic unit')
-
+        self.compatibility(other)
         self.value = self.Convert[self.unit] * self.value  # convert to lowest
         other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value - other.value
@@ -94,41 +86,23 @@ class Measurements:
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     return Measurements(round(total, 2), unit=volume)
-        else:
+        elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
                     return Measurements(round(total, 2), unit=weight)
+        else:  # Generic type
+            total = self.value + other.value
+            return Measurements(round(total, rounding), unit=self.unit)
 
-    def __eq__(self, other):  # todo should I include value as part of equivalence?
+    def __eq__(self, other):
         if not isinstance(other, Measurements):
             raise AssertionError('Must be of class Measurements')
         return self.type == other.type and self.metric == other.metric
 
     def __repr__(self):
-        if self.value != 1:
-            return f'{self.value} {self.unit}s'
-        else:
-            return f'{self.value} {self.unit}'
-
-
-# class MyFloatField(FloatField):
-#     def process_data(self, valuelist):
-#         if valuelist:
-#             if valuelist.count('/') == 1:
-#                 try:
-#                     numbers = valuelist.split('/')
-#                     self.data = numbers[0]/numbers[1]
-#                 except ValueError:
-#                     self.data = None
-#                     raise ValueError(self.gettext('Not a valid division'))
-#             else:
-#                 try:
-#                     self.data = valuelist[0]
-#                 except ValueError:
-#                     self.data = None
-#                     raise ValueError(self.gettext('Not a valid float value'))
+        return f'{self.value} {self.unit}s' if self.value != 1 else f'{self.value} {self.unit}'
 
 
 class RecipeForm(FlaskForm):
@@ -144,7 +118,7 @@ class QuantityForm(FlaskForm):
 
     @staticmethod
     def validate_ingredient_quantity(self, field):
-        try:  # is just a float
+        try:
             float(field.data)
         except ValueError:
             try:  # May be correct format for division
