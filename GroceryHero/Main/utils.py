@@ -17,9 +17,9 @@ def aisle_grocery_sort(menu_list, aisles):
     for dictionary in quantities:
         for key in dictionary:
             try:
-                merged[key].append(Measurements(value=int(dictionary[key][0]), unit=dictionary[key][1]))
+                merged[key].append(Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1]))
             except KeyError:
-                merged[key] = [Measurements(value=int(dictionary[key][0]), unit=dictionary[key][1])]
+                merged[key] = [Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1])]
     # print(merged)
     sorted_ingredients = {}  # AisleName as Key, list of ingredients as Value
     for aisle in aisles:
