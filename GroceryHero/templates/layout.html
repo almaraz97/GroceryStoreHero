@@ -56,11 +56,11 @@
         <div class="navbar-nav col p-0">
             {% if current_user.is_authenticated %}
                 {% if current_user.recipes|length <=80 %}
-                    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe') }}"><img src="{{ url_for('static', filename='icons/add_recipes.png')  }}" height="35px" width="35px"></a>
+                    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe') }}"><img src="{{ url_for('static', filename='icons/add_recipe.png')  }}" height="35px" width="35px"></a>
                 {% else %}
                     <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>
                 {% endif %}
-                <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisles.png')  }}" height="35px" width="35px"></a>
+                <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisle.png')  }}" height="35px" width="35px"></a>
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a>
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>
                 <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>

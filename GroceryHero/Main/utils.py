@@ -6,21 +6,19 @@ from GroceryHero.models import Recipes, Aisles
 
 
 def aisle_grocery_sort(menu_list, aisles):
-    # print(extras)
     ingredients = [recipe.quantity for recipe in menu_list]
     ingredients = sorted([item for sublist in ingredients for item in sublist])  # Flattens
     overlap = len(ingredients)
     # todo extras might not need aisle information in the first place
     quantities = [menu_item.quantity for menu_item in menu_list]
     # quantities.append({x[0]: x[1:-1] for x in [aisle_obj[1] for aisle_obj in extras]})
-    merged = {}  # Merges quantities dictionaries. Ingredient as Key, Measurement Object list as Value
+    merged = {}  # Merged quantities dictionaries. Ingredient[str] as Key, list of Measurement Objects as Value
     for dictionary in quantities:
         for key in dictionary:
             try:
                 merged[key].append(Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1]))
             except KeyError:
                 merged[key] = [Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1])]
-    # print(merged)
     sorted_ingredients = {}  # AisleName as Key, list of ingredients as Value
     for aisle in aisles:
         if aisles[aisle] is None:  # If aisle doesn't have ingredients, make empty list
@@ -33,7 +31,6 @@ def aisle_grocery_sort(menu_list, aisles):
     missing = [ingredient for ingredient in ingredients if ingredient not in
                [item for sublist in sorted_ingredients.values() for item in sublist]]
     sorted_ingredients['Other (unsorted)'] = missing
-    # print(merged)
     for entry in list(merged.keys()):  # Combines merged dictionary Measurement Objects if they are same type
         if len(merged[entry]) > 1:
             temp, index, first = [], 0, True
@@ -47,18 +44,24 @@ def aisle_grocery_sort(menu_list, aisles):
                         first = False
                         if i == len(merged[entry]):  # Break if final list item is appended to temp
                             break
-                    if temp[index].type == merged[entry][i].type:  # If both same measurement type (Gen,Mass,Vol)
-                        if temp[index].unit in Measurements.Generic:  # If they're in generic, both must match
-                            if temp[index].unit == merged[entry][i].unit:
-                                temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
-                                removals.append(i)  # Remove it later
-                                i += 1  # Move on to next one
-                            else:  # Append to temp list
-                                first = True
-                        else:  # Measurement Objects are both Weight or Volume
-                            temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
-                            removals.append(i)  # Remove it later
-                            i += 1  # Move on to next one
+                    # if temp[index].type == merged[entry][i].type:  # If both same measurement type (Gen,Mass,Vol)
+                    #     if temp[index].unit in Measurements.Generic:  # If they're in generic, both must match
+                    #         if temp[index].unit == merged[entry][i].unit:
+                    #             temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
+                    #             removals.append(i)  # Remove it later
+                    #             i += 1  # Move on to next one
+                    #         else:  # Append to temp list
+                    #             first = True
+                    #     else:  # Measurement Objects are both Weight or Volume
+                    #         temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
+                    #         removals.append(i)  # Remove it later
+                    #         i += 1  # Move on to next one
+                    # else:  # Append to temp list
+                    #     first = True
+                    if temp[index].compatibility(merged[entry][i].type):  # Are type/unit compatible
+                        temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
+                        removals.append(i)  # Remove it later
+                        i += 1  # Move on to next one
                     else:  # Append to temp list
                         first = True
                 for remove in sorted(removals, reverse=True):  # Remove list items from dictionary entry
@@ -66,7 +69,6 @@ def aisle_grocery_sort(menu_list, aisles):
                 first = True
                 index += 1
             merged[entry] = temp
-    # print(merged)
     for key in sorted_ingredients:  # Combines ingredient key and its measurement object into a list
         aisle_items = sorted(set(sorted_ingredients[key]))
         temp = []
@@ -82,7 +84,6 @@ def aisle_grocery_sort(menu_list, aisles):
                 temp.append([str(aisle_items[index]), unit_obj])
             del merged[aisle_items[index]][0]
         sorted_ingredients[key] = temp
-    # print(merged)
     for aisle in sorted_ingredients:  # Remove measurement unit, not JSON serializable
         sorted_ingredients[aisle] = [[item[0], item[1].value, item[1].unit, 0] for item in sorted_ingredients[aisle]]
     return sorted_ingredients, (overlap - len([item for sublist in sorted_ingredients.values() for item in sublist]))

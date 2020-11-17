@@ -3,7 +3,7 @@ import string
 from flask import render_template, url_for, redirect, Blueprint, request, abort, flash
 from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
-from GroceryHero.Recipes.forms import Measurements, FullQuantityForm, QuantityForm
+from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
@@ -14,9 +14,9 @@ from GroceryHero import db
 main = Blueprint('main', __name__)
 
 """
-Added history, eaten, date joined, messages columns. Add history functionalities, add eaten functionalities, stats
+1. Added history, eaten, date joined, messages columns. Add history functionalities, add eaten functionalities, stats
 visualisations, most eaten recipes, menu stats, better on mobile
-fixed double reload of clear extras button, Allowed unsorted extras, Centered 'grocerylist' and buttons for mobile
+2. fixed double reload of clear extras button, Allowed unsorted extras, Centered 'grocerylist' and buttons for mobile
 views, added navbars for mobile, stopped saving redundant recipe weights
 make mobile icons for advanced harmony form, fixed menu harmony display, fix recipe group weights,
 Fix search bar in recipe page, Make cursor over cross off text, added harmony page better, validate numbers on quantity
@@ -24,23 +24,21 @@ Made ingredients alphabetical in menu list, but only from here on and when updat
 add pantry functionality, add/remove shelf buttons like grocery-list buttons, download recipe single, fixed history,
 bug when deleted, add "add all" for a recipe recommendation (ul ids instead of li), pantry column;add;remove;clear,
 add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation, 
-allowed fraction in form
+allowed fraction in form, add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs
 """
 
 
-# This update
+# todo convert harmony tool to cython, test speed improvement
 # todo move as much logic out of routes and into utils
 # todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
-# todo ?add all_ingredients column to fill pantry and aisles from?
-# todo add Measurement equivalence as part of object adding logic
+# todo ?add an all_ingredients column to fill pantry and aisles from?
 # todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
 # todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
-# todo add RHT switchables- Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
 # Soon
-# todo figure our JSON situation from harmony preferences JSON column coming in and out
+# todo add RHT switchables- Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
+# todo figure out JSON situation from harmony preferences JSON column coming in and out
 # todo save the day a history clear was performed (can find average time before eating recipe again)
-# todo Javascript adding from RHT recommended
 # todo be able to add serving size to a recipe and multiply it in the menu
 # todo add grocery-list items being used by recipes (Garlic 3 units (used by x,y,z))
 # Later
