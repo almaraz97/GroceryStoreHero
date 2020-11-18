@@ -189,7 +189,7 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
     # Ensure preferences come through properly if not specified
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
     max_sim = None if max_sim == 'No Limit' else int(max_sim)/100
-     # max_sim = int(max_sim)/100 if isinstance(max_sim, int) else None
+    # max_sim = int(max_sim)/100 if isinstance(max_sim, int) else None
     excludes = None if not excludes else excludes  # Comes in as 0 or not
     includes = [] if not includes else includes
     modifier = 1 / (count + len(includes) + 1) if modifier == 'Graded' else 1.0
@@ -209,36 +209,3 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
 # ['excludes', 'similarity', 'groups', 'possible', 'recommended', 'rec_limit', 'tastes', 'ingredient_weights',
 # 'sticky_weights', 'recipe_ids', 'menu_weight', 'ingredient_excludes', 'algorithm', 'modifier']
 
-"""
-def recipe_stack(recipes, count=2, max_sim=1.0, excludes=None, includes=None, ingredient_weights=None, tastes=None, limit=500_000,
-                 algorithm='Balanced', rec_limit=5, ingredient_excludes=None, sticky_weights=None, modifier='Graded'):
-    if includes is not None:  # If user wants 1-more, show all recommendations with the multi-select
-        rec_limit = len(recipes) if count - len(includes) == 1 else rec_limit
-    else:
-        rec_limit = len(recipes) if count == 1 else rec_limit
-    # Ensure preferences come through as None or list w/items
-    count = 4 if count - len(includes) > 4 else count  # Count = whats in menu + additional recom. wanted, must be <5
-    max_sim = None if max_sim == 'No limit' else int(max_sim) / 100
-    modifier = (1 / .5 * (count-1)) if modifier == 'Graded' else 1.0
-    excludes = None if not excludes else excludes  # Comes in as 0 or not
-    includes = None if not includes else includes
-    ingredient_weights = None if not ingredient_weights else ingredient_weights
-    tastes = None if not tastes else tastes
-
-    # Find combos
-    combos, possible = create_combos(recipes=recipes, count=count, excludes=excludes, includes=includes)
-    combos = limit_combos(combos, limit)
-    # Score/sort combos
-    scored_combos = score_combos(recipes=recipes, combos=combos, max_sim=max_sim,
-                                 algo=algorithm, weights=ingredient_weights, taste=tastes, ing_ex=ingredient_excludes,
-                                 sticky=sticky_weights, modifier=modifier)
-    scored_combos = sorted(scored_combos, key=lambda key: scored_combos[key])
-    # Return
-    # combos = return_unique_combos(combos=scored_combos, includes=includes, rec_limit=rec_limit)
-    # print(len(combos)) todo remove unique combos?
-    combos = return_combo_score(recipes, targets=combos, algo=algorithm, weights=ingredient_weights,
-                                taste=tastes, ing_ex=ingredient_excludes, sticky=sticky_weights, modifier=modifier)
-    # print(len(combos))
-    return combos, millify(possible)
-    
-"""

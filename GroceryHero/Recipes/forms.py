@@ -46,7 +46,7 @@ class Measurements:
                 raise AssertionError('Must agree in Generic unit')
         else:
             if not isinstance(other, Measurements):
-                raise AssertionError('Must be of class Measurements')
+                return False  # raise AssertionError('Must be of class Measurements')
             if self.metric != other.metric:
                 return False
             if self.type != other.type:

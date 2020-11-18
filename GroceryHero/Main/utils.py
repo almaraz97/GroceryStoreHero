@@ -58,7 +58,7 @@ def aisle_grocery_sort(menu_list, aisles):
                     #         i += 1  # Move on to next one
                     # else:  # Append to temp list
                     #     first = True
-                    if temp[index].compatibility(merged[entry][i].type):  # Are type/unit compatible
+                    if temp[index].compatibility(merged[entry][i]):  # Are type/unit compatible
                         temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
                         removals.append(i)  # Remove it later
                         i += 1  # Move on to next one
