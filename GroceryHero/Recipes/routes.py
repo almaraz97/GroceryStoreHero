@@ -84,9 +84,9 @@ def new_recipe():  # todo could use session to transfer recipe to quantity page
     form = RecipeForm()
     if form.validate_on_submit():  # Send data to quantity page
         ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != ''])
-        quantity = {ingredient: [1, 'Unit'] for ingredient in ingredients}
+        ingredients = {ingredient: [1, 'Unit'] for ingredient in ingredients}
         notes = form.notes.data.replace('/', '\\')  # This gets sent through to the next route
-        recipe = json.dumps({'title': form.title.data, 'quantity': quantity, 'notes': notes})
+        recipe = json.dumps({'title': string.capwords(form.title.data), 'quantity': ingredients, 'notes': notes})
         return redirect(url_for('recipes.new_recipe_quantity', recipe=recipe))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
@@ -104,7 +104,7 @@ def new_recipe_quantity(recipe):
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
-        recipe = Recipes(title=(recipe['title']).capitalize(), quantity=formatted, author=current_user,
+        recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'])
         db.session.add(recipe)
         db.session.commit()
