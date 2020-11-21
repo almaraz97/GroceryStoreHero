@@ -55,7 +55,7 @@ def recipes_page(possible=0, recommended=None):
             count = int(form.groups.data)  # + len(in_menu) if form.groups.data else len(in_menu)
             recommended, possible = recipe_stack(recipes, count, max_sim=form.similarity.data,
                                                  excludes=form.excludes.data + recipe_history, includes=in_menu,
-                                                 limit=500_000, **preferences)
+                                                 limit=1_000_000, **preferences)
             in_menu = None if len(in_menu) < 1 else in_menu  # Don't show menu items in recommendation groups
             if in_menu is not None:
                 for group in list(recommended.keys()):
@@ -79,7 +79,7 @@ def recipes_page(possible=0, recommended=None):
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
 @login_required
-def new_recipe():  # todo could use session to transfer recipe to quantity page
+def new_recipe():  # todo could use session to transfer recipe to quantity page?
     if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
         return redirect(url_for('main.account'))
     form = RecipeForm()
@@ -121,13 +121,22 @@ def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
     if recipe_post.author != current_user:
         abort(403)
-    quantity = {ingredient: [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]] if
-                             float(recipe_post.quantity[ingredient][0]).is_integer() else
-                             [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
-                for ingredient in recipe_post.quantity.keys()}
-    recipe_post.quantity = quantity
-    if request.method == 'POST':
-        print('Hello')
+    print(recipe_post.quantity)
+    # quantity = {}
+    # for ingredient in recipe_post.quantity.keys():
+    #     try:
+    #         if float(recipe_post.quantity[ingredient][0]).is_integer():
+    #             quantity[ingredient] = [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
+    #         else:
+    #             quantity[ingredient] = [float(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
+    #     except ValueError:
+    #         quantity[ingredient] = [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
+    # quantity = {ingredient: [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]] if
+    #                          float(recipe_post.quantity[ingredient][0]).is_integer() else
+    #                          [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
+    #             for ingredient in recipe_post.quantity.keys()}
+    # recipe_post.quantity = quantity
+    if request.method == 'POST':  # Download recipe
         title = recipe_post.title
         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
@@ -156,6 +165,8 @@ def update_recipe(recipe_id):
     if recipe.author != current_user:  # You can only update your own recipes
         abort(403)
     form = RecipeForm()
+    for key in recipe.quantity:
+        print(type(recipe.quantity[key][0]))
     if form.validate_on_submit():
         ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',')])
         quantity_dict = {ingredient: recipe.quantity[ingredient] if ingredient in recipe.quantity else [1, 'Unit']
@@ -183,9 +194,10 @@ def update_recipe_quantity(recipe_id, recipe):
     if form.is_submitted():
         title = recipe['title']
         notes = recipe['notes'].replace('\\', '/')
+        [float(pair['ingredient_quantity']) for pair in form.ingredient_forms.data]
         try:
             quantity = [float(pair['ingredient_quantity']) for pair in form.ingredient_forms.data]
-        except TypeError:  # todo ?improper way of handling bad input, csrf fieldlist in page ->validate_on_submit
+        except ValueError:
             flash('You must enter valid numbers', 'danger')
             return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id, recipe=json.dumps(recipe)))
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]

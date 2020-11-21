@@ -1,40 +1,25 @@
 import itertools
 import math
+import random
 
-cdef int dot(v1, v2):
+cdef double dot(v1, v2):
     cdef sum_ = 0
     for i in range(len(v1)):
         sum_ += v1[i]*v2[i]
     return sum_
 
 cdef double norm_stack(input_recipe_dict, algorithm, ingredient_weights, tastes, sticky_weights, ingredient_excludes):
-    # cdef list ingredient_excludes = []
-    # cdef list ingredient_weights = []
-    # cdef list sticky_weights = []
-    # cdef dict tastes
-    ##cdef list recipe_ingredients
     cdef double avg_mag
-    ##cdef list avg_vec
-    # cdef dict avg_sticky
-    # cdef dict comp_vec
     cdef double perfect_mag
-    ##cdef list perfect_vec
     cdef double score
     cdef double max_l
     cdef double avg_taste
     cdef double p
-    ##cdef list taste_comparisons
-    ##cdef list taste_scores
-    # cdef dict recipe_vec
-    # cdef list ingredients
-    # cdef list similarity
-    # cdef list rows
-    # cdef list avg_v
 
     assert len(input_recipe_dict) > 1
     recipe_ingredients = {item for sublist in input_recipe_dict.values() for item in sublist if item not in ingredient_excludes}
     recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe] else 0 for ingredient in recipe_ingredients] for recipe in input_recipe_dict}
-    recipe_vec_keys = list(recipe_vec.keys())
+    recipe_vec_keys = list(recipe_vec)
     comp_vec = {recipe: [0 if recipe == recipe_vec_keys[i] else dot(recipe_vec[recipe], recipe_vec[recipe_vec_keys[i]]) for i in range(len(recipe_vec_keys))] for recipe in recipe_vec_keys}
     avg_mag = sum([sum(comp_vec[recipe]) for recipe in comp_vec]) / 2
     avg_vec = [sum(row) / len(comp_vec) for row in zip(*recipe_vec.values())]
@@ -56,11 +41,12 @@ cdef double norm_stack(input_recipe_dict, algorithm, ingredient_weights, tastes,
     elif algorithm == 'Balanced':  # Two norm
         p = .5
         score = sum([x ** 2 for x in avg_vec]) ** p
+        # print(score)
         max_l = sum([x ** 2 for x in perfect_vec]) ** p
     elif algorithm == 'Selfish':  # Nine norm
         p = .111111111111111
-        score = sum([x ** 9 for x in avg_vec]) ** (1. / 9)
-        max_l = sum([x ** 9 for x in perfect_vec]) ** (1. / 9)
+        score = sum([x ** 9 for x in avg_vec]) ** p
+        max_l = sum([x ** 9 for x in perfect_vec]) ** p
     elif algorithm == 'Greedy':  # Infinity norm
         score = max(avg_vec)
         max_l = max(perfect_vec)
@@ -74,28 +60,31 @@ cdef double norm_stack(input_recipe_dict, algorithm, ingredient_weights, tastes,
     return (score / max_l) * (1 / avg_taste)
 
 
-cdef create_combos(recipes, count, excludes, includes):
+cdef create_combos(recipes, count, excludes, includes, limit):
     """Create all possible combinations of given recipes"""
-    if excludes is not None:
+    if excludes:
         excludes = [excludes] if isinstance(excludes, str) else excludes
         recipes = [recipe for recipe in recipes if recipe not in excludes]
-
     recipes = [recipe for recipe in recipes if recipe not in includes]
     combos = list(itertools.combinations(recipes, count))
+    # Limit combinations
+    if len(combos) > limit:
+        random.shuffle(combos)
+        combos = combos[:limit]
     if includes:  # If there are menu items add to combinations
         for i, combo in enumerate(combos):
             combos[i] = combo + tuple(includes)
     return combos, len(combos)
 
 
-cdef dict score_combos(recipes, combos, double max_sim, algo, weights, taste, ing_ex, sticky, double modifier):
+cdef dict score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky, double modifier):
     """ Score each combination of recipe """
-    cdef double harmony_score
+    cdef float harmony_score
     scores = {}
     for group in combos:
         dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
-                                   sticky_weights=sticky, ingredient_excludes=ing_ex) ** modifier
+                                   sticky_weights=sticky, ingredient_excludes=ing_ex)**modifier
         if harmony_score < max_sim:
             scores[group] = harmony_score
     return scores
@@ -112,9 +101,9 @@ cdef list return_unique_combos(combos, int rec_limit, includes):
 
 
 cdef dict return_combo_score(recipes, combos, algo, weights, taste, sticky, ing_ex, double modifier):
-    recommendations = {combo: ((norm_stack({key: recipes[key] for key in combo}, algorithm=algo,
+    recommendations = {combo: round(((norm_stack({key: recipes[key] for key in combo}, algorithm=algo,
                                                  ingredient_weights=weights, tastes=taste, sticky_weights=sticky,
-                                                 ingredient_excludes=ing_ex) ** modifier) * 100)
+                                                 ingredient_excludes=ing_ex) ** modifier) * 100), 1)
                        for combo in combos}
     return recommendations
 
@@ -126,22 +115,23 @@ def millify(n):
     return '{:.0f}{}'.format(n / 10 ** (3 * millidx), millnames[millidx])
 
 
-def recipe_stack(recipes, int count, double max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', int rec_limit=5,
-                 ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None, sticky_weights=None):
+def recipe_stack(recipes, int count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', int rec_limit=5,
+                 ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None, sticky_weights=None, int limit=1_000_000):
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
-    max_sim = 1_000 if max_sim == 'No Limit' else int(max_sim)/100
+    max_sim = 100_000 if max_sim == 'No Limit' else int(max_sim)/100
     excludes = [] if excludes is None else excludes  # Comes in as 0 or not
     includes = [] if includes is None else includes
-    modifier = 1 / (count + len(includes) + 1) if modifier == 'Graded' else 1.0
+    modifier = 1./(count + len(includes) + 1) if modifier == 'Graded' else 1.0
     ingredient_weights = {} if ingredient_weights is None else ingredient_weights
     tastes = {} if tastes is None else tastes
     ingredient_excludes = [] if ingredient_excludes is None else ingredient_excludes
-    sticky_weights= {} if sticky_weights is None else sticky_weights
-    combos, possible = create_combos(recipes, count, excludes, includes)
+    sticky_weights = {} if sticky_weights is None else sticky_weights
+
+    combos, possible = create_combos(recipes, count, excludes, includes, limit)
     scored_combos = score_combos(recipes, combos, max_sim, algorithm, ingredient_weights, tastes, ingredient_excludes,
                                  sticky_weights, modifier)
-    scored_combos = sorted(scored_combos, key=lambda key: scored_combos[key])
-    combos = return_unique_combos(combos, rec_limit, includes)
+    scored_combos = sorted(scored_combos, key=lambda key: scored_combos[key]); print()
+    combos = return_unique_combos(scored_combos, rec_limit, includes)
     combos = return_combo_score(recipes, combos, algorithm, ingredient_weights, tastes, sticky_weights,
                                 ingredient_excludes, modifier)
     return combos, millify(possible)
@@ -174,3 +164,21 @@ def recipe_stack(recipes, int count, double max_sim=1.0, excludes=None, includes
     # perfect_vec = []
     # for _ in avg_vec:
     #     perfect_vec.append(perfect_mag * len(avg_vec))
+
+# Recipe stack
+# # cdef list ingredient_excludes = []
+#     # cdef list ingredient_weights = []
+#     # cdef list sticky_weights = []
+#     # cdef dict tastes
+#     ##cdef list recipe_ingredients
+#     ##cdef list avg_vec
+#     # cdef dict avg_sticky
+#     # cdef dict comp_vec
+#     ##cdef list perfect_vec
+#     ##cdef list taste_comparisons
+#     ##cdef list taste_scores
+#     # cdef dict recipe_vec
+#     # cdef list ingredients
+#     # cdef list similarity
+#     # cdef list rows
+#     # cdef list avg_v
