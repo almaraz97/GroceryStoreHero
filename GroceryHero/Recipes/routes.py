@@ -1,9 +1,8 @@
 import itertools
-
 from flask import (render_template, url_for, flash,
-                   redirect, request, abort, Blueprint, Response)
+                   redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
-from GroceryHero.Main.utils import update_grocery_list, ensure_harmony_keys, get_harmony_settings
+from GroceryHero.Main.utils import update_grocery_list, ensure_harmony_keys, get_harmony_settings, rem_trail_zero
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm
 from GroceryHero.HarmonyToolCy import recipe_stack
@@ -78,29 +77,29 @@ def recipes_page(possible=0, recommended=None):
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
 @login_required
-def new_recipe():  # todo could use session to transfer recipe to quantity page?
+def new_recipe():
     if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
         return redirect(url_for('main.account'))
     form = RecipeForm()
     if form.validate_on_submit():  # Send data to quantity page
         ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != ''])
         ingredients = {ingredient: [1, 'Unit'] for ingredient in ingredients}
-        notes = form.notes.data.replace('/', '\\')  # This gets sent through to the next route
-        recipe = json.dumps({'title': string.capwords(form.title.data), 'quantity': ingredients, 'notes': notes})
-        return redirect(url_for('recipes.new_recipe_quantity', recipe=recipe))
+        notes = form.notes.data  # This gets sent through to the next route
+        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients, 'notes': notes}
+        return redirect(url_for('recipes.new_recipe_quantity'))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
 
-@recipes.route('/post/new/quantity/<string:recipe>', methods=['GET', 'POST'])
+@recipes.route('/post/new/quantity', methods=['GET', 'POST'])
 @login_required
-def new_recipe_quantity(recipe):
-    recipe = json.loads(recipe)  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
+def new_recipe_quantity():
+    recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
     data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
                                   'ingredient_type': recipe['quantity'][ingredient][1]}
                                  for ingredient in recipe['quantity'].keys()]}
     form = FullQuantityForm(data=data)
     form.ingredients = [x for x in recipe['quantity'].keys()]
-    if form.is_submitted():
+    if form.validate_on_submit():
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
@@ -114,49 +113,6 @@ def new_recipe_quantity(recipe):
                            recipe=recipe)
 
 
-@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
-@login_required
-def recipe_single(recipe_id):
-    recipe_post = Recipes.query.get_or_404(recipe_id)
-    if recipe_post.author != current_user:
-        abort(403)
-    print(recipe_post.quantity)
-    # quantity = {}
-    # for ingredient in recipe_post.quantity.keys():
-    #     try:
-    #         if float(recipe_post.quantity[ingredient][0]).is_integer():
-    #             quantity[ingredient] = [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
-    #         else:
-    #             quantity[ingredient] = [float(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
-    #     except ValueError:
-    #         quantity[ingredient] = [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
-    # quantity = {ingredient: [int(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]] if
-    #                          float(recipe_post.quantity[ingredient][0]).is_integer() else
-    #                          [recipe_post.quantity[ingredient][0], recipe_post.quantity[ingredient][1]]
-    #             for ingredient in recipe_post.quantity.keys()}
-    # recipe_post.quantity = quantity
-    if request.method == 'POST':  # Download recipe
-        title = recipe_post.title
-        recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-        return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-                                                                 f"attachment; filename={title}.txt"})
-    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
-
-
-# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
-# @login_required
-# def export(recipe_id):
-#     recipe_post = Recipes.query.get_or_404(recipe_id)
-#     if recipe_post.author != current_user:
-#         abort(403)
-#     else:
-#         title = recipe_post.title
-#         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-#         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-#                                                                      f"attachment; filename={title}.txt"})
-#     return redirect(url_for('recipe_single', recipe_id=recipe_id))
-
-
 @recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
 @login_required
 def update_recipe(recipe_id):
@@ -164,16 +120,14 @@ def update_recipe(recipe_id):
     if recipe.author != current_user:  # You can only update your own recipes
         abort(403)
     form = RecipeForm()
-    for key in recipe.quantity:
-        print(type(recipe.quantity[key][0]))
     if form.validate_on_submit():
         ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',')])
         quantity_dict = {ingredient: recipe.quantity[ingredient] if ingredient in recipe.quantity else [1, 'Unit']
                          for ingredient in ingredients}
-        notes = form.notes.data.replace('/', '\\')
+        notes = form.notes.data
         title = string.capwords(form.title.data.strip())
-        recipe = json.dumps({'title': title, 'quantity': quantity_dict, 'notes': notes})
-        return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id, recipe=recipe))
+        session['recipe'] = {'title': title, 'quantity': quantity_dict, 'notes': notes}
+        return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id))
     elif request.method == 'GET':
         form.title.data = recipe.title
         form.content.data = ', '.join(recipe.quantity.keys())
@@ -181,26 +135,21 @@ def update_recipe(recipe_id):
     return render_template('create_recipe.html', title='Update Recipe', form=form, legend='Update Recipe')  # todo
 
 
-@recipes.route('/post/<int:recipe_id>/update_quantity/<recipe>', methods=['GET', 'POST'])
+@recipes.route('/post/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
 @login_required
-def update_recipe_quantity(recipe_id, recipe):
-    recipe = json.loads(recipe)  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
+def update_recipe_quantity(recipe_id):
+    recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
     data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
                                   'ingredient_type': recipe['quantity'][ingredient][1]}
                                  for ingredient in recipe['quantity'].keys()]}
     form = FullQuantityForm(data=data)  # List of dictionaries
     form.ingredients = [x for x in recipe['quantity'].keys()]
-    if form.is_submitted():
+
+    if form.validate_on_submit():
         title = recipe['title']
-        notes = recipe['notes'].replace('\\', '/')
-        [float(pair['ingredient_quantity']) for pair in form.ingredient_forms.data]
-        try:
-            quantity = [float(pair['ingredient_quantity']) for pair in form.ingredient_forms.data]
-        except ValueError:
-            flash('You must enter valid numbers', 'danger')
-            return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id, recipe=json.dumps(recipe)))
-        measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
-        formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
+        notes = recipe['notes']
+        formatted = {ingredient: [F['ingredient_quantity'], F['ingredient_type']] for ingredient, F in
+                     zip(form.ingredients, form.ingredient_forms.data)}
         # Get previous data to update
         recipe = Recipes.query.get_or_404(recipe_id)
         recipe.title = title
@@ -212,6 +161,23 @@ def update_recipe_quantity(recipe_id, recipe):
         return redirect(url_for('recipes.recipe_single', recipe_id=recipe.id))
     return render_template('recipe_quantity.html', title='Update Recipe', form=form, legend='Recipe Quantities',
                            recipe=recipe)
+
+
+@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
+@login_required
+def recipe_single(recipe_id):
+    recipe_post = Recipes.query.get_or_404(recipe_id)
+    if recipe_post.author != current_user:
+        abort(403)
+    quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
+                for ingredient in recipe_post.quantity}
+    recipe_post.quantity = quantity
+    if request.method == 'POST':  # Download recipe
+        title = recipe_post.title
+        recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+        return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+                                                                 f"attachment; filename={title}.txt"})
+    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
 
 
 @recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
@@ -315,7 +281,7 @@ def recipes_search(recommended=None, possible=0):
 
 @recipes.route('/recipe_similarity/<ids>/<sim>', methods=['GET', 'POST'])
 @login_required
-def recipe_similarity(ids, sim):
+def recipe_similarity(ids, sim):  # Too similar button in recommendations
     ids = json.loads(ids)
     recipe_names = [Recipes.query.filter_by(id=ID).first().title for ID in ids]
     recipe_names = [x for x in recipe_names if x is not None]
@@ -352,6 +318,19 @@ def check_preferences(user):
     if user.extras == '' or user.extras is None:
         user.extras = []
     db.session.commit()
+
+# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+# @login_required
+# def export(recipe_id):
+#     recipe_post = Recipes.query.get_or_404(recipe_id)
+#     if recipe_post.author != current_user:
+#         abort(403)
+#     else:
+#         title = recipe_post.title
+#         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+#         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+#                                                                      f"attachment; filename={title}.txt"})
+#     return redirect(url_for('recipe_single', recipe_id=recipe_id))
 
 
 # def transfer_site_changes():

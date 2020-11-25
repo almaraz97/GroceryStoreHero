@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from werkzeug.routing import ValidationError
-from wtforms import StringField, SubmitField, TextAreaField, SelectField, FloatField, FieldList, FormField
-from wtforms.validators import InputRequired, DataRequired, number_range
+from wtforms import StringField, SubmitField, TextAreaField, SelectField, FieldList, FormField, ValidationError
+from wtforms.validators import InputRequired, DataRequired
 
 
 class Measurements:
@@ -121,8 +121,29 @@ class RecipeForm(FlaskForm):
     submit = SubmitField('Next')
 
 
+# def dec_frac():
+#     message = 'Enter a number or a fraction'
+#
+#     def _validate(form, field):
+#         try:
+#             float(field.data)
+#         except ValueError:
+#             try:  # May be correct format for division
+#                 if '/' not in field.data or field.data.count('/') > 1:  # No division or too many
+#                     # form.errors[field] = message
+#                     raise ValidationError(message)
+#                 else:  # See if other values are floats
+#                     temp = [float(x) for x in field.data.split('/')]
+#             except ValueError:
+#                 # form.errors[field] = message
+#                 raise ValidationError(message)
+#         # for forms in form:
+#         #     print(forms)
+#     return _validate
+
+
 class QuantityForm(FlaskForm):
-    ingredient_quantity = StringField('Quantity', default=1.0, validators=[InputRequired()])
+    ingredient_quantity = StringField('Quantity', default=1.0, validators=[InputRequired()])  # , dec_frac()
     ingredient_type = SelectField("Measurement", choices=[(x, x) for x in Measurements.Measures], default='Unit')
 
     @staticmethod

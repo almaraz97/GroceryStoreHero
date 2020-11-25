@@ -7,18 +7,22 @@
             <legend class="border-bottom mb-4">{{ legend }}</legend>
             {% set index = namespace(value=0) %}
             {% for input_form in form.ingredient_forms %}
+                {% if input_form.ingredient_quantity.errors %}
+                    {% set error = ['mt-0','margin: 0 0 23px 0', 'margin: 0 0 30px 0'] %}
+                {% else %}
+                    {% set error = '' %}
+                {%endif%}
                 <div class="form-inline form-row mb-3">
-                    <h5 class="col">{{ form.ingredients[index.value] }}</h5>
+                    <h5 class="col" style="{{error[2]}}">{{ form.ingredients[index.value] }}</h5>
                     {{ input_form.csrf_token }}
-                    <!--Ingredient Quantity form-->
-<!--                    {{ input_form.ingredient_quantity.label(class="form-control-label") }}-->
-<!--                    {{ input_form.ingredient_type.label(class="form-control-label" ) }}-->
                     {% if input_form.ingredient_quantity.errors %}
-                        {{ input_form.ingredient_quantity(class="form-control is-invalid", placeholder="Enter Quantity") }}
-                        <div class="invalid-feedback">
-                            {% for error in input_form.ingredient_quantity.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+                        <div class="col">
+                            {{ input_form.ingredient_quantity(class="form-control is-invalid mb-0", placeholder="Enter Quantity") }}
+                            <div class="invalid-feedback">
+                                {% for error in input_form.ingredient_quantity.errors %}
+                                    <span class="">{{ error }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
                     {% else %}
                         <div class="col">
@@ -26,7 +30,7 @@
                         </div>
                     {% endif %}
                     <!--Ingredient Type form-->
-                    <div class="col">
+                    <div class="col {{error[0]}}" style="{{error[1]}}">
                         {{ input_form.ingredient_type(class="custom-select") }}
                     </div>
                 </div>

@@ -15,10 +15,13 @@ def aisle_grocery_sort(menu_list, aisles):
     merged = {}  # Merged quantities dictionaries. Ingredient[str] as Key, list of Measurement Objects as Value
     for dictionary in quantities:
         for key in dictionary:
-            try:
-                merged[key].append(Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1]))
-            except KeyError:
-                merged[key] = [Measurements(value=float(dictionary[key][0]), unit=dictionary[key][1])]
+            try:  # Add ingredient to existing to merge quantity later
+                merged[key].append(Measurements(value=convert_frac(dictionary[key][0]), unit=dictionary[key][1]))
+            except KeyError:  # Ingredient doesnt have a entry yet
+                merged[key] = [Measurements(value=convert_frac(dictionary[key][0]), unit=dictionary[key][1])]
+            # except ValueError:  # Ingredient quantity is a fraction
+            #     quantity = dictionary[key][0][0]/dictionary[key][0][2]
+            #     merged[key] = [Measurements(value=quantity, unit=dictionary[key][1])]
     sorted_ingredients = {}  # AisleName as Key, list of ingredients as Value
     for aisle in aisles:
         if aisles[aisle] is None:  # If aisle doesn't have ingredients, make empty list
@@ -145,13 +148,7 @@ def ensure_harmony_keys(user):
     if user.extras is None:
         user.extras = []
         db.session.commit()
-    if user.harmony_preferences is None:
-        user.harmony_preferences = {'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0, 'recommended': {},
-                                    'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-                                    'recipe_ids': {}, 'history': 0, 'ingredient_excludes': [],
-                                    'algorithm': 'Balanced', 'modifier': 'Graded'}
-        db.session.commit()
-    if len(user.harmony_preferences.keys()) < 14:
+    if user.harmony_preferences is None or len(user.harmony_preferences.keys()) < 14:
         user.harmony_preferences = {'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0, 'recommended': {},
                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
                                     'recipe_ids': {}, 'history': 0, 'ingredient_excludes': [],
@@ -300,9 +297,17 @@ def apriori_test(user, min_support=None):
     return list(apriori(recipes, min_support=min_support, min_lift=1.1))
 
 
-def convert_frac(num, ingredients):  # form validator already checked for float or fraction
+def convert_frac(num):  # form validator already checked for float or fraction
     try:
         return float(num)
     except ValueError:
         num = num.split('/')
         return float(num[0]) / float(num[1])
+
+
+def rem_trail_zero(num):
+    try:
+        num = str(int(float(num))) if float(num).is_integer() else str(num)
+        return num
+    except ValueError:
+        return num

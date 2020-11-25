@@ -1,6 +1,6 @@
 import json
 import string
-from flask import render_template, url_for, redirect, Blueprint, request, abort, flash
+from flask import render_template, url_for, redirect, Blueprint, request, session
 from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
@@ -23,11 +23,13 @@ Fix search bar in recipe page, Make cursor over cross off text, added harmony pa
 Made ingredients alphabetical in menu list, but only from here on and when updating a recipe
 add pantry functionality, add/remove shelf buttons like grocery-list buttons, download recipe single, fixed history,
 bug when deleted, add "add all" for a recipe recommendation (ul ids instead of li), pantry column;add;remove;clear,
-add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation, 
-allowed fraction in form, add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs
+add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation,
+add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs, 
+allowed fraction in form w validation, added fraction handling for various site utilities for recipe quantities, 
+use of session in new and update recipe route handoffs,
 """
 
-
+# todo merge grocerylist quantities and take decimal part and convert to common fractions
 # todo convert harmony tool to cython, test speed improvement
 # todo move as much logic out of routes and into utils
 # todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
@@ -101,15 +103,17 @@ def about():
 
 
 @main.route('/harmony_tool', methods=['GET', 'POST'])
-def harmony_tool():  # todo must use Javascript to reload page and enter previous information
+def harmony_tool():
     recommended = None
+    if 'harmony' in session:  # todo use session to keep this information
+        pass
     form = FullHarmonyForm()
     form.basic.groups.choices = range(2, 4)
     # Shows user their previous settings
     preferences = get_harmony_settings(current_user.harmony_preferences)
     preferences['rec_limit'] = 'No Limit'
     ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
-    if request.method == 'POST':  # Carry over preferences  # todo
+    if request.method == 'POST':  # Carry over preferences
         preferences['algorithm'] = form.advanced.algorithm.data
         preferences['modifier'] = form.advanced.modifier.data
         return redirect(url_for('main.harmony_tool2', preferences=preferences))
@@ -118,32 +122,32 @@ def harmony_tool():  # todo must use Javascript to reload page and enter previou
                            sidebar=True, harmony=True)
 
 
-@main.route('/harmony_tool/<preferences>', methods=['GET', 'POST'])
-def harmony_tool2(preferences):
-    ing_weights, form, sticky, tastes, recommended = None, None, None, None, None
-    recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
-    recipes = {r.title: r.quantity.keys() for r in recipe_list}
-    if preferences is not None:
-        preferences = {'advanced':
-                       {'pairs': None, 'pair_weight': None, 'ingredient': None, 'ingredient_weights': None,
-                        'ingredient_ex': None, 'ingredient_rem': None, 'ingredient2': None, 'sticky_weights': None,
-                        'history_exclude': None, 'recommend_num': None, 'algorithm': None, 'modifier': None
-                        }, 'basic': {'groups': None, 'excludes': None, 'similarity': None}}
-        form = FullHarmonyForm(data=preferences)
-    else:
-        return redirect(url_for('harmony_tool2'))
-    if request.method == 'POST':
-        recipe_history = [item for sublist in current_user.history[:int(form.advanced.history_exclude.data)]
-                          for item in sublist]
-        recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
-        count = int(form.basic.groups.data)  # todo consider weighting settings
-        recommended, _ = recipe_stack(recipes, count, max_sim=form.basic.similarity.data,
-                                      excludes=form.basic.excludes.data + recipe_history,
-                                      limit=500_000, **preferences)
-    elif request.method == 'GET':
-        pass
-    return render_template('harmony.html', title='Harmony Tool', form=form, ing_weights=ing_weights, tastes=tastes,
-                           sticky_weights=sticky, recommended=recommended, sidebar=True, harmony=True)
+# @main.route('/harmony_tool/<preferences>', methods=['GET', 'POST'])
+# def harmony_tool2(preferences):
+#     ing_weights, form, sticky, tastes, recommended = None, None, None, None, None
+#     recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
+#     recipes = {r.title: r.quantity.keys() for r in recipe_list}
+#     if preferences is not None:
+#         preferences = {'advanced':
+#                        {'pairs': None, 'pair_weight': None, 'ingredient': None, 'ingredient_weights': None,
+#                         'ingredient_ex': None, 'ingredient_rem': None, 'ingredient2': None, 'sticky_weights': None,
+#                         'history_exclude': None, 'recommend_num': None, 'algorithm': None, 'modifier': None
+#                         }, 'basic': {'groups': None, 'excludes': None, 'similarity': None}}
+#         form = FullHarmonyForm(data=preferences)
+#     else:
+#         return redirect(url_for('harmony_tool2'))
+#     if request.method == 'POST':
+#         recipe_history = [item for sublist in current_user.history[:int(form.advanced.history_exclude.data)]
+#                           for item in sublist]
+#         recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
+#         count = int(form.basic.groups.data)  # todo consider weighting settings
+#         recommended, _ = recipe_stack(recipes, count, max_sim=form.basic.similarity.data,
+#                                       excludes=form.basic.excludes.data + recipe_history,
+#                                       limit=500_000, **preferences)
+#     elif request.method == 'GET':
+#         pass
+#     return render_template('harmony.html', title='Harmony Tool', form=form, ing_weights=ing_weights, tastes=tastes,
+#                            sticky_weights=sticky, recommended=recommended, sidebar=True, harmony=True)
 
 
 @login_required
