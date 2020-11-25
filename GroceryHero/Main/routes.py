@@ -198,7 +198,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5)
     else:
         history_count_names, ingredient_history, ingredient_count, \
-        harmony, avg_harmony, average_menu_len, rules = [None] * 7
+        harmony, avg_harmony, average_menu_len, rules = None, None, None, 0, 0, 0, None
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
                            avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
