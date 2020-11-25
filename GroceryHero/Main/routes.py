@@ -26,18 +26,17 @@ bug when deleted, add "add all" for a recipe recommendation (ul ids instead of l
 add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation,
 add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs, 
 allowed fraction in form w validation, added fraction handling for various site utilities for recipe quantities, 
-use of session in new and update recipe route handoffs,
+use of session in new and update recipe route handoffs, cython working
 """
 
-# todo merge grocerylist quantities and take decimal part and convert to common fractions
-# todo convert harmony tool to cython, test speed improvement
+# todo pantry double type ingredient quantity rounding down
+# todo in grocerylist quantities take decimal part and convert to common fractions
 # todo move as much logic out of routes and into utils
 # todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
-# todo ?add an all_ingredients column to fill pantry and aisles from?
 # todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
-# todo add ?environment/global variable for harmony keys to check_columns, default model, and other places
 # todo fix password reset abilities (being sent another link that will work)
 # Soon
+# todo ?add an all_ingredients column to fill pantry and aisles from?
 # todo add RHT switchables- Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
 # todo figure out JSON situation from harmony preferences JSON column coming in and out
 # todo save the day a history clear was performed (can find average time before eating recipe again)
@@ -71,7 +70,6 @@ def home():
         if len(menu_list) > 1:
             harmony, _ = recipe_stack({recipe.title: recipe.quantity for recipe in menu_list}, count=len(menu_list),
                                       **preferences)
-            harmony = 5  # list(harmony.values())[0]
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,

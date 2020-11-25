@@ -186,6 +186,7 @@ def get_harmony_settings(user_preferences, holds=None):
     sticky = {key: float(value) for key, value in
               sticky.items()}
     preferences['sticky_weights'] = sticky
+    preferences['modifier'] = user_preferences['modifier']
 
     return preferences
 

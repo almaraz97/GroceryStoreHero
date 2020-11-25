@@ -50,12 +50,17 @@
         <!--Recipe cards-->
         {% for recipe in cards %}
             <article class="media content-section">
+<!--              <div>-->
+<!--              <div class="card-header col-12 p-3" style="border-bottom: 0px; background-color: #9C1A1C">-->
+<!--          </div>-->
                 <!--Add and remove buttons-->
+<!--                <div>-->
                 {% if recipe.in_menu %}
                         <button class="btn btn-success btn-sm mt-3 updateButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Menu</button>
                 {% else %}
                         <button class="btn btn-light btn-sm mt-3 updateButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Menu</button>
                 {% endif %}
+<!--                </div>-->
                 <div class="media-body ml-4">
                     <div class="article-metadata">
                         <a style="font-size: 18px;" class="mr-2" href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">{{ recipe.title }}</a>
@@ -63,6 +68,7 @@
                     </div>
                     <p class="article-content mt-2 mb-2">{{ recipe.quantity|join(', ') }}</p>
                 </div>
+<!--              </div>-->
             </article>
         {% endfor %}
 {% endif %}

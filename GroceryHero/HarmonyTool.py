@@ -194,7 +194,6 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
     combos, possible = create_combos(recipes, count, excludes, includes, limit)
     scored_combos = score_combos(recipes, combos, max_sim, algorithm, ingredient_weights, tastes, ingredient_excludes,
                                  sticky_weights, modifier)
-    print(scored_combos)
     combos = return_unique_combos(scored_combos, rec_limit, includes)
     combos = return_combo_score(recipes, combos, algorithm, ingredient_weights, tastes, sticky_weights,
                                 ingredient_excludes, modifier)
