@@ -8,7 +8,7 @@ from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountF
                                      RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
 from GroceryHero.Main.forms import ImportForm
 from GroceryHero.Users.utils import save_picture, send_reset_email, import_files, update_harmony_preferences, \
-    load_harmony_form
+    load_harmony_form, starter_recipes
 from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights
 import json
 
@@ -31,6 +31,9 @@ def register():
                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
         # todo create default recipes here
         db.session.add(user)
+        db.session.commit()
+        for recipe in starter_recipes():
+            db.session.add(recipe)
         db.session.commit()
         flash(f'Your account has been created. You can now log in!', 'success')
         return redirect(url_for("users.login"))

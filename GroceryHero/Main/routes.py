@@ -189,7 +189,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         all_recipes = Recipes.query.filter_by(author=current_user).all()
         harmony = round((norm_stack({r.title: r.quantity.keys() for r in all_recipes}) * 100), 5)
         avg_harmony = []
-        for batch in history2:  # todo integrate user harmony preferences (modifier at least)
+        for batch in history2:
             if len(batch) > 1:
                 recs = {recipe.title: recipe.quantity for recipe in Recipes.query.filter(Recipes.id.in_(batch)).all()}
                 modifier = 1 / (len(recs) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
