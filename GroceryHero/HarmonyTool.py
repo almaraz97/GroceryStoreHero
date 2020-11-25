@@ -180,7 +180,8 @@ def millify(n):
 
 
 def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', rec_limit=5,
-                 limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None, sticky_weights=None):
+                 limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None,
+                 sticky_weights=None, home=False):
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
     max_sim = 100_000 if max_sim == 'No Limit' else int(max_sim)/100
     excludes = [] if excludes is None else excludes  # Comes in as 0 or not

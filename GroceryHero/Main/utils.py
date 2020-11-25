@@ -161,32 +161,32 @@ def get_harmony_settings(user_preferences, holds=None):
                 'modifier']
     holds = [] if holds is None else holds
     settings = [item for item in settings if item not in holds]
-
     preferences = {k: v for k, v in user_preferences.items() if k in settings}
-
-    preferences['rec_limit'] = int(preferences['rec_limit'])  # Convert to integer
-
-    weights = preferences['ingredient_weights']
-    weights = json.loads(weights) if isinstance(weights, str) else weights
-    weights = {key: float(value) for key, value in
-               weights.items()}
-    preferences['ingredient_weights'] = weights
-
-    tastes = preferences['tastes']
-    tastes = json.loads(tastes) if isinstance(tastes, str) else tastes
-    tastes = {tuple(item.split(', ')): float(value) for item, value
-              in tastes.items()}
-    preferences['tastes'] = tastes
-
-    ing_ex = preferences['ingredient_excludes']
-    preferences['ingredient_excludes'] = ing_ex
-
-    sticky = preferences['sticky_weights']
-    sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
-    sticky = {key: float(value) for key, value in
-              sticky.items()}
-    preferences['sticky_weights'] = sticky
-    preferences['modifier'] = user_preferences['modifier']
+    if 'rec_limit' not in holds:
+        preferences['rec_limit'] = int(preferences['rec_limit'])  # Convert to integer
+    if 'ingredient_weights' not in holds:
+        weights = preferences['ingredient_weights']
+        weights = json.loads(weights) if isinstance(weights, str) else weights
+        weights = {key: float(value) for key, value in
+                   weights.items()}
+        preferences['ingredient_weights'] = weights
+    if 'tastes' not in holds:
+        tastes = preferences['tastes']
+        tastes = json.loads(tastes) if isinstance(tastes, str) else tastes
+        tastes = {tuple(item.split(', ')): float(value) for item, value
+                  in tastes.items()}
+        preferences['tastes'] = tastes
+    if 'ingredient_excludes' not in holds:
+        ing_ex = preferences['ingredient_excludes']
+        preferences['ingredient_excludes'] = ing_ex
+    if 'sticky_weights' not in holds:
+        sticky = preferences['sticky_weights']
+        sticky = json.loads(sticky) if isinstance(sticky, str) else sticky
+        sticky = {key: float(value) for key, value in
+                  sticky.items()}
+        preferences['sticky_weights'] = sticky
+    if 'modifier' not in holds:
+        preferences['modifier'] = user_preferences['modifier']
 
     return preferences
 

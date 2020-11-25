@@ -29,6 +29,7 @@ allowed fraction in form w validation, added fraction handling for various site 
 use of session in new and update recipe route handoffs, cython working
 """
 
+
 # todo pantry double type ingredient quantity rounding down
 # todo in grocerylist quantities take decimal part and convert to common fractions
 # todo move as much logic out of routes and into utils
@@ -57,7 +58,6 @@ def home():
         [], [], [], 0, 0, None, None, None, None  # []*3, 0, 0, None*4
     if current_user.is_authenticated:
         ensure_harmony_keys(current_user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-        preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim'])
         menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                      if recipe.in_menu]
         # GroceryList maker
@@ -68,8 +68,10 @@ def home():
                                 for item in groceries[aisle]]
         aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
         if len(menu_list) > 1:
-            harmony, _ = recipe_stack({recipe.title: recipe.quantity for recipe in menu_list}, count=len(menu_list),
-                                      **preferences)
+            preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
+            recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
+            modifier = 1 / (len(recipes) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
+            harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
