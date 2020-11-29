@@ -1,6 +1,6 @@
 /*Comment to change from light to dark*/
 body {
-  background: #fafafa;
+  /*background: #fafafa;*/
   color: #333333;
   /*background: #080808;*/
   /*color: #000000;*/
@@ -45,6 +45,7 @@ h1, h2, h3, h4, h5, h6 {
 /*  background: #484848;*/
 /*}*/
 
+
 /*Regular*/
 .btn-outline-info:hover,
 .btn-outline-info.hover {
@@ -52,7 +53,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .site-header .navbar-nav .nav-link {
-  color: #ffffff;  /* Switched the hover and normal */
+  color: #ffffff;
+  font-weight: 300; /* Switched the hover and normal */
 }
 
 .site-header .navbar-nav .nav-link:hover {
@@ -67,7 +69,6 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 66.67%;
   float: left;
 }
-
 
 .article-title {
   color: #444444;
@@ -127,3 +128,18 @@ margin: 25px 10px 0 0 !important;
 .list-group-item.active {
 background-color: #28a745;
 border-color: #28a745; }
+
+
+.callout {
+  border: 1px solid #eee;
+  border-right-width: 5px;
+  border-radius: 5px;
+}
+
+/*@each $name,$color in (default,#777),(primary,#428bca),(success,#5cb85c),(danger,#d9534f),(warning,#f0ad4e),(info,#5bc0de), (bdc,#29527a) {*/
+/*  .callout-#{$name} {*/
+/*    border-left-color: $color;*/
+/*  }*/
+/*}*/
+/*{'teal': '#20c997', 'yellow': '#ffc107', 'indigo': '#6610f2', 'red': '#dc3545', 'success': '#5cb85c',
+                  'pink': '#e83e8c', 'secondary': '#6c757d', 'info': '#17a2b8'}*/

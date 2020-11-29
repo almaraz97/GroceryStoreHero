@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from werkzeug.routing import ValidationError
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, FieldList, FormField, ValidationError
-from wtforms.validators import InputRequired, DataRequired
+from wtforms.validators import InputRequired, DataRequired, URL
 
 
 class Measurements:
@@ -117,9 +117,15 @@ class Measurements:
 class RecipeForm(FlaskForm):
     title = StringField('Recipe Name', validators=[DataRequired()])
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
-    notes = TextAreaField('Notes (optional)')
+    type_ = SelectField('Type', choices=[(x, x) for x in ['Other', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert']],
+                        default='Other')
+    notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
 
+
+class RecipeLinkForm(FlaskForm):
+    link = StringField('Recipe Link', validators=[DataRequired(), URL()])
+    submit = SubmitField('Next')
 
 # def dec_frac():
 #     message = 'Enter a number or a fraction'

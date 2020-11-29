@@ -52,7 +52,7 @@
                         </div>
                         <!--Info section-->
                         <div id="collapse{{ recipe.id }}" class="collapse" aria-labelledby="heading{{ recipe.id }}" data-parent="#accordion">
-                            <div class="card-body mt-3 ml-4">
+                            <div class="card-body ml-4">
                                  <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
                                     <a href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">Ingredients:</a>
                                     <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;" e_id="{{ recipe.id }}">Eaten</button>

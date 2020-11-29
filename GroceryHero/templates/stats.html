@@ -2,93 +2,97 @@
 {% block content %}
 <h1 class="mb-3">Your Advanced Statistics:</h1>
 <article class="media content-section">
-   <div>
-      <h4 class="border-bottom">Harmony Stats</h4>
-      <ul class="mb-3">
-         <li>Entire Recipe List Harmony- {{ harmony }}%</li>
-         <li>Average Menu Harmony- {{ avg_harmony|round(2) }}%</li>
-         <li>Average Menu Size- {{ average_menu_len|round(2) }}</li>
-         <li>Number of Menu Clears- {{ clears }}</li>
-      </ul>
-      <h4 class="mt-2 mb-3">Total Recipe Consumption Frequency Chart </h4>
-      <div style="max-height:200px; overflow:auto" class="mb-3">
-      <table class="table table-border table-hover table-sm ml-2">
-         <tr class="bg-success">
-            <th style="color:white">Recipe</th>
-            <th style="color:white">Times Eaten</th>
-            <th style="color:white">Frequency (/wk)</th>
-         </tr>
-         {% if recipe_history %}
-            {% for item in recipe_history %}
-               <tr>
-                  <td>{{ item[0] }}</td>
-                  <td>{{ item[1] }}</td>
-                  <td>{{ item[2] }}</td>
-               </tr>
+  <div>
+    {% if current_user.pro %}
+    <h4 class="mb-2">Harmony Stats</h4>
+    <ul class="mb-3">
+       <li>Entire Recipe List Harmony- {{ harmony }}%</li>
+       <li>Average Menu Harmony- {{ avg_harmony|round(2) }}%</li>
+       <li>Average Menu Size- {{ average_menu_len|round(2) }}</li>
+       <li>Number of Menu Clears- {{ clears }}</li>
+    </ul>
+    {% endif %}
+    <h4 class="mt-2 mb-2 pb-1">Total Recipe Consumption Frequency Chart </h4>
+    <div style="max-height:200px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
+    <table class="table table-border table-hover table-striped table-sm ml-2">
+       <tr class="bg-success">
+          <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Recipe</th>
+          <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Total</th>
+          <th style="color:white; position:sticky; top:-1px; background:#5cb85c; width:20%;">Per Week</th>
+       </tr>
+       {% if recipe_history %}
+          {% for item in recipe_history %}
+             <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+             </tr>
+          {% endfor %}
+       {% else %}
+          <tr>
+             <td>None</td>
+             <td>None</td>
+             <td>None</td>
+          </tr>
+       {% endif %}
+    </table>
+    </div>
+
+    <h4 class="mt-4 pb-1">Ingredient Frequency Chart</h4>
+    <div style="max-height:200px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
+    <table class="table table-border table-hover table-striped table-sm ml-2">
+       <tr class="bg-success">
+          <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Ingredient</th>
+          <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Total</th>
+          <th style="color:white; position:sticky; top:-1px;background:#5cb85c; width:20%;">Per Week</th>
+       </tr>
+       {% if ingredient_count %}
+          {% for item in ingredient_count %}
+             <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+             </tr>
+          {% endfor %}
+       {% else %}
+          <tr>
+             <td>None</td>
+             <td>None</td>
+             <td>None</td>
+          </tr>
+       {% endif %}
+    </table>
+    </div>
+
+    <h4 class="mx-1 pb-1">Recipe Pair Frequency</h4>
+    <div style="max-height:200px; overflow-y: auto; overflow-x:hidden;" class="mb-3">
+    <table class="table table-border table-hover table-striped table-sm ml-2">
+      <tr class="bg-success">
+        <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Recipe Combination</th>
+        <th style="color:white; position:sticky; top:-1px;background:#5cb85c; width:20%;">Frequency</th>
+      </tr>
+      {% if frequency_pairs %}
+        {% for item in frequency_pairs %}
+          <tr>
+            {% set group = [] %}
+            {% for recipe in item[0] %}
+              {% set group = group.append(recipe) %}
             {% endfor %}
-         {% else %}
-            <tr>
-               <td>None</td>
-               <td>None</td>
-               <td>None</td>
-            </tr>
-         {% endif %}
-      </table>
-      </div>
-      <h4 class="mb-3">Ingredient Frequency Chart</h4>
-      <div style="max-height:200px; overflow:auto" class="mb-3">
-      <table class="table table-border table-hover table-sm ml-2">
-         <tr class="bg-success">
-            <th style="color:white">Recipe</th>
-            <th style="color:white">Times Eaten</th>
-            <th style="color:white">Frequency (/wk)</th>
-         </tr>
-         {% if ingredient_count %}
-            {% for item in ingredient_count %}
-               <tr>
-                  <td>{{ item[0] }}</td>
-                  <td>{{ item[1] }}</td>
-                  <td>{{ item[2] }}</td>
-               </tr>
-            {% endfor %}
-         {% else %}
-            <tr>
-               <td>None</td>
-               <td>None</td>
-               <td>None</td>
-            </tr>
-         {% endif %}
-      </table>
-      </div>
-      <h4 class="border-bottom">Recipe Pair Frequency</h4>
-      <div style="max-height:200px; overflow:auto" class="mb-3">
-      <table class="table table-border table-hover table-sm ml-2">
-         <tr class="bg-success">
-            <th style="color:white">Recipe Combination</th>
-            <th style="color:white">Frequency</th>
-         </tr>
-         {% if frequency_pairs %}
-            {% for item in frequency_pairs %}
-               <tr>
-                  {% set group = [] %}
-                  {% for recipe in item[0] %}
-                     {% set group = group.append(recipe) %}
-                  {% endfor %}
-                  {% set group = group|join(' + ') %}
-                  <td>{{ group }}</td>
-                  <td>{{ item[1]|round(3) }}</td>
-               </tr>
-            {% endfor %}
-         {% else %}
-            <tr>
-               <td>None</td>
-               <td>None</td>
-            </tr>
-         {% endif %}
-      </table>
-      </div>
-      <h4 class="border-bottom">Recipe Dimensionality (UMAP)</h4>
-      <p class="mb-3">To be added.</p>
-   </div>
+            {% set group = group|join(' + ') %}
+            <td>{{ group }}</td>
+            <td>{{ item[1]|round(3) }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+           <td>None</td>
+           <td>None</td>
+        </tr>
+      {% endif %}
+    </table>
+    </div>
+    <h4 class="mx-1">Recipe Dimensionality (UMAP)</h4>
+    <p class="mb-3">To be added.</p>
+  </div>
 </article>
 {% endblock content %}

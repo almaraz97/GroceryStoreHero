@@ -9,7 +9,7 @@ from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountF
 from GroceryHero.Main.forms import ImportForm
 from GroceryHero.Users.utils import save_picture, send_reset_email, import_files, update_harmony_preferences, \
     load_harmony_form, starter_recipes
-from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights
+from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights, ensure_harmony_keys
 import json
 
 users = Blueprint('users', __name__)
@@ -50,6 +50,7 @@ def login():
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
+            ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:
             flash(f"Login Unsuccessful. Please check email or password", 'danger')

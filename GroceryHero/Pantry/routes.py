@@ -20,8 +20,10 @@ def pantry_page():
         if current_user.pantry is None:
             current_user.pantry = {}
             db.session.commit()
-        all_pantry = current_user.pantry
         # # {Shelf: {Ingredient: [quantity, unit],...},...}
+        all_pantry = current_user.pantry
+        for shelf in all_pantry:
+            all_pantry[shelf] = {k: all_pantry[shelf][k] for k in sorted(all_pantry[shelf])}
         all_pantry = {name: {ing: Measurements(value=int(L[0]) if float(L[0]).is_integer() else L[0], unit=L[1])
                              for ing, L in all_pantry[name].items()}
                       for name, ing in all_pantry.items()}

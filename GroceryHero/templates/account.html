@@ -56,10 +56,11 @@
             </div>
         </form>
 </div>
+{% if current_user.pro %}
 <!-- Harmony Settings -->
 <div class="content-section">
     <form action="#" method="POST">
-        {{ form3.hidden_tag() }}
+    {{ form3.hidden_tag() }}
     <legend class="border-bottom mb-4">Advanced Harmony Tool Settings</legend>
     <div class="row mb-3">
         <div class="col-4">
@@ -181,6 +182,7 @@
         {{ form3.submit(class="btn btn-info mt-2 mb-3") }}
     </form>
 </div>
+{% endif %}
 <!-- Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

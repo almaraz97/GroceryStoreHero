@@ -143,9 +143,9 @@ def update_grocery_list(user):
 
 def ensure_harmony_keys(user):
     if user.grocery_list is None:
-        user.grocery_list = [{}, 0]
+        user.grocery_list = [{}, 0]  # Groceries and (number of items?)
         db.session.commit()
-    if user.extras is None:
+    if user.extras is None or user.extras == '':
         user.extras = []
         db.session.commit()
     if user.harmony_preferences is None or len(user.harmony_preferences.keys()) < 14:

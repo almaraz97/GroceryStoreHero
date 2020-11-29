@@ -7,7 +7,7 @@ from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles
 from flask_login import current_user, login_required
-from GroceryHero.Main.utils import (update_grocery_list, ensure_harmony_keys, get_harmony_settings, get_history_stats,
+from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
                                     show_harmony_weights, update_pantry, apriori_test, convert_frac)
 from GroceryHero import db
 
@@ -26,10 +26,11 @@ bug when deleted, add "add all" for a recipe recommendation (ul ids instead of l
 add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation,
 add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs, 
 allowed fraction in form w validation, added fraction handling for various site utilities for recipe quantities, 
-use of session in new and update recipe route handoffs, cython working
+use of session in new and update recipe route handoffs, cython working, load recipe type in the update form
 """
 
-
+# todo add_ make headers same size
+# todo show recipe type in recipe single
 # todo pantry double type ingredient quantity rounding down
 # todo in grocerylist quantities take decimal part and convert to common fractions
 # todo move as much logic out of routes and into utils
@@ -57,7 +58,6 @@ def home():
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics = \
         [], [], [], 0, 0, None, None, None, None  # []*3, 0, 0, None*4
     if current_user.is_authenticated:
-        ensure_harmony_keys(current_user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
         menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                      if recipe.in_menu]
         # GroceryList maker

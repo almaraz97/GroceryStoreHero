@@ -1,15 +1,17 @@
 import itertools
+import json
+import string
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
-from GroceryHero.Main.utils import update_grocery_list, ensure_harmony_keys, get_harmony_settings, rem_trail_zero
-from GroceryHero.Users.forms import HarmonyForm
-from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm
-from GroceryHero.HarmonyToolCy import recipe_stack
-from GroceryHero.models import Recipes
 from GroceryHero import db
-import string
-import json
+from GroceryHero.HarmonyToolCy import recipe_stack
+from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
+from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
+from GroceryHero.Recipes.utils import parse_ingredients
+from GroceryHero.Users.forms import HarmonyForm
+from GroceryHero.models import Recipes
+from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
 recipes = Blueprint('recipes', __name__)
 
@@ -26,7 +28,8 @@ def recipes_page(possible=0, recommended=None):
         recipe_history = [item for sublist in current_user.history[:current_user.harmony_preferences['history']]
                           for item in sublist]
         recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
-        form = HarmonyForm()  # Recipe Harmony Tool Form
+        # Recipe Harmony Tool Form
+        form = HarmonyForm()
         form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
         modifier = current_user.harmony_preferences['modifier']
         form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
@@ -35,8 +38,11 @@ def recipes_page(possible=0, recommended=None):
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
+        colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d', }
+        about = None if current_user.pro else True
         if request.method == 'GET':
-            check_preferences(current_user)
+            # check_preferences(current_user)
             preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
             form.similarity.data = preferences['similarity']
             form.groups.data = preferences['groups']
@@ -69,8 +75,8 @@ def recipes_page(possible=0, recommended=None):
             db.session.commit()
         return render_template('recipes.html', title='Recipes', cards=recipe_list,
                                recipe_ids=recipe_ids,
-                               search_recipes=sorted(recipe_list, key=lambda x: x.title),
-                               sidebar=True, combos=possible, recommended=recommended, form=form)
+                               search_recipes=sorted(recipe_list, key=lambda x: x.title), about=about,
+                               sidebar=True, combos=possible, recommended=recommended, form=form, colors=colors)
     return render_template('recipes.html', recipes=None, all_recipes=None, title='Recipes', sidebar=False, combos=0,
                            recommended=None)
 
@@ -82,12 +88,12 @@ def new_recipe():
         return redirect(url_for('main.account'))
     form = RecipeForm()
     if form.validate_on_submit():  # Send data to quantity page
-        ingredients = sorted([string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != ''])
+        ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
         ingredients = {ingredient: [1, 'Unit'] for ingredient in ingredients}
-        notes = form.notes.data  # This gets sent through to the next route
-        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients, 'notes': notes}
+        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,
+                             'notes': form.notes.data, 'type': form.type_.data}
         return redirect(url_for('recipes.new_recipe_quantity'))
-    return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
+    return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe', link=True)
 
 
 @recipes.route('/post/new/quantity', methods=['GET', 'POST'])
@@ -104,13 +110,60 @@ def new_recipe_quantity():
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
-                         notes=recipe['notes'])
+                         notes=recipe['notes'], recipe_type=recipe['type'])
         db.session.add(recipe)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
         return redirect(url_for('recipes.recipes_page'))
     return render_template('recipe_quantity.html', title='New Recipe', form=form, legend='Recipe Quantities',
                            recipe=recipe)
+
+
+@recipes.route('/recipes/link', methods=['GET', 'POST'])
+@login_required
+def recipe_from_link():
+    form = RecipeLinkForm()
+    if form.validate_on_submit():
+        try:
+            scraper = scrape_me(form.link.data)
+        except WebsiteNotImplementedError:
+            try:
+                scraper = scrape_me(form.link.data, wild_mode=True)
+            except NoSchemaFoundInWildMode:
+                flash("Website not supported :/", 'danger')
+                return redirect(url_for('recipes.recipe_from_link'))
+        ingredients = [x.lower() for x in scraper.ingredients()]
+        ings, quantity = parse_ingredients(ingredients)
+        session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
+                             'measures': quantity}
+        return redirect(url_for('recipes.new_recipe_link'))
+    return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
+
+
+@recipes.route('/post/new_link', methods=['GET', 'POST'])
+@login_required
+def new_recipe_link():  # filling out the form data from link page
+    form = RecipeForm()
+    if request.method == 'GET':
+        if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
+            return redirect(url_for('main.account'))
+        recipe = session['recipe_raw']
+        form.title.data = recipe['title']
+        form.content.data = ', '.join([x.replace(',', '') for x in recipe['ingredients']])
+        form.notes.data = recipe['notes']
+    if form.validate_on_submit():  # Send data to quantity page
+        ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
+        ings = {}
+        for i, ing in enumerate(ingredients):
+            try:
+                ings[ing] = session['recipe_raw']['measures'][i]
+            except IndexError:
+                ings[ing] = [1, 'Unit']
+        ingredients = ings
+        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,
+                             'notes': form.notes.data, 'type': form.type_.data}
+        return redirect(url_for('recipes.new_recipe_quantity'))
+    return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
 
 @recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
@@ -126,12 +179,13 @@ def update_recipe(recipe_id):
                          for ingredient in ingredients}
         notes = form.notes.data
         title = string.capwords(form.title.data.strip())
-        session['recipe'] = {'title': title, 'quantity': quantity_dict, 'notes': notes}
+        session['recipe'] = {'title': title, 'quantity': quantity_dict, 'notes': notes, 'type':form.type_.data}
         return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id))
     elif request.method == 'GET':
         form.title.data = recipe.title
         form.content.data = ', '.join(recipe.quantity.keys())
         form.notes.data = recipe.notes
+        form.type_.data = recipe.recipe_type
     return render_template('create_recipe.html', title='Update Recipe', form=form, legend='Update Recipe')  # todo
 
 
@@ -146,19 +200,18 @@ def update_recipe_quantity(recipe_id):
     form.ingredients = [x for x in recipe['quantity'].keys()]
 
     if form.validate_on_submit():
-        title = recipe['title']
-        notes = recipe['notes']
         formatted = {ingredient: [F['ingredient_quantity'], F['ingredient_type']] for ingredient, F in
                      zip(form.ingredients, form.ingredient_forms.data)}
         # Get previous data to update
-        recipe = Recipes.query.get_or_404(recipe_id)
-        recipe.title = title
-        recipe.quantity = formatted  # Must be different to change to alphabetical
-        recipe.notes = notes
+        rec = Recipes.query.get_or_404(recipe_id)
+        rec.title = recipe['title']
+        rec.quantity = formatted  # Must be different to change to alphabetical
+        rec.notes = recipe['notes']
+        rec.recipe_type = recipe['type']
         update_grocery_list(current_user)
         db.session.commit()
         flash('Your recipe has been updated!', 'success')
-        return redirect(url_for('recipes.recipe_single', recipe_id=recipe.id))
+        return redirect(url_for('recipes.recipe_single', recipe_id=rec.id))
     return render_template('recipe_quantity.html', title='Update Recipe', form=form, legend='Recipe Quantities',
                            recipe=recipe)
 
@@ -307,7 +360,6 @@ def recipe_similarity(ids, sim):  # Too similar button in recommendations
 
 
 def check_preferences(user):
-    ensure_harmony_keys(user)
     # checks = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
     #           'rec_limit': 3, 'tastes': {}, 'ingredient_weights': json.dumps({}), 'sticky_weights': {},
     #           'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}

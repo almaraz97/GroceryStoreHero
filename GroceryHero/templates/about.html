@@ -1,104 +1,81 @@
 {% extends 'layout.html' %}
 {% block content %}
-    <body>
-        <h1>About</h1>
-        <div class="content-section mt-3">
-            <legend class="border-bottom mb-3">On This Version</legend>
-            <h5 class="mt-3">What's new?</h5>
-            <ul class="mt-2 mb-2">
-                <li>All new recipes will have unit options for storing quantities of each item</li>
-                <li>You can now update recipes quantities as well</li>
-                <li>Grocery List items collapse and will show units of measurement of your choice, combining to the highest unit</li>
-                <li>"You have _ recipes on your menu" now shows correct number of menu items</li>
-                <li>Maximum harmony is now a drop down</li>
-                <li>About page now has a side bar</li>
-                <li>Account page now has a side bar with import and export options (Advanced harmony settings coming soon)</li>
-                <li>You can now download and import recipes and aisles</li>
-                <li>You now have the ability to delete your account</li>
-                <li>recipe pairs to penalize entire groups to be easier with (multiselect)</li>
-                <li>Striking through grocery list ingredients</li>
-                <li>Adding grocery list items from aisle ingredients</li>
-                <li>A new aisle page side bar will show you unsorted ingredients (ones without aisles) to make adding them
-                easier</li>
-            </ul>
-            <h5 class="mt-3">What's coming up?</h5>
-            <ul class="mt-2 mb-2">
-                <li>Sorting aisles within stores and/or by store</li>
-                <li>Advanced harmony settings such as weights, taste pairs, algorithm and at some points stores required to get ingredients</li>
-                <li>Fixing search bar in recipes to have a single one that drops down and is typeable</li>
-            </ul>
-        </div>
-        <section id="harmonytool">
-        <div class="content-section mt-3">
-            <legend class="border-bottom mb-3">Recipe Harmony Tool FAQs</legend>
-            <h5 class="mt-3">What is the Recipe Harmony Tool?</h5>
-            <p class="mt-2 mb-2">The Recipe Harmony Tool is a way of grouping recipes together that overlap in
-                ingredients so that buying in bulk and preventing food waste is easier; saving you money and in a small
-                way, helping the earth. It can evaluate anywhere from hundreds to millions of recipe combinations
-                and recommend the top 3 that fit your specific preferences.
-            </p>
-            <h5 class="mt-3">What is the meaning of the Recipe Harmony Score?</h5>
-            <p class="mt-2 mb-2">The harmony score is a way to measure how similar a group of recipes are by their
-                shared ingredients. But that's not the only thing it can consider. By adding utilizing some of the advanced
-                harmony settings in your account page the harmony score can consider which ingredients you do or do not want
-                to see very often, which recipes you want or don't want together and more; all of which will affect the
-                harmony score. After configuring these settings it may be possible to achieve a score higher than 100%.
-            </p>
-            <h5 class="mt-3" id="advanced">What is a good Recipe Harmony Score?</h5>
-            <p>Generally, anything lower than 20 means there are next to no ingredient overlap while anything above 70
-                means they are practically the same recipe. A score of 100% is possible but only for completely
-                identical recipes. From my experience a group score higher than 50% tends to taste very similar but with
-                advanced settings configured that can be avoided. By configuring those it may be possible to get a score
-                higher than 100%!
-            </p>
-            <h5 class="mt-3">What is the Harmony Mode setting in the advanced settings?</h5>
-            <p>If you have 3 apples, 1 ground beef, 2 yogurts, and 4 sodas on your grocery list, this is how the modes would each interact.
-                        <ul class="">
-                            <li>Charity only wants to make the weakest link (ground beef in this case) as big as possible</li>
-                            <li>Fairness wants every item to be the same quantity (increase ground beef, then yogurt then apples) and then increase them evenly</li>
-                            <li>Balanced and Selfish want all items to get bigger but</li>
-                            <li>Selfish with a higher priority towards the bigger items</li>
-                            <li>Greedy only wants the largest quantity item (sodas in this case) as big as possible.</li>
-                        </ul></p>
-        </div>
-        <div class="content-section mt-3">
-                <legend class="border-bottom mb-3">Other Tips to Being a Grocery Hero</legend>
-                <ul class="mb-3">
-                    <li>Try to be as general as possible for ingredients. This way the harmony tool will know that cheddar cheese
-                    from company A and cheddar cheese from company B are inter-changable. By saying "company A cheddar cheese" as
-                    a recipe's ingredient, the harmony tool will treat it as a distinct ingredient and won't pair it with other recipes that
-                    could otherwise share that ingredient. However if they are different, say one is sharp and one is mild, than that
-                    may be useful to you.</li>
-                    <li>Ingredients that are metric and ones that are Imperial will not combine as of currently. If you have
-                        1 pound of chicken and 100 grams of chicken, they will stay separated.
-                    </li>
-                    <li>When importing recipes or aisles, new aisles or recipes that share a name with an aisle or recipe
-                    you already have will not be added.</li>
-                    <li>Many recipes that require spices do not use much of your supply. Chances are you do not want recipes
-                        recommended together just because they share many of the same spices. In this case set those ingredients
-                        to weight 0 and they will not be included in the Harmony Tool's calculations.</li>
-                    <li>You can only add extras from aisles currently. Add them to their aisle so the extra item can be sorted
-                    when you add it to you list.</li>
-                </ul>
-        </div>
-    </body>
-    <!-- Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Are you sure you'd like to import recipes?</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <form action="" method="POST">
-                        <input class="btn btn-danger" type="submit" value="Delete">
-                    </form>
-                </div>
-            </div>
-        </div>
+<body>
+<h1>About</h1>
+<div class="content-section mt-3">
+  <legend class="border-bottom mb-3">On This Version</legend>
+<!--  <h5 class="mt-3">What's new?</h5>-->
+<!--  <ul class="mt-2 mb-2">-->
+<!--  </ul>-->
+  <h5 class="mt-3">What's coming up?</h5>
+  <ul class="mt-2 mb-2">
+  </ul>
+</div>
+{% if current_user.pro %}
+<section id="harmonytool">
+  <div class="content-section mt-3">
+    <legend class="border-bottom mb-3">Recipe Harmony Tool FAQs</legend>
+    <h5 class="mt-3">What is the Recipe Harmony Tool?</h5>
+    <p class="mt-2 mb-2">The Recipe Harmony Tool is a way of grouping recipes together that overlap in
+      ingredients so that buying in bulk and preventing food waste is easier; saving you money and in a small
+      way, helping the earth. It can evaluate anywhere from hundreds to millions of recipe combinations
+      and recommend the top 3 that fit your specific preferences.
+    </p>
+    <h5 class="mt-3">What is the meaning of the Recipe Harmony Score?</h5>
+    <p class="mt-2 mb-2">The harmony score is a way to measure how similar a group of recipes are by their
+      shared ingredients. But that's not the only thing it can consider. By adding utilizing some of the advanced
+      harmony settings in your account page the harmony score can consider which ingredients you do or do not want
+      to see very often, which recipes you want or don't want together and more; all of which will affect the
+      harmony score. After configuring these settings it may be possible to achieve a score higher than 100%.
+    </p>
+    <h5 class="mt-3" id="advanced">What is a good Recipe Harmony Score?</h5>
+    <p>Generally, anything lower than 20 means there are next to no ingredient overlap while anything above 70
+      means they are practically the same recipe. A score of 100% is possible but only for completely
+      identical recipes. From my experience a group score higher than 50% tends to taste very similar but with
+      advanced settings configured that can be avoided. By configuring those it may be possible to get a score
+      higher than 100%!
+    </p>
+    <h5 class="mt-3">What is the Harmony Mode setting in the advanced settings?</h5>
+    <p>If you have 3 apples, 1 ground beef, 2 yogurts, and 4 sodas on your grocery list, this is how the modes would each interact.
+    <ul class="">
+      <li>Charity only wants to make the weakest link (ground beef in this case) as big as possible</li>
+      <li>Fairness wants every item to be the same quantity (increase ground beef, then yogurt then apples) and then increase them evenly</li>
+      <li>Balanced and Selfish want all items to get bigger but</li>
+      <li>Selfish with a higher priority towards the bigger items</li>
+      <li>Greedy only wants the largest quantity item (sodas in this case) as big as possible.</li>
+    </ul></p>
+  </div>
+  {% endif %}
+  <div class="content-section mt-3">
+    <legend class="border-bottom mb-3">Other Tips to Being a Grocery Hero</legend>
+    <ul class="mb-3">
+      <li>Ingredients that are metric and ones that are Imperial will not combine in the grocery list as of currently.
+        If you have 1 pound of chicken and 100 grams of chicken, they will stay separated.
+      </li>
+      <li>When importing recipes or aisles, new aisles or recipes that share a name with an aisle or recipe
+        you already have will not be added.</li>
+      <li>You can only add extras from aisles currently. Add them to their aisle so the extra item can be sorted
+        when you add it to you list.</li>
+    </ul>
+  </div>
+</body>
+<!-- Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Are you sure you'd like to import recipes?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <form action="" method="POST">
+          <input class="btn btn-danger" type="submit" value="Delete">
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock content %}
