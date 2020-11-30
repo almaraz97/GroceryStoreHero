@@ -135,7 +135,7 @@ def recipe_from_link():
         ingredients = [x.lower() for x in scraper.ingredients()]
         ings, quantity = parse_ingredients(ingredients)
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
-                             'measures': quantity}
+                                 'measures': quantity}
         return redirect(url_for('recipes.new_recipe_link'))
     return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
 
