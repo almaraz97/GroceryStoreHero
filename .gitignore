@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
+#*.so
 
 # Distribution / packaging
 .Python
@@ -192,3 +192,4 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 /GroceryHero/Modeling/harmonytesting.py
 /build/
+/venv/
