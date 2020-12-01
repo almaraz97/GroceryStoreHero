@@ -1,32 +1,32 @@
 /*Comment to change from light to dark*/
 body {
-  /*background: #fafafa;*/
-  /*color: #333333;*/
-  background: #080808;
-  color: #000000;
+  background: #fafafa;
+  color: #333333;
+  /*background: #080808;*/
+  /*color: #000000;*/
   margin-top: 5rem;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  /*color: #444444;*/
-  color: #DCDCDC;
+  color: #444444;
+  /*color: #DCDCDC;*/
 }
-Dark mode text
-p {
-  color: #DCDCDC;
-}
+/*Dark mode text*/
+/*p {*/
+/*  color: #DCDCDC;*/
+/*}*/
 
 .bg-steel {
-  /*background-color: #28a745 !important;*/
-  background-color: #800000;
+  background-color: #28a745 !important;
+  /*background-color: #800000;*/
 }
 
 .content-section {
   /*Original*/
   /*background: #ffffff; */
   /*Dark Mode*/
-  background: #484848;
-  /*background: #fff;*/
+  /*background: #484848;*/
+  background: #fff;
   padding: 10px 20px;
   border: 1px solid #dddddd;
   border-radius: 3px;
@@ -34,16 +34,16 @@ p {
   box-shadow: 0 11px 3px -8px rgba(150, 170, 180, 0.5);
 }
 
-.btn-success {
-  background-color: #800000;
-}
-.card-body {
-  background: #484848;
-  padding: 0;
-}
-.collapse{
-  background: #484848;
-}
+/*.btn-success {*/
+/*  background-color: #800000;*/
+/*}*/
+/*.card-body {*/
+/*  background: #484848;*/
+/*  padding: 0;*/
+/*}*/
+/*.collapse{*/
+/*  background: #484848;*/
+/*}*/
 
 
 /*Regular*/
