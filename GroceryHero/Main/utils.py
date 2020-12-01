@@ -226,7 +226,9 @@ def update_pantry(user, recipes):  # From the clear menu using recipes
     recipe_ingredients = []
     for recipe in recipes:
         for ing, M in recipe.quantity.items():
-            recipe_ingredients.append([ing, M[0], M[1]])
+            quantity = convert_frac(M[0])
+            unit = M[1]
+            recipe_ingredients.append([ing, quantity, unit])
 
     for ing in recipe_ingredients:  # See what's being used
         item = ing[0]
@@ -302,8 +304,12 @@ def convert_frac(num):  # form validator already checked for float or fraction
     try:
         return float(num)
     except ValueError:
-        num = num.split('/')
-        return float(num[0]) / float(num[1])
+        try:
+            num = num.split('/')
+            return float(num[0]) / float(num[1])
+        except ValueError:  # Fraction is mixed
+            num = (int(num[0])*int(num[4]) + int(num[2]))/ int(num[4])
+            return num
 
 
 def rem_trail_zero(num):

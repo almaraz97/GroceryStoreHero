@@ -5,6 +5,20 @@
     {{ form.hidden_tag() }}
     <fieldset class="form-group">
       <legend class="border-bottom mb-4">{{ legend }}</legend>
+      <!--Shelves-->
+      {% if shelves is defined %}  <!--Show multiselect when selecting what to add-->
+        <h5>Which shelf would you like to add to?</h5>
+          {% if form.shelves.errors %}
+            {{ form.shelves(class="custom-select is-invalid mt-3") }}
+              <div class="invalid-feedback">
+                {% for error in form.shelves.errors %}
+                  <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+          {% else %}
+              {{ form.shelves(class="custom-select mt-3") }}
+          {% endif %}
+      {% endif %}
       <!--Ingredients from multi-select-->
       {% if ingredients is defined %}  <!--Show multiselect when selecting what to add-->
         <h5>Which items you would like to add?</h5>

@@ -27,10 +27,13 @@ add similarity rating button for recipe recommendation, fixed pantry on anonymou
 add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs, 
 allowed fraction in form w validation, added fraction handling for various site utilities for recipe quantities, 
 use of session in new and update recipe route handoffs, cython working, load recipe type in the update form
+handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
+# todo extras quantity is wrong
+# todo allow pantry adds without being recipe ingredient
 # todo add_ make headers same size
-# todo show recipe type in recipe single
+# todo push recipe single buttons into lower row if recipe name is too long
 # todo pantry double type ingredient quantity rounding down
 # todo in grocerylist quantities take decimal part and convert to common fractions
 # todo move as much logic out of routes and into utils
@@ -244,12 +247,12 @@ def add_extras(ingredients):
             for j, aisle in enumerate(aisles):  # For aisle in user aisles
                 if form.ingredients[i] in aisle.content.split(', ') and j <= len(aisles):  # If ingredient in that aisle
                     entries.append([aisle.title, [form.ingredients[i],
-                                                  convert_frac(ingredient_form.ingredient_quantity.data, ingredients),
+                                                  convert_frac(ingredient_form.ingredient_quantity.data),
                                                   ingredient_form.ingredient_type.data, 0]])  # Add to extras
                     break
                 else:  # All aisles have been searched, no matches
-                    unsorted.append([form.ingredients[i],
-                                     convert_frac(ingredient_form.ingredient_quantity.data, ingredients),
+                    unsorted.append([form.ingredients[i],  # todo verify this works
+                                     convert_frac(ingredient_form.ingredient_quantity.data),
                                      ingredient_form.ingredient_type.data, 0])
         for item in unsorted:
             entries.append(['Other (unsorted)', item])  # Add to extras

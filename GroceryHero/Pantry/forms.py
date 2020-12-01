@@ -20,6 +20,13 @@ class ShelfForm(FlaskForm):
     submit = SubmitField('Next')
 
 
+class AddToShelfForm(FlaskForm):
+    shelves = SelectField("Shelves", default='[<--Choose-->]')
+    multi = SelectMultipleField('Recipe Ingredients')
+    other = TextAreaField('Ingredients (separate with commas)', validators=[InputRequired()])
+    submit = SubmitField('Next')
+
+
 class QuantityForm(FlaskForm):
     ingredient_quantity = FloatField('Quantity', default=1.0, validators=[InputRequired()])
     ingredient_type = SelectField("Measurement", choices=M.Measures, default='Unit')
