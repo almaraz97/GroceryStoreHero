@@ -68,6 +68,7 @@ class Recipes(db.Model):  # Add picture of recipe in recipe page
     public = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     servings = db.Column(db.Integer, nullable=True, default=0)
+    # yield = db.Column(db.Integer, nullable=True, default=1)
     # downloads = db.Column(db.Integer, nullable=True, default=0)
     # other_eaten = db.Column(db.Integer, nullable=True, default=0)
 
