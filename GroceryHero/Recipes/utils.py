@@ -29,12 +29,12 @@ def parse_ingredients(ingredients):
     ingredients = temp
     for i, ingredient in enumerate(ingredients):
         temp = ''  # New string for ingredient in ingredients list, gets chars appended as it goes through
-        nums = ''
-        cons = 0  # For remembering if last character was a number
-        flag = False  # For remembering if the last character was a space ('2 1/2')
+        nums = ''  # String for holding quantity value
+        cons = 0  # For remembering if last character was a number (consecutive, counts which index has the last number)
+        flag = False  # For remembering if the last character was a space (ie '2 1/2', '1.5', '1 5 ounce __')
         for j, char in enumerate(ingredient):  # Getting the quantity and measurements
             try:
-                if isinstance(float(char), float):  # Need to be able to parse fractions and decimals
+                if isinstance(float(char), float):  # Need to be able to parse fractions and decimals (keep it a char)
                     nums = nums + char
                     cons = j
             except ValueError:
@@ -45,9 +45,10 @@ def parse_ingredients(ingredients):
                         nums = nums + char
                         flag = True
                     else:
+                        flag = False if (cons+1) == j else flag  # If there was a separator and last char is digit
                         if flag:
                             quantity.append([nums[:-1]])
-                        else:
+                        else:  # Quantity string is done
                             quantity.append([nums])
                         temp = temp + ingredient[j:]  # A number is found, add the rest of the string
                         break
@@ -55,11 +56,21 @@ def parse_ingredients(ingredients):
                     quantity.append([])
                 else:
                     temp = temp + char
-        quantity[i] = [x if ' ' not in x else str((int(x[0])*int(x[4]))+int(x[2]))+'/'+str(x[4]) for x in quantity[i]]
-        ings.append(' '.join([x.strip() for x in temp.split(' ') if x != ' ' and x != '']))
 
-        found = False
+        if quantity[i]:  # The list is not empty
+            if ('/' in quantity[i][0]) and (' ' in quantity[i][0]):  # Convert mixed fraction to fraction
+                temp1 = quantity[i][0]
+                quantity[i][0] = str((int(temp1[0])*int(temp1[4]))+int(temp1[2]))+'/'+temp1[4]
+            elif '.' in quantity[i][0]:
+                quantity[i][0] = quantity[i][0].strip()
+            elif ' ' in quantity[i][0]:  # Convert number of a certain sized quantity ('1 15 ounce can")
+                numbers = quantity[i][0].split(' ')
+                quantity[i][0] = int(numbers[0]) * float(numbers[1])
+
+        ings.append(' '.join([x.strip() for x in temp.split(' ') if x != ' ' and x != '']))
+        found = False  # todo find '1 15 ounce can' and include only one of the units
         for measure in measures:
+            length = len(measure)  # In case unit is the first part of the string
             if ' ' + measure.lower() + 's ' in ings[i]:
                 ings[i] = ings[i].replace(' ' + measure.lower() + 's ', '')
                 quantity[i].append(convert[measure])
@@ -70,14 +81,25 @@ def parse_ingredients(ingredients):
                 quantity[i].append(convert[measure])
                 found = True
                 break
-            length = len(measure)
-            if ings[i][:length + 1] == measure.lower() + ' ':  # Unit is the first part of the string
+            # Search at the start of the string
+            elif ings[i][:length + 2] == measure.lower() + 's ':
+                ings[i] = ings[i].replace(measure.lower() + 's ', '')
+                quantity[i].append(convert[measure])
+                found = True
+                break
+            elif ings[i][:length + 1] == measure.lower() + ' ':
                 ings[i] = ings[i].replace(measure.lower() + ' ', '')
                 quantity[i].append(convert[measure])
                 found = True
                 break
-            if ings[i][:length + 2] == measure.lower() + 's ':  # Unit is the first part of the string
-                ings[i] = ings[i].replace(measure.lower() + 's ', '')
+            # At the end
+            elif ' ' + measure.lower() + 's' in ings[i]:
+                ings[i] = ings[i].replace(' ' + measure.lower() + 's', '')
+                quantity[i].append(convert[measure])
+                found = True
+                break
+            elif ' ' + measure.lower() in ings[i]:
+                ings[i] = ings[i].replace(' ' + measure.lower(), '')
                 quantity[i].append(convert[measure])
                 found = True
                 break

@@ -33,14 +33,17 @@ def recipes_page(possible=0, recommended=None):
         form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
         modifier = current_user.harmony_preferences['modifier']
         form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
-                                    [x for x in range(50, 105, 5)] + ['No Limit']
+                                  [x for x in range(50, 105, 5)] + ['No Limit']
         form.similarity.default = 50
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
         colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
                   'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d', }
+
+        # about, harmony = (None, True) if current_user.pro else (True, None)
         about = None if current_user.pro else True
+        # print(f'about: {about}, harmony: {harmony}')
         if request.method == 'GET':
             # check_preferences(current_user)
             preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
@@ -73,8 +76,8 @@ def recipes_page(possible=0, recommended=None):
             preference['possible'] = possible
             current_user.harmony_preferences = preference
             db.session.commit()
-        return render_template('recipes.html', title='Recipes', cards=recipe_list,
-                               recipe_ids=recipe_ids,
+
+        return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
                                search_recipes=sorted(recipe_list, key=lambda x: x.title), about=about,
                                sidebar=True, combos=possible, recommended=recommended, form=form, colors=colors)
     return render_template('recipes.html', recipes=None, all_recipes=None, title='Recipes', sidebar=False, combos=0,

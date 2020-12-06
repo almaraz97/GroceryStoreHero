@@ -34,18 +34,18 @@
         <!-- Navbar Right Side -->
         <div class="navbar-nav">
           {% if current_user.is_authenticated %}
-          {% if current_user.recipes|length <=80 %}
-          <a class="nav-item nav-link" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
+            {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->
+              <a class="nav-item nav-link" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
+            {% else %}
+              <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Upgrade</a>
+            {% endif %}
+            <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
+            <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
           {% else %}
-          <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Upgrade</a>
-          {% endif %}
-          <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
-          <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
-          <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
-          <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
-          {% else %}
-          <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
-          <a class="nav-item nav-link" href="{{ url_for('users.register') }}">Register</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.register') }}">Register</a>
           {% endif %}
         </div>
       </div>
@@ -56,18 +56,18 @@
 <nav class="navbar navbar-dark bg-steel fixed-top site-header d-sm-none row mx-auto navbar-expand">
   <div class="navbar-nav col p-0">
     {% if current_user.is_authenticated %}
-    {% if current_user.recipes|length <=80 %}
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe', link=0) }}"><img src="{{ url_for('static', filename='icons/add_recipe.png')  }}" height="35px" width="35px"></a>
+      {% if current_user.recipes|length <=80 %}
+        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe', link=0) }}"><img src="{{ url_for('static', filename='icons/add_recipe.png')  }}" height="35px" width="35px"></a>
+      {% else %}
+        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>
+      {% endif %}
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisle.png')  }}" height="35px" width="35px"></a>
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a>
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>
     {% else %}
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>
-    {% endif %}
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisle.png')  }}" height="35px" width="35px"></a>
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a>
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>
-    {% else %}
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.login') }}">Login</a>
-    <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.register') }}">Register</a>
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.login') }}">Login</a>
+      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.register') }}">Register</a>
     {% endif %}
   </div>
 </nav>
@@ -75,304 +75,304 @@
   <div class="row">
     <div class="col-md-8">
       {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-      {% for category, message in messages %}   <!-- todo Have flashed items auto-close-->
-      <div class="alert alert-{{ category }}">
-        {{ message }}
-      </div>
-      {% endfor %}
-      {% endif %}
+        {% if messages %}
+          {% for category, message in messages %}   <!-- todo Have flashed items auto-close-->
+            <div class="alert alert-{{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
       {% endwith %}
       {% block content %}{% endblock content %}
     </div>
     {% if sidebar %}
     <div class="col-md-4 mb-5 pb-4">
       <div class="content-section">
-        {% if about is defined %}
-        <h3>GroceryStoreHero</h3>
-        <p class='text-muted border-bottom pb-2'>By Alejandro Almaraz</p>
-        <h4>Consider Donating</h4>
-        <a href="https://venmo.com/Alejandro-Almaraz">Venmo</a><br>
-        <a href="https://paypal.me/Almaraz103">Paypal</a><br>
-        <a href="#">Bitcoin Address: </a><br><p style="font-size:14px;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicba<br>RdTUycL</p>
-        <a href="#">Ethereum Address:</a><br><p style="font-size:14px;">0x907156AF1ba3461eC4B8702C<br>c9cB27818615aA5b</p>
+        {% if about is defined and about != none %}
+          <h3>GroceryStoreHero</h3>
+          <p class='text-muted border-bottom pb-2'>By Alejandro Almaraz</p>
+          <h4>Consider Donating</h4>
+          <a href="https://venmo.com/Alejandro-Almaraz">Venmo</a><br>
+          <a href="https://paypal.me/Almaraz103">Paypal</a><br>
+          <a href="#">Bitcoin Address: </a><br><p style="font-size:14px;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicba<br>RdTUycL</p>
+          <a href="#">Ethereum Address:</a><br><p style="font-size:14px;">0x907156AF1ba3461eC4B8702C<br>c9cB27818615aA5b</p>
         {% elif account is defined %}
-        <h3 class='border-bottom pb-2'>Your Files</h3>
-        <form method="POST" action="" enctype="multipart/form-data">
-          {{ form2.hidden_tag() }}
-          <fieldset class="form-group mb-0">
-            <h4 class="mt-2 mb-2">Import</h4>
-            <div class="form-group mb-1">
-              {{ form2.file_name(class="form-control-file") }}
-              {% if form2.file_name.errors %}
-              {% for error in form2.file_name.errors %}
-              <span class="text-danger">{{ error }}</span></br>
-              {% endfor %}
-              {% endif %}
+          <h3 class='border-bottom pb-2'>Your Files</h3>
+          <form method="POST" action="" enctype="multipart/form-data">
+            {{ form2.hidden_tag() }}
+            <fieldset class="form-group mb-0">
+              <h4 class="mt-2 mb-2">Import</h4>
+              <div class="form-group mb-1">
+                {{ form2.file_name(class="form-control-file") }}
+                {% if form2.file_name.errors %}
+                  {% for error in form2.file_name.errors %}
+                    <span class="text-danger">{{ error }}</span></br>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </fieldset>
+            <div class="form-group mt-1">
+              {{ form2.import_recipes_button(class="btn btn-info") }}
+              {{ form2.import_aisles_button(class="btn btn-info") }}
             </div>
-          </fieldset>
-          <div class="form-group mt-1">
-            {{ form2.import_recipes_button(class="btn btn-info") }}
-            {{ form2.import_aisles_button(class="btn btn-info") }}
-          </div>
-        </form>
-        <form method="POST" action="{{ url_for('users.export') }}" enctype="multipart/form-data">
-          <h4 class="mt-3 mb-2">Download</h4>
-          <fieldset class="form-group">
-            <input class="btn btn-info" type="submit" value="Recipes" name="export">
-            <input class="btn btn-info" type="submit" value="Aisles" name="export">
-          </fieldset>
-        </form>
+          </form>
+          <form method="POST" action="{{ url_for('users.export') }}" enctype="multipart/form-data">
+            <h4 class="mt-3 mb-2">Download</h4>
+            <fieldset class="form-group">
+              <input class="btn btn-info" type="submit" value="Recipes" name="export">
+              <input class="btn btn-info" type="submit" value="Aisles" name="export">
+            </fieldset>
+          </form>
         {% elif aisle is defined %}
-        <h3 class=''>Un-added Ingredients</h3>
-        <p class='text-muted border-bottom pb-2'>Give your ingredients a home and your grocery list will be sorted for you.</p>
-        <!--Form adds unadded aisle items-->
-        {{ form.hidden_tag() }}
-        <form action="" method="POST">
-          <fieldset>
-            {{ form.unadded.label(class="form-control-label") }}
-            {{ form.unadded(class="custom-select") }}
-            {{ form.aisles.label(class="form-control-label mt-3") }}
-            {{ form.aisles(class="custom-select") }}
-          </fieldset>
-          {{ form.submit(class="btn btn-success btn-sm btn-block mt-4 mb-3") }}
-        </form>
+          <h3 class=''>Un-added Ingredients</h3>
+          <p class='text-muted border-bottom pb-2'>Give your ingredients a home and your grocery list will be sorted for you.</p>
+          <!--Form adds unadded aisle items-->
+          {{ form.hidden_tag() }}
+          <form action="" method="POST">
+            <fieldset>
+              {{ form.unadded.label(class="form-control-label") }}
+              {{ form.unadded(class="custom-select") }}
+              {{ form.aisles.label(class="form-control-label mt-3") }}
+              {{ form.aisles(class="custom-select") }}
+            </fieldset>
+            {{ form.submit(class="btn btn-success btn-sm btn-block mt-4 mb-3") }}
+          </form>
         {% elif home is defined %}
-        <h3 class="">Dashboard Statistics</h3>
-        <p class='text-muted border-bottom pb-2'>May the numbers be on your side and the savings plentiful!</p>
-        {% if current_user.pro %}
-        <h4>Menu</h4>
-        <ul>
-          {% if menu_recipes|length == 1 %}
-          <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipe on your menu</li>
+          <h3 class="">Dashboard Statistics</h3>
+          <p class='text-muted border-bottom pb-2'>May the numbers be on your side and the savings plentiful!</p>
+          {% if current_user.pro %}
+            <h4>Menu</h4>
+            <ul>
+              {% if menu_recipes|length == 1 %}
+                <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipe on your menu</li>
+              {% else %}
+                <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipes on your menu</li>
+              {% endif %}
+              {% if harmony_score is defined %}
+                <li class='text-muted mb-2'>Your menu has a Harmony Score of {{ harmony_score }}%</li>
+              {% endif %}
+            </ul>
+          {% endif %}
+          <h4 class="mt-3">Grocery List</h4>
+          {% if groceries is defined %}
+            {% set index = namespace(value=0) %}
+            {% for key in groceries %}
+              {% for item in groceries[key] %}
+                {% set index.value = index.value + 1 %}  <!--Number of ingredients in grocery list-->
+              {% endfor %}
+            {% endfor %}
+            <ul>
+              <li class='text-muted mt-0 mb-2'>You have {{ index.value }} items on your grocery list</li>
+              <li class='text-muted mt-0'>{{ overlap }} recipe ingredient{% if overlap > 1 %}s{% endif %} overlapped</li>
+            </ul>
+          {% endif %}
+          <h4 class="mt-3"><a href="{{ url_for('main.stats') }}">Miscellaneous</a></h4>
+          {% if statistics is defined and statistics[0]|length > 0 %}
+            <ul class='text-muted mt-0 mb-2'>
+              <li class='text-muted mt-0'>Most eaten recipe: {{ statistics[0][0] }} ({{ statistics[0][1] }})</li>
+              <li class='text-muted mt-0'>Least eaten recipe: {{ statistics[1][0] }} ({{ statistics[1][1] }})</li>
+              <li class='text-muted mt-0'>Most used ingredient: {{ statistics[2][0] }} ({{ statistics[2][1] }})</li>
+              <li class='text-muted mt-0'>Least used ingredient: {{ statistics[3][0] }} ({{ statistics[3][1] }})</li>
+            </ul>
           {% else %}
-          <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipes on your menu</li>
-          {% endif %}
-          {% if harmony_score is defined %}
-          <li class='text-muted mb-2'>Your menu has a Harmony Score of {{ harmony_score }}%</li>
-          {% endif %}
-        </ul>
-        {% endif %}
-        <h4 class="mt-3">Grocery List</h4>
-        {% if groceries is defined %}
-        {% set index = namespace(value=0) %}
-        {% for key in groceries %}
-        {% for item in groceries[key] %}
-        {% set index.value = index.value + 1 %}
-        {% endfor %}
-        {% endfor %}
-        <ul>
-          <li class='text-muted mt-0 mb-2'>You have {{ index.value }} items on your grocery list</li>
-          <li class='text-muted mt-0'>{{ overlap }} recipe ingredient{% if overlap > 1 %}s{% endif %} overlapped</li>
-        </ul>
-        {% endif %}
-        <h4 class="mt-3"><a href="{{ url_for('main.stats') }}">Miscellaneous</a></h4>
-        {% if statistics is defined and statistics[0]|length > 0 %}
-        <ul class='text-muted mt-0 mb-2'>
-          <li class='text-muted mt-0'>Most eaten recipe: {{ statistics[0][0] }} ({{ statistics[0][1] }})</li>
-          <li class='text-muted mt-0'>Least eaten recipe: {{ statistics[1][0] }} ({{ statistics[1][1] }})</li>
-          <li class='text-muted mt-0'>Most used ingredient: {{ statistics[2][0] }} ({{ statistics[2][1] }})</li>
-          <li class='text-muted mt-0'>Least used ingredient: {{ statistics[3][0] }} ({{ statistics[3][1] }})</li>
-        </ul>
-        {% else %}
-        <p class="text-muted">This will appear after you eat your first weeks' meals.</p>
+            <p class="text-muted">This will appear after you eat your first weeks' meals.</p>
         {% endif %}
         {% elif pantry is defined %}
-        <h3>Add Items to Pantry</h3>
-        <p class='text-muted border-bottom pb-2'>Clearing your menu updates your pantry. Add items that will get many uses here.</p>
-        <!--Form adds unadded aisle items-->
-        {{ form.hidden_tag() }}
-        <form action="" method="POST">
-          <fieldset>
-            {{ form.csrf_token() }}
-            {{ form.name.label(class="form-control-label") }}
-            {% if form.name.errors %}
-            {{ form.name(class="custom-select is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.name.errors %}
-              <span>{{ error }}</span>
-              {% endfor %}
-            </div>
-            {% else %}
-            {{ form.name(class="custom-select") }}
-            {% endif %}
-
-            {{ form.content.label(class="form-control-label mt-3") }}
-            {% if form.content.errors %}
-            {{ form.content(class="custom-select is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.content.errors %}
-              <span>{{ error }}</span>
-              {% endfor %}
-            </div>
-            {% else %}
-            {{ form.content(class="custom-select") }}
-            {% endif %}
-
-            {{ form.ingredient_quantity.label(class="form-control-label mt-3") }}
-            {% if form.ingredient_quantity.errors %}
-            {{ form.ingredient_quantity(class="form-control is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.ingredient_quantity.errors %}
-              <span>{{ error }}</span>
-              {% endfor %}
-            </div>
-            {% else %}
-            {{ form.ingredient_quantity(class="form-control") }}
-            {% endif %}
-
-            {{ form.ingredient_type.label(class="form-control-label mt-3") }}
-            {% if form.ingredient_type.errors %}
-            {{ form.ingredient_type(class="custom-select is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.ingredient_type.errors %}
-              <span>{{ error }}</span>
-              {% endfor %}
-            </div>
-            {% else %}
-            {{ form.ingredient_type(class="custom-select") }}
-            {% endif %}
-          </fieldset>
-          <div class="d-flex mb-3 mt-1">
-            {{ form.add(class="btn btn-success btn-sm btn-block mt-3") }}
-            {{ form.remove(class="btn btn-danger btn-sm btn-block mt-3 ml-2") }}
-          </div>
-        </form>
-        {% elif harmony %}
-        <h3>Full Harmony Tool</h3>
-        <p class='text-muted border-bottom pb-2'>Settings won't save here but you can see how they can affect recommendations.</p>
-        <!--Recipe cards-->
-        {% if recommended is not none %}
-        {% set index = namespace(value=1) %}
-        {% for group in recommended %}
-        <!--                                <article class="media content-section m-0 p-0">-->
-        <div class="media-body">
-          <p class="mb-0 ml-2" style="float:inline; text-decoration:underline;">Recommendation {{ index.value }} -> {{ recommended[group] }}%</p>
-          {% set index.value = index.value + 1 %}
-          <ul class="mb-0">
-            {% for recipe in group %}
-            <li class="my-0 py-0">{{ recipe }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        <!--                                </article>-->
-        {% endfor %}
-        {% else %}
-        No recommendations yet.
-        {% endif %}
-        {% else %}
-        <h3>Recipe Harmony Tool<a href="{{ url_for('main.harmony_tool') }}">™</a></h3>
-        <p class='text-muted border-bottom pb-2'>The recommendation system that will save you time and money.</p>
-        {{ form.hidden_tag() }}
-        <!--Form which updates User JSON and reloads page-->
-        <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
+          <h3>Add Items to Pantry</h3>
+          <p class='text-muted border-bottom pb-2'>Clearing your menu updates your pantry. Add items that will get many uses here.</p>
+          <!--Form adds unadded aisle items-->
           {{ form.hidden_tag() }}
-          <fieldset>
-            <!--Drop down Groups-->
-            <div class="input-group mb-2">
-              {{ form.groups.label(class="form-control-label") }}
-              <div class="input-group mb-2">
-                {{ form.groups(class="custom-select") }}
+          <form action="" method="POST">
+            <fieldset>
+              {{ form.csrf_token() }}
+              {{ form.name.label(class="form-control-label") }}
+              {% if form.name.errors %}
+              {{ form.name(class="custom-select is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.name.errors %}
+                <span>{{ error }}</span>
+                {% endfor %}
               </div>
-            </div>
-            <!--Drop down Exclude -->
-            <div class="input-group mb-2">
-              {{ form.excludes.label(class="form-control-label") }}
-              <div class="input-group mb-2">
-                {{ form.excludes(class="custom-select") }}
+              {% else %}
+              {{ form.name(class="custom-select") }}
+              {% endif %}
+
+              {{ form.content.label(class="form-control-label mt-3") }}
+              {% if form.content.errors %}
+              {{ form.content(class="custom-select is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.content.errors %}
+                <span>{{ error }}</span>
+                {% endfor %}
               </div>
-            </div>
-            <div class="input-group mb-2">
-              <!--Drop down Similarity-->
-              {{ form.similarity.label(class="form-control-label") }}
-              <div class="input-group mb-2">
-                {{ form.similarity(class="custom-select") }}
+              {% else %}
+              {{ form.content(class="custom-select") }}
+              {% endif %}
+
+              {{ form.ingredient_quantity.label(class="form-control-label mt-3") }}
+              {% if form.ingredient_quantity.errors %}
+              {{ form.ingredient_quantity(class="form-control is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.ingredient_quantity.errors %}
+                <span>{{ error }}</span>
+                {% endfor %}
               </div>
+              {% else %}
+              {{ form.ingredient_quantity(class="form-control") }}
+              {% endif %}
+
+              {{ form.ingredient_type.label(class="form-control-label mt-3") }}
+              {% if form.ingredient_type.errors %}
+              {{ form.ingredient_type(class="custom-select is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.ingredient_type.errors %}
+                <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+              {% else %}
+              {{ form.ingredient_type(class="custom-select") }}
+              {% endif %}
+            </fieldset>
+            <div class="d-flex mb-3 mt-1">
+              {{ form.add(class="btn btn-success btn-sm btn-block mt-3") }}
+              {{ form.remove(class="btn btn-danger btn-sm btn-block mt-3 ml-2") }}
             </div>
-          </fieldset>
-          <div>
-            {{ form.submit(class="btn btn-success btn-sm btn-block mt-2") }}
-          </div>
-        </form>
-        {% if combos is defined %}
-        <p class='text-muted mb-2 mt-3 pt-1 border-top' style="text-align: center;">{{combos}} combinations were evaluated</p>
-        {% endif %}
-        <!-- Recommendations -->
-        {% if recommended %}
-        <!-- Multi-select Recipes -->
-        {% if (recommended.keys()|first)|length < 2 %}
-        <form action="{{ url_for('recipes.multi_add_to_menu', multi=True) }}" method="POST">
-          <select multiple class="form-control mt-3" name="harmony">
-            <option value="">-- select options (clt+click) --</option>
-            {% for recipe in recommended %}
-            <option value="{{ recipe_ids[recipe[0]] }}">{{ recipe[0] }} {{ recommended[recipe] }}%</option>
-            {% endfor %}
-          </select>
-          <button class="btn btn-success btn-block btn-sm mt-3 mb-2">Add to Menu</button>
-        </form>
-        {% else %}
-        <!--Accordion recipe recommendations-->
-        <div id="accordion">
+          </form>
+        {% elif harmony is defined %}
+          <h3>Full Harmony Tool</h3>
+          <p class='text-muted border-bottom pb-2'>Settings won't save here but you can see how they can affect recommendations.</p>
+          <!--Recipe cards-->
+          {% if recommended is not none %}
           {% set index = namespace(value=1) %}
           {% for group in recommended %}
-          <div class="card mb-2">
-            <div class="card-header p-0" id="heading{{ index.value }}">
-              <h5 class="mb-0">
-                <button class="btn btn-light btn-block btn-lrg" data-toggle="collapse" data-target="#collapse{{ index.value }}"  aria-controls="collapse{{ index.value }}">
-                  Recommendation {{ index.value }} | Score: {{ recommended[group] }}%
-                </button>
-              </h5>
-            </div>
-            <div id="collapse{{ index.value }}" class="card-block collapse" aria-labelledby="heading{{ index.value }}" data-parent="#accordion">
-              <div class="card-body-harmony mt-3">
-                <ul style="font-size: 14px;" class="mb-2">
-                  {% set ids = [] %}
-                  {% for recipe in group %}
-                  {% set ids = ids.append(recipe_ids[recipe]) %}
-                  {% endfor %}
-                  {% for recipe in group %}
-                  {% if recipe is defined and recipe|length > 0 %}
-                  <li class="mt-1 mb-0"><a href="{{ url_for('recipes.multi_add_to_menu2',ids=ids) }}">{{ recipe }}</a></li>
-                  {% endif %}
-                  {% endfor %}
-                </ul>
-                <div class="mx-5 mb-2 pt-0 ">
-                  <button class="m-0 p-0 btn-block btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#change{{ids}}">Too similar?</button>
+          <!--                                <article class="media content-section m-0 p-0">-->
+          <div class="media-body">
+            <p class="mb-0 ml-2" style="float:inline; text-decoration:underline;">Recommendation {{ index.value }} -> {{ recommended[group] }}%</p>
+            {% set index.value = index.value + 1 %}
+            <ul class="mb-0">
+              {% for recipe in group %}
+              <li class="my-0 py-0">{{ recipe }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <!--                                </article>-->
+          {% endfor %}
+          {% else %}
+          No recommendations yet.
+          {% endif %}
+          {% else %}
+          <h3>Recipe Harmony Tool<a href="{{ url_for('main.harmony_tool') }}">™</a></h3>
+          <p class='text-muted border-bottom pb-2'>The recommendation system that will save you time and money.</p>
+          {{ form.hidden_tag() }}
+          <!--Form which updates User JSON and reloads page-->
+          <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <fieldset>
+              <!--Drop down Groups-->
+              <div class="input-group mb-2">
+                {{ form.groups.label(class="form-control-label") }}
+                <div class="input-group mb-2">
+                  {{ form.groups(class="custom-select") }}
                 </div>
-                <!-- Modal to rate recommendation similarity-->
-                <div class="modal fade" id="change{{ids}}" tabindex="-1" role="dialog" aria-labelledby="changeLabel{{ids}}" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="changeLabel{{ids}}">How similar are these recipes?</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-                      <div class="modal-footer">
-                        <form action="" method="POST">
-                          <div class="btn-group mr-5 pr-4" role="group">
-                            <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=1) }}" type="submit" class="btn btn-success">1</button>
-                            <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=2) }}" type="submit" class="btn btn-warning">2</button>
-                            <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=3) }}" type="submit" class="btn btn-warning">3</button>
-                            <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=4) }}" type="submit" class="btn btn-warning">4</button>
-                            <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=5) }}" type="submit" class="btn btn-danger">5</button>
-                          </div>
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                          <!--                                                                            <input class="btn btn-danger" type="submit" value="Change">-->
-                        </form>
+              </div>
+              <!--Drop down Exclude -->
+              <div class="input-group mb-2">
+                {{ form.excludes.label(class="form-control-label") }}
+                <div class="input-group mb-2">
+                  {{ form.excludes(class="custom-select") }}
+                </div>
+              </div>
+              <div class="input-group mb-2">
+                <!--Drop down Similarity-->
+                {{ form.similarity.label(class="form-control-label") }}
+                <div class="input-group mb-2">
+                  {{ form.similarity(class="custom-select") }}
+                </div>
+              </div>
+            </fieldset>
+            <div>
+              {{ form.submit(class="btn btn-success btn-sm btn-block mt-2") }}
+            </div>
+          </form>
+          {% if combos is defined %}
+          <p class='text-muted mb-2 mt-3 pt-1 border-top' style="text-align: center;">{{combos}} combinations were evaluated</p>
+          {% endif %}
+          <!-- Recommendations -->
+          {% if recommended %}
+          <!-- Multi-select Recipes -->
+          {% if (recommended.keys()|first)|length < 2 %}
+          <form action="{{ url_for('recipes.multi_add_to_menu', multi=True) }}" method="POST">
+            <select multiple class="form-control mt-3" name="harmony">
+              <option value="">-- select options (clt+click) --</option>
+              {% for recipe in recommended %}
+              <option value="{{ recipe_ids[recipe[0]] }}">{{ recipe[0] }} {{ recommended[recipe] }}%</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-success btn-block btn-sm mt-3 mb-2">Add to Menu</button>
+          </form>
+          {% else %}
+          <!--Accordion recipe recommendations-->
+          <div id="accordion">
+            {% set index = namespace(value=1) %}
+            {% for group in recommended %}
+            <div class="card mb-2">
+              <div class="card-header p-0" id="heading{{ index.value }}">
+                <h5 class="mb-0">
+                  <button class="btn btn-light btn-block btn-lrg" data-toggle="collapse" data-target="#collapse{{ index.value }}"  aria-controls="collapse{{ index.value }}">
+                    Recommendation {{ index.value }} | Score: {{ recommended[group] }}%
+                  </button>
+                </h5>
+              </div>
+              <div id="collapse{{ index.value }}" class="card-block collapse" aria-labelledby="heading{{ index.value }}" data-parent="#accordion">
+                <div class="card-body-harmony mt-3">
+                  <ul style="font-size: 14px;" class="mb-2">
+                    {% set ids = [] %}
+                    {% for recipe in group %}
+                    {% set ids = ids.append(recipe_ids[recipe]) %}
+                    {% endfor %}
+                    {% for recipe in group %}
+                    {% if recipe is defined and recipe|length > 0 %}
+                    <li class="mt-1 mb-0"><a href="{{ url_for('recipes.multi_add_to_menu2',ids=ids) }}">{{ recipe }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                  <div class="mx-5 mb-2 pt-0 ">
+                    <button class="m-0 p-0 btn-block btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#change{{ids}}">Too similar?</button>
+                  </div>
+                  <!-- Modal to rate recommendation similarity-->
+                  <div class="modal fade" id="change{{ids}}" tabindex="-1" role="dialog" aria-labelledby="changeLabel{{ids}}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="changeLabel{{ids}}">How similar are these recipes?</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-footer">
+                          <form action="" method="POST">
+                            <div class="btn-group mr-5 pr-4" role="group">
+                              <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=1) }}" type="submit" class="btn btn-success">1</button>
+                              <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=2) }}" type="submit" class="btn btn-warning">2</button>
+                              <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=3) }}" type="submit" class="btn btn-warning">3</button>
+                              <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=4) }}" type="submit" class="btn btn-warning">4</button>
+                              <button formaction="{{ url_for('recipes.recipe_similarity', ids=ids, sim=5) }}" type="submit" class="btn btn-danger">5</button>
+                            </div>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <!--                                                                            <input class="btn btn-danger" type="submit" value="Change">-->
+                          </form>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+            {% set index.value = index.value + 1 %}
+            {% endfor %}
           </div>
-          {% set index.value = index.value + 1 %}
-          {% endfor %}
-        </div>
-        {% endif %}
-        {% endif %}
+          {% endif %}
+          {% endif %}
         {% endif %}
       </div>
     </div>

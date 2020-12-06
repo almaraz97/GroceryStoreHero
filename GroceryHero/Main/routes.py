@@ -30,6 +30,7 @@ use of session in new and update recipe route handoffs, cython working, load rec
 handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
+# todo move accordions down after being eaten
 # todo extras quantity is wrong
 # todo allow pantry adds without being recipe ingredient
 # todo add_ make headers same size
