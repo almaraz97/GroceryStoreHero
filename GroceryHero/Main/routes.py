@@ -31,6 +31,8 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
 # todo move accordions down after being eaten
+# todo adding extras dont reset grocery list
+# todo updating a recipe, dont reset grocery list (perhaps hold recipe ID in the recipe dict's list?
 # todo extras quantity is wrong
 # todo allow pantry adds without being recipe ingredient
 # todo add_ make headers same size

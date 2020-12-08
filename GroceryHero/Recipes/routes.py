@@ -103,6 +103,7 @@ def new_recipe():
 @login_required
 def new_recipe_quantity():
     recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
+    # print(recipe['quantity'])  # todo mima error
     data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
                                   'ingredient_type': recipe['quantity'][ingredient][1]}
                                  for ingredient in recipe['quantity'].keys()]}

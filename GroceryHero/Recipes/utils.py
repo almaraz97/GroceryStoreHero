@@ -32,6 +32,7 @@ def parse_ingredients(ingredients):
         nums = ''  # String for holding quantity value
         cons = 0  # For remembering if last character was a number (consecutive, counts which index has the last number)
         flag = False  # For remembering if the last character was a space (ie '2 1/2', '1.5', '1 5 ounce __')
+        empty = False
         for j, char in enumerate(ingredient):  # Getting the quantity and measurements
             try:
                 if isinstance(float(char), float):  # Need to be able to parse fractions and decimals (keep it a char)
@@ -66,6 +67,8 @@ def parse_ingredients(ingredients):
             elif ' ' in quantity[i][0]:  # Convert number of a certain sized quantity ('1 15 ounce can")
                 numbers = quantity[i][0].split(' ')
                 quantity[i][0] = int(numbers[0]) * float(numbers[1])
+        else:
+            quantity[i].append('1')  # Might want to flag to user that this value defaulted
 
         ings.append(' '.join([x.strip() for x in temp.split(' ') if x != ' ' and x != '']))
         found = False  # todo find '1 15 ounce can' and include only one of the units
@@ -104,9 +107,8 @@ def parse_ingredients(ingredients):
                 found = True
                 break
 
-        if not found:
-            if len(quantity[i]) < 1:
-                quantity[i].append('1')
+        if not found:  # Didnt find a unit
             quantity[i].append('Unit')
+
         ings[i] = ings[i].strip()
     return ings, quantity
