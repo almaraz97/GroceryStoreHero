@@ -16,8 +16,8 @@
       {% endif %}
     </div>
       <!--Accordion Menu List-->
+      {% set all_eaten = namespace(value=0) %}
       <div id="accordion" class="my-3">
-        {% set all_eaten = 0%}
         {% if menu_recipes[0] is not defined and menu_recipes[0] != '' %} <!--If there is nothing on the menu-->
           <div class="card">
             <div class="card-header p-0" id="headingMenu">
@@ -47,7 +47,7 @@
                         {{ recipe.title }}
                       </button>
                     {% else %}
-                      {% set all_eaten = all_eaten + 1%}
+                      {% set all_eaten.value = all_eaten.value + 1 %}
                       <button style=".collapse" class="btn btn-secondary btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
                         {{ recipe.title }}
                       </button>
@@ -177,7 +177,7 @@
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      {% if all_eaten == menu_recipes|length%}
+      {% if all_eaten.value == menu_recipes|length%}
         <div class="modal-header">
           <h5 class="modal-title" id="deleteModalLabel">Clear All Menu Items?</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -200,12 +200,12 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-      <div class="modal-footer">
-        <p class="text-muted">Clearing also saves these recipes into your recipe history.
-           You can remove them from the Recipe page instead if you didn't eat these recipes.
-        </p>
-        <button type="button" class="btn btn-secondary ml-3" data-dismiss="modal">Close</button>
-      </div>
+        <div class="modal-footer">
+          <p class="text-muted">Clearing also saves these recipes into your recipe history.
+             You can remove them from the Recipe page instead if you didn't eat these recipes. Then try clearing again.
+          </p>
+          <button type="button" class="btn btn-secondary ml-3" data-dismiss="modal">Close</button>
+        </div>
       {% endif %}
     </div>
   </div>
