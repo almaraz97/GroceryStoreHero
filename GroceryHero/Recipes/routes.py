@@ -5,7 +5,7 @@ from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
 from GroceryHero import db
-from GroceryHero.HarmonyToolCy import recipe_stack
+from GroceryHero.HarmonyTool import recipe_stack
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients
