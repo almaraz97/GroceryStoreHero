@@ -72,7 +72,7 @@ def new_shelf_quantity(send):
                                  for ingredient in send['quantity'].keys()]}
     form = FullQuantityForm(data=data)
     form.ingredients = [x for x in send['quantity'].keys()]
-    if form.is_submitted():
+    if form.is_submitted():  # change to validate
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [int(Q), M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}

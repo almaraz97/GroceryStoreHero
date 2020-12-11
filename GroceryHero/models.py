@@ -12,6 +12,9 @@ def load_user(user_id):
 
 
 class User(db.Model, UserMixin):
+    """
+    Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}
+    """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -19,7 +22,6 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable=False)
     recipes = db.relationship('Recipes', backref='author', lazy=True)
     aisles = db.relationship('Aisles', backref='author', lazy=True)
-    """Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}"""
     harmony_preferences = db.Column(db.JSON, nullable=True,
                                     default={'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0,
                                              'recommended': {}, 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {},
@@ -30,12 +32,14 @@ class User(db.Model, UserMixin):
     extras = db.Column(db.JSON, nullable=True, default=[])
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     messages = db.Column(db.JSON, nullable=False, default=[])
-    # Should be [[{title: [ingredients, ...]}, ...}, ...]...]
-    history = db.Column(db.JSON, nullable=False, default=[])  # Eating history
-    friend_requests = db.Column(db.JSON, nullable=False, default=[])
-    friends = db.Column(db.JSON, nullable=False, default=[])
-    # {Shelf: {Ingredient: [quantity, unit],...},...}
-    pantry = db.Column(db.JSON, nullable=True, default={})
+    # Eating history #CHANGE to [Clear({title: [[ingredients], datetime ...]...})...]
+    history = db.Column(db.JSON, nullable=False, default=[])
+    friend_requests = db.Column(db.JSON, nullable=False, default=[])  # #Key, Value
+    friends = db.Column(db.JSON, nullable=False, default=[])  # #Keys are friend IDs, Values are their list of settings to that friend (Block,
+    pantry = db.Column(db.JSON, nullable=True, default={})  # #{Shelf: {Ingredient: [quantity, unit],...},...}
+    # public = db.Column(db.Boolean, nullable=False, default=False)
+    # feed_see = db.Column(db.JSON, nullable=True, default={})  # #{'update': True, 'add':True, 'delete':False, 'clear':{'titles':True, 'ingredients':True,...}}  # To show others
+    # feed_show = db.Column(db.JSON, nullable=True, default={})  # #{'update': True, 'add':True, 'delete':False, 'clear':{'titles':True, 'ingredients':True,...}}  # To show others
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
@@ -56,21 +60,25 @@ class User(db.Model, UserMixin):
 
 class Recipes(db.Model):  # Add picture of recipe in recipe page
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     quantity = db.Column(db.JSON, nullable=True)  # Format: {ingredient: [value, unit]}
     notes = db.Column(db.Text, nullable=True)
-    link = db.Column(db.String(20), nullable=True)
+    link = db.Column(db.String(200), nullable=True)
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
-    recipe_type = db.Column(db.String(16), nullable=True)  # Asian, Hispanic, Southern
-    picture = db.Column(db.String(20), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    public = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
+    recipe_type = db.Column(db.String(16), nullable=True)
+    # recipe_genre = db.Column(db.String(16), nullable=True) # Asian, Hispanic, Southern
+    picture = db.Column(db.String(20), nullable=True)
+    public = db.Column(db.Boolean, nullable=False, default=False)
     servings = db.Column(db.Integer, nullable=True, default=0)
-    # yield = db.Column(db.Integer, nullable=True, default=1)
-    # downloads = db.Column(db.Integer, nullable=True, default=0)
-    # other_eaten = db.Column(db.Integer, nullable=True, default=0)
+    # # Key is user ID, Value is datetime
+    # downloads = db.Column(db.JSON, nullable=True, default={})
+    # # Key is user ID, value is Bool for their menu eatens
+    # others_eaten = db.Column(db.JSON, nullable=True, default={})
+    # # Key is user ID, value is Bool for their menu
+    # others_menu = db.Column(db.JSON, nullable=True, default={})
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
@@ -97,6 +105,50 @@ class Aisles(db.Model):
         if isinstance(other, Aisles):
             return self.title == other.title and self.content == other.content
         return False
+
+
+# class Actions(db.Model):  # Where friends feed stuff will be held
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     type_ = db.Column(db.String(20), nullable=False)  # Update, Add, Delete, Clear
+#     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+#     content = db.Column(db.Text, nullable=False)
+#     comments = db.Column(db.JSON, nullable=True, default={})
+#     likes = db.Column(db.JSON, nullable=True, default={})
+#     feed_show = db.Column(db.Boolean, nullable=True, default=True)  # Whether user wants others to see
+#
+#     def __repr__(self):
+#         return f"Actions('{self.type_}', '{self.content}', '{self.date_created}')"
+
+# Once you make a recipe public it cannot be changed. It is linked to your version
+# class Pub_Recs(db.Model):  # Add picture of recipe in recipe page
+#     id = db.Column(db.Integer, primary_key=True)
+#     origin_id = db.Column(db.Integer, nullable=False)
+#     title = db.Column(db.String(50), nullable=False)
+#     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+#     quantity = db.Column(db.JSON, nullable=True)  # Format: {ingredient: [value, unit]}
+#     notes = db.Column(db.Text, nullable=True)
+#     link = db.Column(db.String(20), nullable=True)
+#     # in_menu = db.Column(db.Boolean, nullable=False, default=False)
+#     recipe_type = db.Column(db.String(16), nullable=True)  # Asian, Hispanic, Southern
+#     picture = db.Column(db.String(20), nullable=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     # public = db.Column(db.Boolean, nullable=False, default=False)
+#     # eaten = db.Column(db.Boolean, nullable=False, default=False)
+#     servings = db.Column(db.Integer, nullable=True, default=0)
+#     # # Key is user ID, Value is datetime
+#     # downloads = db.Column(db.JSON, nullable=True, default={})
+#     # other_eaten = db.Column(db.Integer, nullable=True, default=0)
+#     # # Key is user ID, value is Bool for their menu
+#     # others_menu = db.Column(db.JSON, nullable=True, default={})
+#
+#     def __repr__(self):
+#         return f"PubRecs('{self.title}', '{list(self.quantity.keys())}')"
+#
+#     def __eq__(self, other):
+#         if isinstance(other, Recipes):
+#             return self.title == other.title and self.quantity.keys() == other.quantity.keys()
+#         return False
 
 
 # toy_user = User()

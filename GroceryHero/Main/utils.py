@@ -95,6 +95,9 @@ def aisle_grocery_sort(menu_list, aisles):
 def update_grocery_list(user):
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=user).order_by(Recipes.title).all()
                  if recipe.in_menu]
+    # friends = user.friends
+    # menu_list.append(recipe for recipe in Recipes.query.filter(Recipes.id.in_(friends))
+    #                  if recipe.others_menu.get(current_user, False))
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
     entries = user.extras

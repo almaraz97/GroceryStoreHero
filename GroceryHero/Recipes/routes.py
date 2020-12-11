@@ -10,7 +10,7 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients
 from GroceryHero.Users.forms import HarmonyForm
-from GroceryHero.models import Recipes
+from GroceryHero.models import Recipes, User
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
 recipes = Blueprint('recipes', __name__)
@@ -33,17 +33,16 @@ def recipes_page(possible=0, recommended=None):
         form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
         modifier = current_user.harmony_preferences['modifier']
         form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
-                                  [x for x in range(50, 105, 5)] + ['No Limit']
+            [x for x in range(50, 105, 5)] + ['No Limit']
         form.similarity.default = 50
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
         colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d', }
+                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
 
         # about, harmony = (None, True) if current_user.pro else (True, None)
         about = None if current_user.pro else True
-        # print(f'about: {about}, harmony: {harmony}')
         if request.method == 'GET':
             # check_preferences(current_user)
             preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
@@ -84,6 +83,26 @@ def recipes_page(possible=0, recommended=None):
                            recommended=None)
 
 
+@recipes.route('/friend_recipes', methods=['GET', 'POST'])
+@login_required
+def friend_recipes():
+    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    recipe_list = []
+    user_recipes = Recipes.query.filter_by(user_id=current_user.id).all()
+    friends = current_user.friends
+    friend_dict = {ids: User.query.filter_by(id=ids).first().username for ids in friends}
+    # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
+    for friend in friends:  # current_user.friends:
+        for recipe in Recipes.query.filter_by(user_id=friend).all():
+            if recipe not in recipe_list+user_recipes:
+                recipe_list.append(recipe)
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=False,
+                           recommended=None,  colors=colors, search_recipes=recipe_list,
+                           friend_dict=friend_dict, friends=True)
+
+
 @recipes.route('/post/new', methods=['GET', 'POST'])
 @login_required
 def new_recipe():
@@ -103,7 +122,6 @@ def new_recipe():
 @login_required
 def new_recipe_quantity():
     recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
-    # print(recipe['quantity'])  # todo mima error
     data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
                                   'ingredient_type': recipe['quantity'][ingredient][1]}
                                  for ingredient in recipe['quantity'].keys()]}
@@ -114,7 +132,7 @@ def new_recipe_quantity():
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
-                         notes=recipe['notes'], recipe_type=recipe['type'])
+                         notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''))
         db.session.add(recipe)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
@@ -139,8 +157,8 @@ def recipe_from_link():
         ingredients = [x.lower() for x in scraper.ingredients()]
         ings, quantity = parse_ingredients(ingredients)
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
-                                 'measures': quantity}
-        return redirect(url_for('recipes.new_recipe_link'))
+                                 'measures': quantity, 'link': form.link.data if len(form.link.data) <= 20 else ''}
+        return redirect(url_for('recipes.new_recipe_link'))  # todo change link string limit
     return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
 
 
@@ -159,13 +177,11 @@ def new_recipe_link():  # filling out the form data from link page
         ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
         ings = {}
         for i, ing in enumerate(ingredients):
-            try:
-                ings[ing] = session['recipe_raw']['measures'][i]
-            except IndexError:
-                ings[ing] = [1, 'Unit']
-        ingredients = ings
-        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,
-                             'notes': form.notes.data, 'type': form.type_.data}
+            # todo figure out how to link quantity with ingredients, despite deletion and modification
+            ings[ing] = session['recipe_raw']['measures'][i]  # except IndexError: ings[ing] = [1, 'Unit']
+
+        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ings,
+                             'notes': form.notes.data, 'type': form.type_.data, 'link': session['recipe_raw']['link']}
         return redirect(url_for('recipes.new_recipe_quantity'))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
@@ -183,7 +199,7 @@ def update_recipe(recipe_id):
                          for ingredient in ingredients}
         notes = form.notes.data
         title = string.capwords(form.title.data.strip())
-        session['recipe'] = {'title': title, 'quantity': quantity_dict, 'notes': notes, 'type':form.type_.data}
+        session['recipe'] = {'title': title, 'quantity': quantity_dict, 'notes': notes, 'type': form.type_.data}
         return redirect(url_for('recipes.update_recipe_quantity', recipe_id=recipe_id))
     elif request.method == 'GET':
         form.title.data = recipe.title
@@ -224,16 +240,26 @@ def update_recipe_quantity(recipe_id):
 @login_required
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
-    if recipe_post.author != current_user:
-        abort(403)
+    # if recipe_post.user_id not in current_user.friends:
+    #     abort(403)
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
                 for ingredient in recipe_post.quantity}
     recipe_post.quantity = quantity
     if request.method == 'POST':  # Download recipe
-        title = recipe_post.title
-        recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-        return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-                                                                 f"attachment; filename={title}.txt"})
+        if recipe_post.user_id == current_user.id:
+            title = recipe_post.title
+            recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+            return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+                                                                     f"attachment; filename={title}.txt"})
+        else:
+            flash(f"{recipe_post.title} imported to your library!", 'success')
+            # title = recipe_post.title
+            # content = None
+            # notes = None
+            # type_ = None
+            # new_recipe = Recipes(title=title, content=content, notes=notes, type_=type_)
+            # db.session.add(new_recipe)
+            # db.session.commit()
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
 
 

@@ -30,33 +30,6 @@ use of session in new and update recipe route handoffs, cython working, load rec
 handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
-# todo move accordions down after being eaten
-# todo adding extras dont reset grocery list
-# todo updating a recipe, dont reset grocery list (perhaps hold recipe ID in the recipe dict's list?
-# todo extras quantity is wrong
-# todo allow pantry adds without being recipe ingredient
-# todo add_ make headers same size
-# todo push recipe single buttons into lower row if recipe name is too long
-# todo pantry double type ingredient quantity rounding down
-# todo in grocerylist quantities take decimal part and convert to common fractions
-# todo move as much logic out of routes and into utils
-# todo add error feedback on forms/change to form.validate_on_submit()/add hidden tags
-# todo add store title to grocery-list above aisle names, Allow each store to have aisles 1-10
-# todo fix password reset abilities (being sent another link that will work)
-# Soon
-# todo ?add an all_ingredients column to fill pantry and aisles from?
-# todo add RHT switchables- Cheddar Cheese ~ Mozzarella Cheese, allow either or in recipes, best possible Harmony given
-# todo figure out JSON situation from harmony preferences JSON column coming in and out
-# todo save the day a history clear was performed (can find average time before eating recipe again)
-# todo be able to add serving size to a recipe and multiply it in the menu
-# todo add grocery-list items being used by recipes (Garlic 3 units (used by x,y,z))
-# Later
-# todo have aisle ingredients show recipes that have that ingredient
-# todo Store RHT dict of combos (value as HS), exclude, wont be recalculated (subsets could be excluded and average HS?)
-# todo Add picture functionality
-# todo Add friend list to see their recipes in explore page
-# todo Add ability to make recipe public + filthy filter
-
 
 @main.route('/')
 @main.route('/home')
@@ -66,6 +39,9 @@ def home():
     if current_user.is_authenticated:
         menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                      if recipe.in_menu]
+        # friends = current_user.friends
+        # menu_list.append(recipe for recipe in Recipes.query.filter(Recipes.id.in_(friends))
+        #                  if recipe.others_menu.get(current_user, False))
         # GroceryList maker
         aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
         groceries, overlap = current_user.grocery_list
@@ -93,8 +69,13 @@ def clear_menu():
         history = []
         for recipe in menu_recipes:
             history.append(recipe.id)
-            recipe.in_menu = False
-            recipe.eaten = False
+            if recipe.user_id == current_user.id:
+                recipe.in_menu = False
+                recipe.eaten = False
+            else:
+                pass
+                # recipe.other_menu[current_user.id] = False
+                # recipe.other_eaten[current_user.id] = False
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
         histories.append(history)
@@ -285,7 +266,7 @@ def change_to_grocerylist():
     return json.dumps({'result': 'success'})
 
 
-@main.route('/home/change_eaten', methods=['POST'])
+@main.route('/home/change_eaten', methods=['POST'])  # todo might affect friends list menu stuff
 def change_to_eaten():
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.filter_by(id=recipe_id).first()

@@ -29,7 +29,12 @@ def register():
         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-        # todo create default recipes here
+        # todo finish default recipes
+        # recipes = [Recipes(title='Burgers', quantity=None, notes=None, link=None, in_menu=True),
+        #            Recipes(title='Tacos', quantity=None, notes=None, link=None, in_menu=True),
+        #            Recipes(title='Chicken Soup', quantity=None, notes=None, link=None, in_menu=True),
+        #            Recipes(title='Turkey Panini', quantity=None, notes=None, link=None, in_menu=False),
+        #            Recipes(title='Potato Salad', quantity=None, notes=None, link=None, in_menu=False)]
         db.session.add(user)
         db.session.commit()
         for recipe in starter_recipes():
@@ -41,10 +46,17 @@ def register():
 
 
 @users.route('/login', methods=['GET', 'POST'])
-def login():
+def login():  # todo Auth0 here
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    form = LoginForm()
+    # if session['user']['email_validated']
+    #   email = session['user']['email']
+    #   users = User.query.filter_by(email=email).first()
+    #   if email in users:
+    #       user = User.query.filter_by(email=email).first()
+    #   else:
+    #       #SEND TO REGISTER AND AUTOMATICALLY REGISTER with just username and email
+    form = LoginForm()  # Won't be necessary
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
@@ -86,7 +98,7 @@ def account():
         import_type = 'recipes' if form2.import_recipes_button.data else 'aisles'
         import_files(form2.file_name.data, import_type)
         return redirect(url_for('users.account'))
-    if form3.is_submitted():
+    if form3.is_submitted():  # todo change to validate
         update_harmony_preferences(form3, current_user)
         db.session.commit()
         flash('Your settings have been updated', 'success')

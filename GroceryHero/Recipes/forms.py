@@ -117,8 +117,8 @@ class Measurements:
 class RecipeForm(FlaskForm):
     title = StringField('Recipe Name', validators=[DataRequired()])
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
-    type_ = SelectField('Type', choices=[(x, x) for x in ['Other', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert']],
-                        default='Other')
+    type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']],
+                        default='Dinner')
     notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
 

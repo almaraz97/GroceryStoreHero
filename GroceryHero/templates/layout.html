@@ -143,13 +143,9 @@
           {% if current_user.pro %}
             <h4>Menu</h4>
             <ul>
-              {% if menu_recipes|length == 1 %}
-                <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipe on your menu</li>
-              {% else %}
-                <li class='text-muted mb-2'>You have {{ menu_recipes|length }} recipes on your menu</li>
-              {% endif %}
+              <li class='text-muted mb-2'>{{ menu_recipes|length }} recipe{% if menu_recipes|length == 1 %}s{% endif %} are on your menu</li>
               {% if harmony_score is defined %}
-                <li class='text-muted mb-2'>Your menu has a Harmony Score of {{ harmony_score }}%</li>
+                <li class='text-muted mb-2'>With a Harmony Score of {{ harmony_score }}%</li>
               {% endif %}
             </ul>
           {% endif %}
@@ -162,7 +158,7 @@
               {% endfor %}
             {% endfor %}
             <ul>
-              <li class='text-muted mt-0 mb-2'>You have {{ index.value }} items on your grocery list</li>
+              <li class='text-muted mt-0 mb-2'>{{ index.value }} items are on your grocery list</li>
               <li class='text-muted mt-0'>{{ overlap }} recipe ingredient{% if overlap > 1 %}s{% endif %} overlapped</li>
             </ul>
           {% endif %}
