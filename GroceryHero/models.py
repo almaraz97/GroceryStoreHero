@@ -40,6 +40,7 @@ class User(db.Model, UserMixin):
     # public = db.Column(db.Boolean, nullable=False, default=False)
     # feed_see = db.Column(db.JSON, nullable=True, default={})  # #{'update': True, 'add':True, 'delete':False, 'clear':{'titles':True, 'ingredients':True,...}}  # To show others
     # feed_show = db.Column(db.JSON, nullable=True, default={})  # #{'update': True, 'add':True, 'delete':False, 'clear':{'titles':True, 'ingredients':True,...}}  # To show others
+    # recipe_show = db.Column(db.JSON, nullable=True, default={})  # individual recipe settings for showing
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
