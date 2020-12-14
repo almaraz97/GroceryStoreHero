@@ -36,15 +36,13 @@ class User(db.Model, UserMixin):
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     messages = db.Column(db.JSON, nullable=False, default=[])  # {}
     history = db.Column(db.JSON, nullable=False, default=[])  # {datetime:[{title:[ingredients]},...]}
-    # friend_requests = db.Column(db.JSON, nullable=False, default=[])  # {}  # #Key, Value
-    # friends = db.Column(db.JSON, nullable=False, default=[])
     pantry = db.Column(db.JSON, nullable=True, default={})  # #{Shelf: {Ingredient: [quantity, unit],...},...}
 
-    user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
+    # todo be able to backref here
+    # user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
+    # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
+    # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)
     actions = db.relationship('Actions', backref='author', lazy=True)
-    follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
-    user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)
-
     pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
     pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
     pro4 = db.Column(db.Boolean, nullable=False, default=False)  # Extra
@@ -121,6 +119,8 @@ class Aisles(db.Model):
 class Followers(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    user = db.relationship('User', foreign_keys=[user_id])
+    follow = db.relationship('User', foreign_keys=[follow_id])
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.Integer, nullable=False)
 

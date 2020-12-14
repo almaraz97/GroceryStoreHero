@@ -90,14 +90,15 @@ def friend_recipes():
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     recipe_list = []
     user_recipes = Recipes.query.filter_by(user_id=current_user.id).all()
-    friends = current_user.friends
-    friend_dict = {ids: User.query.filter_by(id=ids).first().username for ids in friends}
+    friend_dict = {}
+    # friends = current_user
+    # friend_dict = {ids: User.query.filter_by(id=ids).first().username for ids in friends}
     # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
-    for friend in friends:  # current_user.friends:
-        for recipe in Recipes.query.filter_by(user_id=friend).all():
-            if recipe not in recipe_list+user_recipes:
-                recipe_list.append(recipe)
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    # for friend in friends:  # current_user.friends:
+    #     for recipe in Recipes.query.filter_by(user_id=friend).all():
+    #         if recipe not in recipe_list+user_recipes:
+    #             recipe_list.append(recipe)
+    # recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=False,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
                            friend_dict=friend_dict, friends=True)
