@@ -39,20 +39,20 @@ class User(db.Model, UserMixin):
     friends = db.Column(db.JSON, nullable=False, default=[])
     pantry = db.Column(db.JSON, nullable=True, default={})  # #{Shelf: {Ingredient: [quantity, unit],...},...}
 
-    # user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
-    # actions = db.relationship('Actions', backref='author', lazy=True)
-    # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
-    # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)
-    # pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
-    # pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
-    # pro4 = db.Column(db.Boolean, nullable=False, default=False)  # Extra
-    # public = db.Column(db.Boolean, nullable=False, default=False)
-    # feed_see = db.Column(db.JSON, nullable=False, default=[]) # Updates, Adds, Deletes, Clears
-    # feed_show = db.Column(db.JSON, nullable=True, default=[])  # Updates, Adds, Deletes, Clears
-    # recipe_hide = db.Column(db.JSON, nullable=True, default=[])  # Hidden recipe ids
-    # grocery_bills = db.Column(db.JSON, nullable=True, default={})  # Track bill amount  ({datetime:float})
-    # ingredients = db.Column(db.JSON, nullable=True, default={})   # {Ingredient: [quantity, unit, price]}
-    # subscription = db.Column(db.JSON, nullable=True, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
+    user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
+    actions = db.relationship('Actions', backref='author', lazy=True)
+    follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
+    user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)
+    pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
+    pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
+    pro4 = db.Column(db.Boolean, nullable=False, default=False)  # Extra
+    public = db.Column(db.Boolean, nullable=False, default=False)
+    feed_see = db.Column(db.JSON, nullable=False, default=[])  # Updates, Adds, Deletes, Clears
+    feed_show = db.Column(db.JSON, nullable=True, default=[])  # Updates, Adds, Deletes, Clears
+    recipe_hide = db.Column(db.JSON, nullable=True, default=[])  # Hidden recipe ids
+    grocery_bills = db.Column(db.JSON, nullable=True, default={})  # Track bill amount  ({datetime:float})
+    ingredients = db.Column(db.JSON, nullable=True, default={})   # {Ingredient: [quantity, unit, price]}
+    subscription = db.Column(db.JSON, nullable=True, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
@@ -78,11 +78,11 @@ class Recipes(db.Model):  # todo add picture of recipe in recipe_single page
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     quantity = db.Column(db.JSON, nullable=True)  # Format: {ingredient: [value, unit]}
     notes = db.Column(db.Text, nullable=True)
-    link = db.Column(db.String(20), nullable=True)  # 500?
+    link = db.Column(db.String(512), nullable=True)
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     recipe_type = db.Column(db.String(16), nullable=True)
-    # recipe_genre = db.Column(db.String(32), nullable=True) # Asian, Hispanic, Southern
+    recipe_genre = db.Column(db.String(32), nullable=True) # Asian, Hispanic, Southern
     picture = db.Column(db.String(20), nullable=True)
     public = db.Column(db.Boolean, nullable=False, default=False)  # Public to friends
     servings = db.Column(db.Integer, nullable=True, default=0)
@@ -134,7 +134,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     borrowed = db.Column(db.Boolean, nullable=False, default=False)
     borrowed_dates = db.Column(db.JSON, nullable=True, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
     downloaded = db.Column(db.Boolean, nullable=False, default=False)
-    downloaded_dates = db.Column(db.JSON, nullable=True, default=[])
+    downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -153,12 +153,12 @@ class Actions(db.Model):  # Where friends feed stuff will be held
 
 
 class Pub_Rec(db.Model):  # Add picture of recipe in recipe page
-    id = db.Column(db.Integer, primary_key=True)
-    origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
+    p_id = db.Column(db.Integer, primary_key=True)
+    origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     title = db.Column(db.String(50), nullable=False)
-    quantity = db.Column(db.JSON, nullable=True)  # Format: {ingredient: [value, unit]}
+    quantity = db.Column(db.JSON, nullable=False)  # Format: {ingredient: [value, unit]}
     notes = db.Column(db.Text, nullable=True)
     link = db.Column(db.String(200), nullable=True)  # 16?
     recipe_type = db.Column(db.String(16), nullable=True)
@@ -177,15 +177,15 @@ class Pub_Rec(db.Model):  # Add picture of recipe in recipe page
         return False
 
 
-# class User_PubRec(db.Model):  # For borrowed recipes
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
-#     recipe_id = db.Column(db.Integer, db.ForeignKey('pub_rec.id'), primary_key=True)
-#     borrowed = db.Column(db.Boolean, nullable=True, default=False)
-#     borrowed_dates = db.Column(db.JSON, nullable=True, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
-#     downloaded = db.Column(db.DateTime, nullable=True)
-#     downloaded_dates = db.Column(db.JSON, nullable=True, default=[])
-#     in_menu = db.Column(db.Boolean, nullable=False, default=False)
-#     eaten = db.Column(db.Boolean, nullable=False, default=False)
+class User_PubRec(db.Model):  # For borrowed recipes
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('pub__rec.p_id'), primary_key=True)
+    borrowed = db.Column(db.Boolean, nullable=True, default=False)
+    borrowed_dates = db.Column(db.JSON, nullable=True, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
+    downloaded = db.Column(db.Boolean, nullable=True)
+    downloaded_dates = db.Column(db.JSON, nullable=True, default=[])
+    in_menu = db.Column(db.Boolean, nullable=False, default=False)
+    eaten = db.Column(db.Boolean, nullable=False, default=False)
 
 
 # Once you make a recipe public it cannot be changed. It is linked to your version
