@@ -92,7 +92,7 @@ def friend_recipes():
     user_recipes = Recipes.query.filter_by(author=current_user).all()
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all()]
     # todo handle deleted account ids
-    friend_dict = {id_: User.query.filter_by(id=id_).first().username for id_ in followees}
+    friend_dict = all_friends = {id_: User.query.filter_by(id=id_).first().username for id_ in followees}
     # User.query.filter(User.id.in_(followees)).all()
     # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
     for friend in followees:  # current_user.friends:
@@ -100,9 +100,36 @@ def friend_recipes():
             if recipe not in recipe_list+user_recipes:
                 recipe_list.append(recipe)
     recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=False,
+    # if request.method == 'POST':
+    #     print(request.values)
+    #     pass
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
-                           friend_dict=friend_dict, friends=True)
+                           friend_dict=friend_dict, all_friends=all_friends, friends=True)
+
+
+@recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
+@login_required
+def friend_recipes_choice(friend=None):  # todo handle deleted account ids
+    if friend is None:
+        return redirect(url_for(friend_recipes))
+    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()  # todo redirect if != 0
+    all_followees = Followers.query.filter_by(user_id=current_user.id).all()
+    print(all_followees)
+    all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first().username for F in all_followees}
+    if followee.status == 1:
+        user_recipes = Recipes.query.filter_by(author=current_user).all()
+        friend = User.query.filter_by(id=friend).first()
+        friend_dict = {friend.id: friend.username}
+        recipe_list = [x for x in Recipes.query.filter_by(user_id=friend.id).all() if x not in user_recipes]
+        recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    else:
+        return redirect(url_for('recipes.friend_recipes'))
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=True,
+                           recommended=None,  colors=colors, search_recipes=recipe_list,
+                           friend_dict=friend_dict, all_friends=all_friends, friends=True)
 
 
 @recipes.route('/post/new', methods=['GET', 'POST'])

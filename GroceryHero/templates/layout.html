@@ -173,6 +173,14 @@
           {% else %}
             <p class="text-muted">This will appear after you eat your first weeks' meals.</p>
         {% endif %}
+        {% elif friends is defined %}
+          <h3>Following List</h3>
+          <p class='text-muted border-bottom pb-2'>Your fellow heroes in eco-justice! Clicking their names will reveal their recipes.</p>
+          <ul>
+          {% for friend in all_friends %}
+            <li><a href="{{url_for('recipes.friend_recipes_choice', friend=friend)}}">{{all_friends[friend]}}</a></li>
+          {% endfor %}
+          </ul>
         {% elif pantry is defined %}
           <h3>Add Items to Pantry</h3>
           <p class='text-muted border-bottom pb-2'>Clearing your menu updates your pantry. Add items that will get many uses here.</p>
