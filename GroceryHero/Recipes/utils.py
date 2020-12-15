@@ -1,4 +1,11 @@
+import itertools
+import json
+from flask import request, abort, redirect, url_for, flash
+from flask_login import login_required, current_user
+from GroceryHero import db
+from GroceryHero.Main.utils import update_grocery_list
 from GroceryHero.Recipes.forms import Measurements
+from GroceryHero.models import Recipes, Followers
 
 
 def parse_ingredients(ingredients):
@@ -112,3 +119,71 @@ def parse_ingredients(ingredients):
 
         ings[i] = ings[i].strip()
     return ings, quantity
+
+
+def check_preferences(user):
+    # checks = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+    #           'rec_limit': 3, 'tastes': {}, 'ingredient_weights': json.dumps({}), 'sticky_weights': {},
+    #           'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+    # for preference in list(checks.keys()):
+    #     if preference in user.harmony_preferences:
+    #         checks[preference] = user.harmony_preferences[preference]
+    # user.harmony_preferences = checks
+    if user.extras == '' or user.extras is None:
+        user.extras = []
+    db.session.commit()
+
+
+def add_follow(users):
+    for user1 in users:
+        for user2 in users:
+            if user1.id != user2.id:
+                follow = Followers(user_id=user1.id, follow_id=user2.id, status=1)
+                db.session.add(follow)
+    db.session.commit()
+
+# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+# @login_required
+# def export(recipe_id):
+#     recipe_post = Recipes.query.get_or_404(recipe_id)
+#     if recipe_post.author != current_user:
+#         abort(403)
+#     else:
+#         title = recipe_post.title
+#         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+#         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+#                                                                      f"attachment; filename={title}.txt"})
+#     return redirect(url_for('recipe_single', recipe_id=recipe_id))
+
+
+# def transfer_site_changes():
+#     for recipe in Recipes.query.all():
+#         recipe.quantity = {' '.join([word.capitalize() for word in ingredient.split(' ')]): [1, 'Unit']
+#                            for ingredient in recipe.content.split(', ')}
+#         recipe.title = ' '.join([word.capitalize() for word in recipe.title.split(' ')])
+#     for user in User.query.all():
+#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+#                                     'rec_limit': 3, 'tastes': {}, 'ing_gen_weights': {}, 'ing_pair_weights': {},
+#                                     'recipe_ids': {}, 'menu_weight': 1}
+#          user.extras = []
+#     for aisle in Aisles.query.all():
+#         aisle.content = ', '.join([' '.join([word.capitalize() for word in ingredient.split(' ')])
+#                                    for ingredient in aisle.content.split(', ')])
+#         aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
+#         aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])
+
+
+# for recipe in Recipes.query.all():
+#     recipe.quantity = {' '.join([word.capitalize() for word in ingredient.split(' ')]): [1, 'Unit']
+#                        for ingredient in recipe.content.split(', ')}
+#     recipe.title = ' '.join([word.capitalize() for word in recipe.title.split(' ')])
+# for user in User.query.all():
+#     user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+#                                 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+#                                 'recipe_ids': {}, 'menu_weight': 1}
+#     user.extras = []
+# for aisle in Aisles.query.all():
+#     aisle.content = ', '.join([' '.join([word.capitalize() for word in ingredient.split(' ')])
+#                                for ingredient in aisle.content.split(', ')])
+#     aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
+#     aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])

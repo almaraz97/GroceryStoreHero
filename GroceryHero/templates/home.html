@@ -122,7 +122,7 @@
               {% endif %}
               {% if groceries[key] %}  <!-- If aisle has grocery ingredients -->
                 <h5 class="m-0">{{ key }}</h5>  <!-- Aisle name -->
-                <ul class="mt-2 mb-3 ml-1">
+                <ul class="mt-2 mb-3 ml-1" style="line-height: 25px;">
                   {% for item in groceries[key] %}
                     {% if item[-1] == 1 %} <!--Are they struck out or not-->
                       <s>
@@ -149,7 +149,7 @@
               {% if groceries[key]|length < 1 %}
                 {% set index.value = index.value - 1 %}
               {% endif %}
-              <ul class="mt-2 mb-4 ml-1">
+              <ul class="mt-2 mb-4 ml-1" style="line-height: 25px;">
                 {% for item in groceries[key] %}
                   {% if item[-1] == 1 %}
                     <s><li class="groceries text-muted" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}

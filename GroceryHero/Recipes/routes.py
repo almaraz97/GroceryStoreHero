@@ -91,8 +91,8 @@ def friend_recipes():
     recipe_list = []
     user_recipes = Recipes.query.filter_by(author=current_user).all()
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all()]
-    print(followees)
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}  # todo handle deleted account ids
+    # todo handle deleted account ids
+    friend_dict = {id_: User.query.filter_by(id=id_).first().username for id_ in followees}
     # User.query.filter(User.id.in_(followees)).all()
     # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
     for friend in followees:  # current_user.friends:
@@ -265,6 +265,32 @@ def recipe_single(recipe_id):
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
 
 
+@recipes.route('/post/search', methods=['GET', 'POST'])
+@login_required
+def recipes_search(recommended=None, possible=0):
+    if current_user.is_authenticated:
+        search = request.form['search']
+        if search == 'Recipe Options' or search == '':
+            return redirect(url_for('recipes.recipes_page'))
+        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
+        all_rec = sorted(recipe_list, key=lambda x: x.title)
+        ids = {recipe.title: recipe.id for recipe in recipe_list}
+        cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
+        # Sidebar form
+        # form = HarmonyForm()
+        # choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
+        # form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
+        # if request.method == 'POST':  # Load previous preferences/recommendations
+        #     preference = current_user.harmony_preferences  # Preference dictionary
+        #     form.similarity.data = preference['similarity']
+        #     form.groups.data = preference['groups']
+        #     possible = preference['possible']
+        #     if preference['recommended']:  # If saved recommended is not empty
+        #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
+        #                        group in preference['recommended']}
+        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec)
+        # form=form, sidebar=True, combos=possible, recommended=recommended,
+
 @recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
 @login_required
 def delete_recipe(recipe_id):
@@ -337,36 +363,9 @@ def multi_add_to_menu2(ids=None):
     return redirect(url_for('recipes.recipes_page'))
 
 
-@recipes.route('/post/search', methods=['GET', 'POST'])
-@login_required
-def recipes_search(recommended=None, possible=0):
-    if current_user.is_authenticated:
-        search = request.form['search']
-        if search == 'Recipe Options' or search == '':
-            return redirect(url_for('recipes.recipes_page'))
-        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
-        all_rec = sorted(recipe_list, key=lambda x: x.title)
-        ids = {recipe.title: recipe.id for recipe in recipe_list}
-        cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
-        # Sidebar form
-        # form = HarmonyForm()
-        # choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
-        # form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
-        # if request.method == 'POST':  # Load previous preferences/recommendations
-        #     preference = current_user.harmony_preferences  # Preference dictionary
-        #     form.similarity.data = preference['similarity']
-        #     form.groups.data = preference['groups']
-        #     possible = preference['possible']
-        #     if preference['recommended']:  # If saved recommended is not empty
-        #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
-        #                        group in preference['recommended']}
-        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec)
-        # form=form, sidebar=True, combos=possible, recommended=recommended,
-
-
 @recipes.route('/recipe_similarity/<ids>/<sim>', methods=['GET', 'POST'])
 @login_required
-def recipe_similarity(ids, sim):  # Too similar button in recommendations
+def recipe_similarity(ids, sim):  # The too similar button in recommendations
     ids = json.loads(ids)
     recipe_names = [Recipes.query.filter_by(id=ID).first().title for ID in ids]
     recipe_names = [x for x in recipe_names if x is not None]
@@ -389,62 +388,3 @@ def recipe_similarity(ids, sim):  # Too similar button in recommendations
     current_user.harmony_preferences = dictionary
     db.session.commit()
     return redirect(url_for('recipes.recipes_page'))
-
-
-def check_preferences(user):
-    # checks = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-    #           'rec_limit': 3, 'tastes': {}, 'ingredient_weights': json.dumps({}), 'sticky_weights': {},
-    #           'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-    # for preference in list(checks.keys()):
-    #     if preference in user.harmony_preferences:
-    #         checks[preference] = user.harmony_preferences[preference]
-    # user.harmony_preferences = checks
-    if user.extras == '' or user.extras is None:
-        user.extras = []
-    db.session.commit()
-
-# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
-# @login_required
-# def export(recipe_id):
-#     recipe_post = Recipes.query.get_or_404(recipe_id)
-#     if recipe_post.author != current_user:
-#         abort(403)
-#     else:
-#         title = recipe_post.title
-#         recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-#         return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-#                                                                      f"attachment; filename={title}.txt"})
-#     return redirect(url_for('recipe_single', recipe_id=recipe_id))
-
-
-# def transfer_site_changes():
-#     for recipe in Recipes.query.all():
-#         recipe.quantity = {' '.join([word.capitalize() for word in ingredient.split(' ')]): [1, 'Unit']
-#                            for ingredient in recipe.content.split(', ')}
-#         recipe.title = ' '.join([word.capitalize() for word in recipe.title.split(' ')])
-#     for user in User.query.all():
-#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                     'rec_limit': 3, 'tastes': {}, 'ing_gen_weights': {}, 'ing_pair_weights': {},
-#                                     'recipe_ids': {}, 'menu_weight': 1}
-#          user.extras = []
-#     for aisle in Aisles.query.all():
-#         aisle.content = ', '.join([' '.join([word.capitalize() for word in ingredient.split(' ')])
-#                                    for ingredient in aisle.content.split(', ')])
-#         aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
-#         aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])
-
-
-# for recipe in Recipes.query.all():
-#     recipe.quantity = {' '.join([word.capitalize() for word in ingredient.split(' ')]): [1, 'Unit']
-#                        for ingredient in recipe.content.split(', ')}
-#     recipe.title = ' '.join([word.capitalize() for word in recipe.title.split(' ')])
-# for user in User.query.all():
-#     user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                 'recipe_ids': {}, 'menu_weight': 1}
-#     user.extras = []
-# for aisle in Aisles.query.all():
-#     aisle.content = ', '.join([' '.join([word.capitalize() for word in ingredient.split(' ')])
-#                                for ingredient in aisle.content.split(', ')])
-#     aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
-#     aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])
