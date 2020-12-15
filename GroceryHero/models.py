@@ -126,8 +126,9 @@ class Followers(db.Model):
 
     def __repr__(self):
         convert = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
+        status = convert[self.status] if self.status in convert else 'Error'
         time = self.date_created
-        return f"Followers({self.user_id} {convert[self.status]} {self.follow_id} on {time})"
+        return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
 
 
 class User_Rec(db.Model):  # For borrowed recipes

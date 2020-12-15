@@ -10,7 +10,7 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients
 from GroceryHero.Users.forms import HarmonyForm
-from GroceryHero.models import Recipes, User
+from GroceryHero.models import Recipes, User, Followers
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
 recipes = Blueprint('recipes', __name__)
@@ -89,16 +89,17 @@ def friend_recipes():
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     recipe_list = []
-    user_recipes = Recipes.query.filter_by(user_id=current_user.id).all()
-    friend_dict = {}
-    # friends = current_user
-    # friend_dict = {ids: User.query.filter_by(id=ids).first().username for ids in friends}
+    user_recipes = Recipes.query.filter_by(author=current_user).all()
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all()]
+    print(followees)
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}  # todo handle deleted account ids
+    # User.query.filter(User.id.in_(followees)).all()
     # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
-    # for friend in friends:  # current_user.friends:
-    #     for recipe in Recipes.query.filter_by(user_id=friend).all():
-    #         if recipe not in recipe_list+user_recipes:
-    #             recipe_list.append(recipe)
-    # recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    for friend in followees:  # current_user.friends:
+        for recipe in Recipes.query.filter_by(user_id=friend).all():
+            if recipe not in recipe_list+user_recipes:
+                recipe_list.append(recipe)
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=False,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
                            friend_dict=friend_dict, friends=True)

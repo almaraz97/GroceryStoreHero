@@ -32,7 +32,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid #dddddd;
   border-radius: 3px;
   margin-bottom: 20px;
-  box-shadow: 0 11px 3px -8px rgba(150, 170, 180, 0.5);
+  box-shadow: 0 11px 30px -8px rgba(150, 170, 180, 0.5);
 }
 
 /*.btn-success {*/
