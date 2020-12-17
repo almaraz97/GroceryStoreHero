@@ -1,3 +1,4 @@
+import datetime
 import json
 import string
 from flask import render_template, url_for, redirect, Blueprint, request, session
@@ -85,7 +86,7 @@ def clear_menu():
         current_user.history = histories
         recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
         ids = [rec.id for rec in recipes]
-        action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids)
+        action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow())
         db.session.add(action)
         db.session.commit()
     return redirect(url_for('main.home'))

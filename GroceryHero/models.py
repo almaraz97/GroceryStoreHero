@@ -128,7 +128,7 @@ class Actions(db.Model):  # Where friend feed stuff will be held
     harmony_score = db.Column(db.Float, nullable=True)  #
 
     def __repr__(self):
-        return f"Actions('{self.content}', '{self.date_created}')"
+        return f"Actions(User {self.user_id} {self.type_}ed {self.recipe_ids} on {self.date_created})"
 
 
 class Followers(db.Model):

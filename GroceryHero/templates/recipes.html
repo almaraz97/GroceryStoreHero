@@ -1,6 +1,10 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-3">Your Recipes</h1>
+{% if public is not defined %}
+  <h1 class="mb-3">Your Recipes</h1>
+{% else %}
+  <h1 class="mb-3">Public Recipes</h1>
+{% endif %}
 {% if current_user.is_authenticated %}
 <!--&lt;!&ndash;Drop down menu search bar&ndash;&gt;-->
 <!--<form action="{# url_for('recipes.recipes_search') #}" method="POST">-->
@@ -28,7 +32,7 @@
     </form>
   </div>
 <div class="row p-0 mx-0 mb-1">
-  {% if switch is defined %}  <!--todo do button swap for each page?-->
+  {% if switch is defined %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
   {% else %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
@@ -74,10 +78,15 @@
         {% endif %}
       {% else %} <!--Not your recipe-->
         {% if friends is defined %}  <!--Looking at Friend Recipes page-->
-            {% if borrows[recipe.id] %}
-              <button class="btn btn-info btn-sm mt-3" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
+            {% if borrows[recipe.id] is defined %}  <!-- if recipe has User_Rec entry -->
+              {% if borrows[recipe.id] %}
+                {% set borrow_button = 'info' %}
+              {% else %}
+                {% set borrow_button = 'light' %}
+              {% endif %}
+              <button class="btn btn-{{borrow_button}} btn-sm mt-3 borrowButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
             {% else %}
-              <button class="btn btn-light btn-sm mt-3" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
+              <button class="btn btn-light btn-sm mt-3 borrowButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
             {% endif %}
         {% else %}
           {% if borrows[recipe.id] %}

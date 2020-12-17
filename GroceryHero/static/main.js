@@ -10,9 +10,28 @@ $(document).ready(function() {
             });
 
         if (this.classList.contains("btn-success")){
-        $(this).removeClass("btn-success").addClass("btn-light");
+            $(this).removeClass("btn-success").addClass("btn-light");
         } else{
-        $(this).removeClass("btn-light").addClass("btn-success");
+            $(this).removeClass("btn-light").addClass("btn-success");
+        }
+    });
+});
+
+// Borrow without reload
+$(document).ready(function() {
+    $('.borrowButton').on('click', function(){
+        let recipe_id = $(this).attr('r_id')
+
+        req = $.ajax({
+            url : '/recipes/change_borrow',
+            type: 'POST',
+            data: {recipe_id: recipe_id}
+            });
+
+        if (this.classList.contains("btn-success")){
+            $(this).removeClass("btn-info").addClass("btn-light");
+        } else{
+            $(this).removeClass("btn-light").addClass("btn-info");
         }
     });
 });
