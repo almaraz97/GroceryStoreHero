@@ -379,7 +379,6 @@ def recipe_borrow(recipe_id):
             db.session.add(action)
             db.session.add(borrow)
         db.session.commit()
-        print("BORROWED EQUALS: ", borrowed.borrowed)
     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
@@ -469,27 +468,27 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload
             borrow = User_Rec(user_id=user_id, recipe_id=recipe_id, borrowed=True,
                               borrowed_dates={'Borrowed': [datetime.utcnow()], 'Unborrowed': []})
             action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow())
-            print("Just borrowed: ", borrow)
+            # print("Just borrowed: ", borrow)
             db.session.add(action)
             db.session.add(borrow)
             db.session.commit()
             return json.dumps({'result': 'success'})
         # Person has borrowed this recipe before (entry exists)
         # print(recipe)
-        print('Borrowed before:', recipe.borrowed)
+        # print('Borrowed before:', recipe.borrowed)
         recipe.borrowed = not recipe.borrowed
-        print('Borrowed after:', recipe.borrowed)
-        print(recipe.borrowed_dates)
+        # print('Borrowed after:', recipe.borrowed)
+        # print(recipe.borrowed_dates)
         if recipe.borrowed:  # Now Borrowed
             recipe.borrowed_dates['Borrowed'].append(datetime.utcnow())
         else:  # Now Unborrowed
             recipe.borrowed_dates['Unborrowed'].append(datetime.utcnow())
-        print(recipe.borrowed_dates)
+        # print(recipe.borrowed_dates)
         recipe.in_menu = False
         recipe.eaten = False
         db.session.commit()
-        print('Verify borrowed is: ', recipe.borrowed)
-        print()
+        # print('Verify borrowed is: ', recipe.borrowed)
+        # print()
     return json.dumps({'result': 'success'})
 
 
