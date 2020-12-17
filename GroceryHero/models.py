@@ -123,9 +123,10 @@ class Actions(db.Model):  # Where friend feed stuff will be held
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     type_ = db.Column(db.String(20), nullable=False)  # Update, Add, Delete, Clear, Borrow, Download, Follow
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    content = db.Column(db.String(250), nullable=True)  # user can type message
+    content = db.Column(db.String(250), nullable=True)  # User can type message
     recipe_ids = db.Column(db.JSON, nullable=True, default=[])
-    harmony_score = db.Column(db.Float, nullable=True)  #
+    title = db.Column(db.String(250), nullable=True)  # Save recipe title in case recipe is deleted
+    harmony_score = db.Column(db.Float, nullable=True)  # For clears
 
     def __repr__(self):
         return f"Actions(User {self.user_id} {self.type_}ed {self.recipe_ids} on {self.date_created})"
