@@ -1,0 +1,66 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1 class="mb-3">Your Feed</h1>
+{% if current_user.is_authenticated %}
+  <!--Search bar with button-->
+  <div style="margin-bottom: 15px;">
+    <form action="{# url_for('recipes.recipes_search') #}" method="POST">
+      <div class="input-group flex-nowrap">
+        <input type="text" class="form-control" placeholder="Action Date" name="search">
+        <div class="input-group-prepend">
+          <button class="input-group-text" id="addon-wrapping">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+<div class="row p-0 mx-0 mb-1">
+  {% if friends is defined %}
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+  {% else %}
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
+  {% endif %}
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+</div>
+{% endif %}
+{% if cards is not defined or cards|length < 1 %}
+  <div class="card">
+    <div class="card-header p-0" id="headingMenu">
+      <h5 class="mb-0">
+        <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
+         {% if current_user.is_authenticated %}
+           <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_page') }}">You have nothing on your feed yet.</a>
+         {% else %}
+           <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have nothing on your feed yet.</a>
+         {% endif %}
+        </button>
+      </h5>
+    </div>
+  </div>
+{% else %}
+  <div class="row mx-1 my-0 py-0">
+    <p class="text-muted my-2 pb-0" style="float: left;">You have {{ cards|length }} action(s)</p>
+    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>
+  </div>
+  <!--Action Cards-->
+  {% for action in cards %}
+    <!--style="border-right:solid 20px #9C1A1C;"-->
+    <article class="media content-section mt-0" style="border-left-color:{{colors[action.type_]}}; border-left-width: 5px; border-radius: 5px;"> <!--border-right-color-->
+      <a href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">
+        <img class="rounded-circle account-img mb-0 mr-0" style="width:110px; height: 110px" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+      </a>
+      <div class="media-body ml-4">
+        <div class="">  <!--article-metadata-->
+          {% if friends is defined %}
+            <div class="text-muted" style="float: right">{{ action.date_created.strftime('%Y-%m-%d') }}</div>
+          {% endif %}
+        </div>
+        <p class="article-content mt-2 mb-2"> <!-- todo what happens with a deleted recipe!??? -->
+          <a style="font-size: 18px;"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }} </a>{% if action.type_ == 'Clear' %}ate{% set index = namespace(value=0) %}{% else %}{{ action.type_ }}ed{% endif %} {% if action.type_ == 'Clear' %}{% for id in action.recipe_ids %}{% if index.value + 1 != action.recipe_ids|length %}<a href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict[id].title }},</a>{% else %} and <a href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict[id].title }}</a> this week!{% endif %} {% set index.value = index.value + 1 %}{% endfor %}{% else %}{{ rec_dict[id] }}{% endif %}</p>
+      </div>
+    </article>
+  {% endfor %}
+{% endif %}
+<button class="btn btn-sm btn-secondary mb-4 col-12" id="tool" style="float: right;" onClick="document.getElementById('top').scrollIntoView();">Go to Top</button>
+{% endblock content %}
+

@@ -139,14 +139,14 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
                     pass
                 else:
                     dictionary['tastes'][combo] = str(form.pair_weight.data)
-                    print(dictionary['tastes'])
+                    # print(dictionary['tastes'])
             else:  # Weight is changing
                 if float(form.pair_weight.data) == 1.0:  # Remove from preferences since redundant
                     del dictionary['tastes'][combo]
                 else:  # Else change the weight
                     dictionary['tastes'][combo] = str(form.pair_weight.data)
         dictionary['tastes'] = json.dumps(dictionary['tastes'])  # todo why dump here and load earlier?
-        print(dictionary['tastes'])
+        # print(dictionary['tastes'])
     # Sticky weights
     if isinstance(dictionary['sticky_weights'], str):  # Load old
         dictionary['sticky_weights'] = json.loads(dictionary['sticky_weights'])

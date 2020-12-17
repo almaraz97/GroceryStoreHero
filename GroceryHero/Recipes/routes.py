@@ -1,6 +1,8 @@
 import itertools
 import json
 import string
+from datetime import datetime
+
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
@@ -10,7 +12,7 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients
 from GroceryHero.Users.forms import HarmonyForm
-from GroceryHero.models import Recipes, User, Followers
+from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
 recipes = Blueprint('recipes', __name__)
@@ -18,9 +20,16 @@ recipes = Blueprint('recipes', __name__)
 
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
-    if current_user.is_authenticated:
+    if current_user.is_authenticated:  # todo allow borrowed recipe to be put on menu and display it correctly
+        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+        friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
+        borrows = {x.recipe_id: x.in_menu for x in
+                    User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
         in_menu = [recipe for recipe in recipe_list if recipe.in_menu]  # Recipe objects that are in menu
+        in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()
+        borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
+        recipe_list = sorted(recipe_list + borrowed, key=lambda x: x.title)
         for i, recipe in enumerate(in_menu):  # Puts menu items first in recipe_list
             recipe_list.remove(recipe)
             recipe_list.insert(i, recipe)
@@ -40,7 +49,6 @@ def recipes_page(possible=0, recommended=None):
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
         colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
                   'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-
         # about, harmony = (None, True) if current_user.pro else (True, None)
         about = None if current_user.pro else True
         if request.method == 'GET':
@@ -75,27 +83,26 @@ def recipes_page(possible=0, recommended=None):
             preference['possible'] = possible
             current_user.harmony_preferences = preference
             db.session.commit()
-
         return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
-                               search_recipes=sorted(recipe_list, key=lambda x: x.title), about=about,
-                               sidebar=True, combos=possible, recommended=recommended, form=form, colors=colors)
+                               search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
+                               recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
     return render_template('recipes.html', recipes=None, all_recipes=None, title='Recipes', sidebar=False, combos=0,
                            recommended=None)
 
 
 @recipes.route('/friend_recipes', methods=['GET', 'POST'])
 @login_required
-def friend_recipes():
+def friend_recipes():  # todo handle deleted account ids
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     recipe_list = []
+    borrows = {x.recipe_id: x.in_menu for x in
+               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
     user_recipes = Recipes.query.filter_by(author=current_user).all()
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all()]
-    # todo handle deleted account ids
-    friend_dict = all_friends = {id_: User.query.filter_by(id=id_).first().username for id_ in followees}
-    # User.query.filter(User.id.in_(followees)).all()
-    # recipe_list = [recipe for recipe in [Recipes.query.filter_by(user_id=friend).all() for friend in friends]]
-    for friend in followees:  # current_user.friends:
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}  # todo more efficient
+    # recipe_list = [r for r in Recipes.query.filter(Recipes.user_id.in_(followees)).all() if r not in user_recipes]
+    for friend in followees:  # Add their recipes to recipe_list
         for recipe in Recipes.query.filter_by(user_id=friend).all():
             if recipe not in recipe_list+user_recipes:
                 recipe_list.append(recipe)
@@ -103,33 +110,87 @@ def friend_recipes():
     # if request.method == 'POST':
     #     print(request.values)
     #     pass
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=True,
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
+                           recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
+                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, switch=True)
+
+
+@recipes.route('/public_recipes', methods=['GET', 'POST'])
+@login_required
+def public_recipes():  # todo handle deleted account ids
+    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    recipe_list = [x for x in Pub_Rec.query.all()]
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
-                           friend_dict=friend_dict, all_friends=all_friends, friends=True)
+                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
 
 
 @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 @login_required
 def friend_recipes_choice(friend=None):  # todo handle deleted account ids
-    if friend is None:
-        return redirect(url_for(friend_recipes))
+    if friend is None or friend == current_user.id:
+        return redirect(url_for('recipes.friend_recipes'))
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()  # todo redirect if != 0
+    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
-    print(all_followees)
-    all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first().username for F in all_followees}
+    all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
+                   for F in all_followees if F.status == 1}
     if followee.status == 1:
         user_recipes = Recipes.query.filter_by(author=current_user).all()
         friend = User.query.filter_by(id=friend).first()
-        friend_dict = {friend.id: friend.username}
+        friend_dict = {friend.id: friend}
         recipe_list = [x for x in Recipes.query.filter_by(user_id=friend.id).all() if x not in user_recipes]
         recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
     else:
         return redirect(url_for('recipes.friend_recipes'))
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Recipes', sidebar=True,
+    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
                            friend_dict=friend_dict, all_friends=all_friends, friends=True)
+
+
+@recipes.route('/friend_feed', methods=['GET', 'POST'])
+@login_required
+def friend_feed():  # todo pagination for posts or limit by date?
+    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2'}
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    # friend_dict[current_user.id] = current_user.username  # for testing
+    cards = Actions.query.filter(Actions.user_id.in_(followees)).all()
+    # print(cards[0])
+    # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
+    recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
+    recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
+    rec_dict = {r.id: r for r in recs}
+    # print(rec_dict)
+    # cards = cards + Actions.query.filter_by(user_id=current_user.id).all()  # for testing
+    return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True,#search=None
+                           colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True)
+
+
+@recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
+@login_required
+def friend_feed_choice(friend_id=None):
+    if friend_id is None:
+        return redirect(url_for('recipes.friend_feed'))
+    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2'}
+    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_id).first()
+    if followee.status == 1:
+        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+        all_friends = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+        # friend = User.query.filter_by(id=followee.follow_id).all()
+        # friend_dict = {friend.id: friend.username}
+        cards = Actions.query.filter_by(user_id=followee.follow_id).all()
+        cards = sorted(cards, key=lambda x: x.date_created)
+    else:
+        return redirect(url_for('recipes.friend_recipes'))
+    return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True,
+                           recommended=None, colors=colors, #search_recipes=recipe_list,
+                           all_friends=all_friends, friends=True, feed=True)
 
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
@@ -162,6 +223,9 @@ def new_recipe_quantity():
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''))
+        content = f'{recipe.title}'
+        action = Actions(user_id=current_user.id, type_='Add', content=content)
+        db.session.add(action)
         db.session.add(recipe)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
@@ -258,6 +322,9 @@ def update_recipe_quantity(recipe_id):
         rec.notes = recipe['notes']
         rec.recipe_type = recipe['type']
         update_grocery_list(current_user)
+        content = f'{rec.title}'
+        action = Actions(user_id=current_user.id, type_='Update', content=content)
+        db.session.add(action)
         db.session.commit()
         flash('Your recipe has been updated!', 'success')
         return redirect(url_for('recipes.recipe_single', recipe_id=rec.id))
@@ -269,10 +336,8 @@ def update_recipe_quantity(recipe_id):
 @login_required
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
-    # if recipe_post.user_id not in current_user.friends:
-    #     abort(403)
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
-                for ingredient in recipe_post.quantity}
+                for ingredient in recipe_post.quantity}  # todo is this still necessary?
     recipe_post.quantity = quantity
     if request.method == 'POST':  # Download recipe
         if recipe_post.user_id == current_user.id:
@@ -281,15 +346,34 @@ def recipe_single(recipe_id):
             return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
                                                                      f"attachment; filename={title}.txt"})
         else:
-            flash(f"{recipe_post.title} imported to your library!", 'success')
-            # title = recipe_post.title
-            # content = None
-            # notes = None
-            # type_ = None
-            # new_recipe = Recipes(title=title, content=content, notes=notes, type_=type_)
-            # db.session.add(new_recipe)
-            # db.session.commit()
-    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
+            return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
+    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True)
+
+
+@recipes.route('/borrow/<int:recipe_id>', methods=['GET', 'POST'])
+@login_required
+def recipe_borrow(recipe_id):
+    recipe_post = Recipes.query.get_or_404(recipe_id)
+    if recipe_post.user_id == current_user.id:
+        return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
+    else:
+        borrowed = User_Rec.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
+        if borrowed is not None:  # If user currently has this borrowed
+            if borrowed.borrowed:
+                borrowed.borrowed, borrowed.in_menu, borrowed.eaten = False, False, False
+                borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
+                flash(f"You have returned {recipe_post.title}", 'info')
+            else:  # Not currently borrowed
+                borrowed.borrowed = True
+                borrowed.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
+                flash(f"{recipe_post.title} borrowed!", 'success')
+        else:  # Create new borrow
+            borrow = User_Rec(user_id=current_user.id, recipe_id=recipe_id, borrowed=True,
+                              borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d')], 'Unborrowed': []})
+            flash(f"{recipe_post.title} borrowed!", 'success')
+            db.session.add(borrow)
+        db.session.commit()
+    return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
 @recipes.route('/post/search', methods=['GET', 'POST'])
@@ -299,8 +383,16 @@ def recipes_search(recommended=None, possible=0):
         search = request.form['search']
         if search == 'Recipe Options' or search == '':
             return redirect(url_for('recipes.recipes_page'))
+        colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+        friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
-        all_rec = sorted(recipe_list, key=lambda x: x.title)
+        borrows = {x.recipe_id: x.in_menu for x in
+                  User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
+        borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
+        all_rec = sorted(recipe_list + borrowed, key=lambda x: x.title)
+        recipe_list = recipe_list + borrowed
         ids = {recipe.title: recipe.id for recipe in recipe_list}
         cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
         # Sidebar form
@@ -315,8 +407,10 @@ def recipes_search(recommended=None, possible=0):
         #     if preference['recommended']:  # If saved recommended is not empty
         #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
         #                        group in preference['recommended']}
-        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec)
+        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
+                               colors=colors, borrows=borrows, friend_dict=friend_dict)
         # form=form, sidebar=True, combos=possible, recommended=recommended,
+
 
 @recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
 @login_required
@@ -331,6 +425,9 @@ def delete_recipe(recipe_id):
         temp['possible'] = 0
         current_user.harmony_preferences = temp
     update_grocery_list(current_user)
+    content = f'{recipe.title}'
+    action = Actions(user_id=current_user.id, type_='Add', content=content)
+    db.session.add(action)
     db.session.commit()
     flash('Your recipe has been deleted!', 'success')
     return redirect(url_for('recipes.recipes_page'))
@@ -340,10 +437,14 @@ def delete_recipe(recipe_id):
 @login_required
 def change_to_menu():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
+    # print(recipe_id)
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only update your own recipes # Might not be needed
-        abort(403)
+        recipe = User_Rec.query.get([current_user.id, recipe_id])
+
     recipe.in_menu = not recipe.in_menu
+    recipe.eaten = False
+    # print(recipe, recipe.eaten)
     update_grocery_list(current_user)
     db.session.commit()
     return json.dumps({'result': 'success'})

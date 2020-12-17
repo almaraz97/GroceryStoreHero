@@ -136,9 +136,9 @@ def shelf_add(ingredients):
     form = FullQuantityForm(data=data)  # List of dictionaries
     form.ingredients = ingredients
     shelves = current_user.pantry
-    print(form.validate())
+    # print(form.validate())
     if form.validate_on_submit():
-        print("Bye")
+        # print("Bye")
         # user.grocery_list [{'Another Name': [['Bread Crumbs', 1, 'Unit', 0], ...], 'Alex': []}, overlap[int]]
         # Extras list Format: [ [AisleName, [IngredientName, quantity, unit, BoolCheck]],...]
         entries = []

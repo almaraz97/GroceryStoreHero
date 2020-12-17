@@ -172,14 +172,34 @@
             </ul>
           {% else %}
             <p class="text-muted">This will appear after you eat your first weeks' meals.</p>
-        {% endif %}
+          {% endif %}
         {% elif friends is defined %}
-          <h3>Following List</h3>
+          <h3>Heroes You Follow</h3>
           <p class='text-muted border-bottom pb-2'>Your fellow heroes in eco-justice! Clicking their names will reveal their recipes.</p>
-          <ul>
-          {% for friend in all_friends %}
-            <li><a href="{{url_for('recipes.friend_recipes_choice', friend=friend)}}">{{all_friends[friend]}}</a></li>
-          {% endfor %}
+          <ul class="pl-1">
+            {% for friend in all_friends %}
+              {% if feed is defined %}
+                {% set friend_send = url_for('recipes.friend_feed_choice', friend_id=friend) %}
+              {% else %}
+                {% set friend_send = url_for('recipes.friend_recipes_choice', friend=friend) %}
+              {% endif %}
+                <li class="mb-2" style="list-style-type: None; font-size: 20px;">
+                <a href="{{ friend_send }}">
+                  <img class="rounded-circle account-img mb-0" style="width:30px;height: 30px" src="{{ url_for('static', filename='profile_pics/' + all_friends[friend].image_file) }}">
+                  {{ all_friends[friend].username }}
+                </a>
+                </li>
+            {% endfor %}
+          </ul>
+        {% elif recipe_single is defined %}
+          <h3>Recipe Statistics</h3>
+          <p class='text-muted border-bottom pb-2'>Statistics based on you and other people's activity with this recipe.</p>
+          <img> [Recipe Image Here]
+          <ul class="mt-2">
+            <li>Eaten by you: () times</li>
+            <li>Borrowed by others: () times</li>
+            <li>Eaten by others: () times</li>
+            <li>Downloaded by others: () times</li>
           </ul>
         {% elif pantry is defined %}
           <h3>Add Items to Pantry</h3>

@@ -3,16 +3,21 @@
 <body>
   <div class="">  <!--content-section-->
   {% if username %}
-    <h1 class="mb-3">{{ username }}'s Dashboard</h1>
+    <h1 class="mb-3">👏{{ username }}'s👏Dashboard👏NI🅱️🅱️A👏</h1>
+    Hold up ✋🏿. First of all Thank you 🙏 for using my grocery🛒 🥦 app 📱.
+    I appreciate it 💯 💯 . But Imma need that 💸 or else🔫!
+    This is a business 📔after all 🤑 and mama ain’t raised no 🤡.
+    Now 👏 hand👏 over 👏 that 👏 $10 👏 a 👏 month or imma 🔒 that account 😳🙄 (not that you use much it anyways 🙉🙈)
   {% else %}
     <h1 class="mb-3">Dashboard</h1>
+<!--    🤪-->
   {% endif %}
     <div style="margin-bottom:20px;">
-      <h3 style="display:inline;">Menu Items</h3>
+      <h3 style="display:inline;">😤 Menu👏Items 😤</h3>
       {% if current_user.is_authenticated %}
-        <button style="float:right;" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">Clear Menu</button>
+        <button style="float:right;" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">Clear👏Menu</button>
       {% else %}
-        <button style="float:right;" class="btn btn-outline-danger btn-sm">Clear Menu</button>
+        <button style="float:right;" class="btn btn-outline-danger btn-sm">Clear👏Menu</button>
       {% endif %}
     </div>
       <!--Accordion Menu List-->
@@ -24,7 +29,7 @@
               <h5 class="mb-0">
                 {% if current_user.is_authenticated %}
                   <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-                    <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_page') }}">There is nothing on your menu yet. Click to add a recipe.</a>
+                    <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_page') }}">There👏is👏nothing👏on👏your👏menu👏yet.👏Click👏to👏add👏a👏recipe.</a>
                   </button>
                 {% else %}
                   <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
@@ -36,62 +41,61 @@
           </div>
           {% else %}
             {% for recipe in menu_recipes %}
-                <div class="card">
-                  <!--Button-->
-                  <div class="card-body bg-success p-0" id="{{ recipe.id }}">
-                    <h5 class="mb-0">
-                      {% set set_eaten = 'success' %}
-                      {% if borrowed[recipe.id] is defined %} <!-- Recipe is borrowed and is eaten -->
-                        {% if borrowed[recipe.id] %}
-                          {% set set_eaten = 'secondary' %}
-                          {% set all_eaten.value = all_eaten.value + 1 %}
-                        {% endif %}
-                      {% else %}
-                        {% if recipe.eaten %}
-                          {% set set_eaten = 'secondary' %}
-                          {% set all_eaten.value = all_eaten.value + 1 %}
-                        {% endif %}
-                      {% endif %}
-                      <button style=".collapse" class="btn btn-{{ set_eaten }} btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
-                        {{ recipe.title }}
+              <div class="card">
+                😤
+                <!--Button-->
+                <div class="card-body bg-success p-0" id="{{ recipe.id }}">
+                  <h5 class="mb-0">
+                    {% if not recipe.eaten %}
+<!--                % set color = colors[recipe.recipe_type]%-->
+                    <!--background:{ color }-->
+                      <button style=".collapse;" class="btn btn-success btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
+                        🤢🤢🤢🤢🤢️💁🏽‍♂️👏{{ recipe.title }}👏💁🏽‍♂️🤢🤢🤢🤢🤢
                       </button>
-                    </h5>
-                  </div>
-                  <!--Recipe Info section-->
-                  <div id="collapse{{ recipe.id }}" class="collapse" aria-labelledby="heading{{ recipe.id }}" data-parent="#accordion">
-                    <div class="card-body ml-4">
-                      <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
-                        <a href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">Ingredients:</a>
-                        <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;" e_id="{{ recipe.id }}">Eaten</button>
-                      </div>
-                      <p class="mb-2" style="font-size: 14px;">{{ recipe.quantity|join(', ') }}</p>
+                    {% else %}
+                      {% set all_eaten.value = all_eaten.value + 1 %}
+                      <button style=".collapse" class="btn btn-secondary btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
+                       🤢🤢🤢🤢🤢🤢️💁🏽‍♂️ 👏{{ recipe.title }}👏💁🏽‍♂🤢🤢🤢🤢🤢
+                      </button>
+                    {% endif %}
+                  </h5>
+                  😤
+                </div>
+                <!--Recipe Info section-->
+                <div id="collapse{{ recipe.id }}" class="collapse" aria-labelledby="heading{{ recipe.id }}" data-parent="#accordion">
+                  <div class="card-body ml-4">
+                    <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
+                      <a href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">Ingredients:</a>
+                      <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;" e_id="{{ recipe.id }}">🤮Eaten🤮</button>
                     </div>
+                    <p class="mb-2" style="font-size: 14px;">{{ recipe.quantity|join('👏, ') }}</p>
                   </div>
                 </div>
+              </div>
             {% endfor %}
           {% endif %}
       </div>
     <div class="content-section mt-4 mb-3">
        <!--Grocery list section WEB-->
        <div class="mb-3 mt-2 border-bottom pb-3 d-none d-md-block d-lg-block d-xl-block">
-        <h3 style="margin: 40px 0 20px 0; display:inline;">Grocery List</h3>
+        <h3 style="margin: 40px 0 20px 0; display:inline;">🧐 Grocery👏List 🤢</h3>
        {% if current_user.is_authenticated %}
-           <button style="float: right; display:inline;" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal" data-target="#deleteModal2">Clear Extras</button>
+           <button style="float: right; display:inline;" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal" data-target="#deleteModal2">Clear👏Extras</button>
            <form action="{{ url_for('main.add_to_extras') }}" style="float:right; display:inline;">
-               <button class="btn btn-outline-success btn-sm" >Add Extras</button>
+               <button class="btn btn-outline-success btn-sm" >Add👏Extras</button>
            </form>
        {% else %}
            <form action="#" style="float: right; display:inline;">
-               <button class="btn btn-outline-danger btn-sm ml-2">Clear Extras</button>
+               <button class="btn btn-outline-danger btn-sm ml-2">Clear👏Extras</button>
            </form>
            <form action="#" style="float: right; display:inline;">
-               <button class="btn btn-outline-success btn-sm" >Add Extras</button>
+               <button class="btn btn-outline-success btn-sm" >Add👏Extras</button>
            </form>
        {% endif %}
       </div>
        <!--Grocery list section MOBILE-->
       <div class="mb-3 d-block d-sm-none row">
-        <h3 class="col-12 mt-2 mb-2 text-center">Grocery List</h3>
+        <h3 class="col-12 mt-2 mb-2 text-center">🧐 Grocery👏List 🤢</h3>
         {% if current_user.is_authenticated %}
           <div class="border-bottom pb-1 col-12 justify-content-center d-flex">
             <form class="mb-2" action="{{ url_for('main.add_to_extras') }}">
@@ -117,25 +121,27 @@
           {% for key in groceries %}
             {% if index.value == 1 and groceries[key]|length < 1 %} <!-- If all aisles don't have grocery items -->
               <ul class="mt-3 mb-4 pb-2">
-                <li>There's nothing on your grocery list yet.</li>
+                <li>🤬🤬There's nothing on your grocery list yet.🤬</li>
               </ul>
             {% else %}
               {% if groceries[key]|length < 1 %}  <!-- No ingredients in aisle -->
                 {% set index.value = index.value - 1 %}
               {% endif %}
               {% if groceries[key] %}  <!-- If aisle has grocery ingredients -->
-                <h5 class="m-0">{{ key }}</h5>  <!-- Aisle name -->
+                {% set key2 = key.split(' ') %}
+                <h5 class="m-0">🍑👁💨💩{{ key2|join('👏') }}👏</h5>  <!-- Aisle name -->
                 <ul class="mt-2 mb-3 ml-1" style="line-height: 25px;">
                   {% for item in groceries[key] %}
+                    {% set nib = item[0].split(' ') %}
                     {% if item[-1] == 1 %} <!--Are they struck out or not-->
                       <s>
-                        <li class="groceries text-muted" style="text-decorator-color: text-muted; cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
-                          <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
+                        <li class="groceries text-muted" style="text-decorator-color: text-muted; cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ nib|join('👏') }}
+                          <i style="font-size: 14px;">🍑👁💨💩{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                         </li>
                       </s>
                     {% else %}
-                      <li class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
-                         <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
+                      <li class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ nib|join('👏') }}
+                         <i style="font-size: 14px;">🍑👁💨💩{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                       </li>
                     {% endif %}
                  {% endfor %}
@@ -147,20 +153,21 @@
           {% set index = namespace(value=groceries|length) %}
           {% for key in groceries %}
             {% if index.value == 1 and groceries[key]|length < 1 %}
-              <ul class="mt-3 mb-4 pb-2"><li>There's nothing on your grocery list yet.</li></ul>
+              <ul class="mt-3 mb-4 pb-2"><li>🍑👁💨💩There's nothing on your grocery list yet.👏👏👏👏👏👏👏👏👏👏</li></ul>
             {% else %}
               {% if groceries[key]|length < 1 %}
                 {% set index.value = index.value - 1 %}
               {% endif %}
               <ul class="mt-2 mb-4 ml-1" style="line-height: 25px;">
                 {% for item in groceries[key] %}
+                  {% set nib = item[0].split(' ') %}
                   {% if item[-1] == 1 %}
-                    <s><li class="groceries text-muted" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
-                      <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
+                    <s><li class="groceries text-muted" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ nib|join('👏') }}
+                      <i style="font-size: 14px;">🍑👁💨💩{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                     </li></s>
                   {% else %}
-                    <li class="groceries" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
-                      <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
+                    <li class="groceries" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ nib|join('👏') }}
+                      <i style="font-size: 14px;">🍑👁💨💩{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                     </li>
                   {% endif %}
                 {% endfor %}
