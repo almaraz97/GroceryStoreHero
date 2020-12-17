@@ -356,7 +356,7 @@ def recipe_borrow(recipe_id):
         if borrowed is not None:  # If user currently has history with recipe
             if borrowed.borrowed:
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = False, False, False
-                borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
+                borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
                 flash(f"You have returned {recipe_post.title}", 'info')
                 if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time unborrowing
                     action = Actions(user_id=current_user.id, type_='Unborrow', recipe_ids=[recipe_id],
@@ -364,7 +364,7 @@ def recipe_borrow(recipe_id):
                     db.session.add(action)
             else:  # Not currently borrowed
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = True, False, False
-                borrowed.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
+                borrowed.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
                 flash(f"{recipe_post.title} borrowed!", 'success')
                 if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time borrowing
                     action = Actions(user_id=current_user.id, type_='borrow', recipe_ids=[recipe_id],
@@ -372,7 +372,7 @@ def recipe_borrow(recipe_id):
                     db.session.add(action)
         else:  # Create new borrow
             borrow = User_Rec(user_id=current_user.id, recipe_id=recipe_id, borrowed=True,
-                              borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d')], 'Unborrowed': []})
+                              borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
             flash(f"{recipe_post.title} borrowed!", 'success')
             action = Actions(user_id=current_user.id, type_='Borrow', recipe_ids=[recipe_id],
                              date_created=datetime.utcnow())
@@ -466,29 +466,21 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload
         if recipe is None:  # If user hasn't borrowed this recipe before make new entry
             user_id = current_user.id
             borrow = User_Rec(user_id=user_id, recipe_id=recipe_id, borrowed=True,
-                              borrowed_dates={'Borrowed': [datetime.utcnow()], 'Unborrowed': []})
+                              borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
             action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow())
-            # print("Just borrowed: ", borrow)
             db.session.add(action)
             db.session.add(borrow)
             db.session.commit()
             return json.dumps({'result': 'success'})
         # Person has borrowed this recipe before (entry exists)
-        # print(recipe)
-        # print('Borrowed before:', recipe.borrowed)
         recipe.borrowed = not recipe.borrowed
-        # print('Borrowed after:', recipe.borrowed)
-        # print(recipe.borrowed_dates)
         if recipe.borrowed:  # Now Borrowed
-            recipe.borrowed_dates['Borrowed'].append(datetime.utcnow())
+            recipe.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
         else:  # Now Unborrowed
-            recipe.borrowed_dates['Unborrowed'].append(datetime.utcnow())
-        # print(recipe.borrowed_dates)
+            recipe.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
         recipe.in_menu = False
         recipe.eaten = False
         db.session.commit()
-        # print('Verify borrowed is: ', recipe.borrowed)
-        # print()
     return json.dumps({'result': 'success'})
 
 

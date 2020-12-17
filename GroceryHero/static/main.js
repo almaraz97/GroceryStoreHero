@@ -28,7 +28,7 @@ $(document).ready(function() {
             data: {recipe_id: recipe_id}
             });
 
-        if (this.classList.contains("btn-success")){
+        if (this.classList.contains("btn-info")){
             $(this).removeClass("btn-info").addClass("btn-light");
         } else{
             $(this).removeClass("btn-light").addClass("btn-info");
