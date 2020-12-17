@@ -2,7 +2,7 @@ import json
 from apyori import apriori
 from GroceryHero import db
 from GroceryHero.Recipes.forms import Measurements
-from GroceryHero.models import Recipes, Aisles
+from GroceryHero.models import Recipes, Aisles, User_Rec
 
 
 def aisle_grocery_sort(menu_list, aisles):
@@ -95,14 +95,14 @@ def aisle_grocery_sort(menu_list, aisles):
 def update_grocery_list(user):
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=user).order_by(Recipes.title).all()
                  if recipe.in_menu]
-    # friends = user.friends
-    # menu_list.append(recipe for recipe in Recipes.query.filter(Recipes.id.in_(friends))
-    #                  if recipe.others_menu.get(current_user, False))
+    borrowed = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]
+    menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
     entries = user.extras
 
     grocery_list, overlap = aisle_grocery_sort(menu_list, aisles)
+    # print('post grocerylist', grocery_list, overlap)
     g_copy = grocery_list.copy()  # Grocery_List copy
     for aisle_obj in entries:
         item_name = aisle_obj[1][0]  # should be list, take off second index
@@ -142,6 +142,7 @@ def update_grocery_list(user):
     user.grocery_list = []
     db.session.commit()
     user.grocery_list = [g_copy, overlap]
+    db.session.commit()
 
 
 def ensure_harmony_keys(user):
@@ -226,29 +227,30 @@ def get_history_stats(user):  # For dashboard basic stats
 
 def update_pantry(user, recipes):  # From the clear menu using recipes
     pantry = user.pantry
-    recipe_ingredients = []
-    for recipe in recipes:
-        for ing, M in recipe.quantity.items():
-            quantity = convert_frac(M[0])
-            unit = M[1]
-            recipe_ingredients.append([ing, quantity, unit])
+    if pantry:
+        recipe_ingredients = []
+        for recipe in recipes:
+            for ing, M in recipe.quantity.items():
+                quantity = convert_frac(M[0])
+                unit = M[1]
+                recipe_ingredients.append([ing, quantity, unit])
 
-    for ing in recipe_ingredients:  # See what's being used
-        item = ing[0]
-        for shelf in pantry:  # Look for it in each shelf
-            if item in pantry[shelf] and ing[2] == pantry[shelf][item][1]:  # Make sure measurements agree
-                recipe_ing = Measurements(value=ing[1], unit=ing[2])  # Get recipe ing that is being used
-                pantry_ing = Measurements(value=pantry[shelf][item][0], unit=pantry[shelf][item][1])  # Get pantry item
-                remaining = pantry_ing - recipe_ing  # Subtract the two
-                if remaining.value > 0:  # If there is anything remaining
-                    pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
-                else:
-                    del pantry[shelf][item]  # Ingredient is gone
-                break
-    user.pantry = {}
-    db.session.commit()  # todo why does it need 2 commits to update value?
-    user.pantry = pantry
-    db.session.commit()
+        for ing in recipe_ingredients:  # See what's being used
+            item = ing[0]
+            for shelf in pantry:  # Look for it in each shelf
+                if item in pantry[shelf] and ing[2] == pantry[shelf][item][1]:  # Make sure measurements agree
+                    recipe_ing = Measurements(value=ing[1], unit=ing[2])  # Get recipe ing that is being used
+                    pantry_ing = Measurements(value=pantry[shelf][item][0], unit=pantry[shelf][item][1])  # Get pantry item
+                    remaining = pantry_ing - recipe_ing  # Subtract the two
+                    if remaining.value > 0:  # If there is anything remaining
+                        pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
+                    else:
+                        del pantry[shelf][item]  # Ingredient is gone
+                    break
+        user.pantry = {}
+        db.session.commit()  # todo why does it need 2 commits to update value?
+        user.pantry = pantry
+        db.session.commit()
 
 
 def add_pantry(user, ingredients, shelf, add):
