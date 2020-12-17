@@ -185,8 +185,7 @@ def friend_feed_choice(friend_id=None):
     else:
         return redirect(url_for('recipes.friend_recipes'))
     return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True,
-                           recommended=None, colors=colors, #search_recipes=recipe_list,
-                           all_friends=all_friends, friends=True, feed=True)
+                           colors=colors, all_friends=all_friends, friends=True, feed=True)
 
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
