@@ -5,7 +5,7 @@ from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
 from GroceryHero.Users.forms import FullHarmonyForm
-from GroceryHero.models import Recipes, Aisles
+from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
                                     show_harmony_weights, update_pantry, apriori_test, convert_frac)
@@ -30,19 +30,19 @@ use of session in new and update recipe route handoffs, cython working, load rec
 handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
+# todo being able to download and upload recipes still necessary?
+
 
 @main.route('/')
 @main.route('/home')
 def home():
-    menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics = \
-        [], [], [], 0, 0, None, None, None, None  # []*3, 0, 0, None*4
+    menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
+        [], [], [], 0, 0, None, None, None, None, None  # []*3, 0, 0, None*4
     if current_user.is_authenticated:
         menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                      if recipe.in_menu]
-        # friends = current_user.friends
-        # menu_list.append(recipe for recipe in Recipes.query.filter(Recipes.id.in_(friends))
-        #                  if recipe.others_menu.get(current_user, False))
-        # GroceryList maker
+        borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
+        menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
         aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
         groceries, overlap = current_user.grocery_list
         for aisle in groceries:  # Turns ingredients into Measurement object
@@ -56,30 +56,37 @@ def home():
             harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
+        if current_user.id == 9 and current_user.username == 'Andrea':
+            return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
+                                   sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
+                                   overlap=overlap, statistics=statistics)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-                           overlap=overlap, statistics=statistics)
+                           overlap=overlap, statistics=statistics, borrowed=borrowed)
 
 
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
     menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
+    menu_recipes = menu_recipes + [x for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()]
     if len(menu_recipes) > 0:
         histories = current_user.history.copy()
         history = []
         for recipe in menu_recipes:
-            history.append(recipe.id)
-            if recipe.user_id == current_user.id:
-                recipe.in_menu = False
-                recipe.eaten = False
+            if isinstance(recipe, Recipes):
+                history.append(recipe.id)
             else:
-                pass
-                # recipe.other_menu[current_user.id] = False
-                # recipe.other_eaten[current_user.id] = False
+                history.append(recipe.recipe_id)
+            recipe.in_menu = False
+            recipe.eaten = False
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
         histories.append(history)
         current_user.history = histories
+        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
+        ids = [rec.id for rec in recipes]
+        action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids)
+        db.session.add(action)
         db.session.commit()
     return redirect(url_for('main.home'))
 
@@ -270,6 +277,8 @@ def change_to_grocerylist():
 def change_to_eaten():
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.filter_by(id=recipe_id).first()
+    if recipe.author != current_user:
+        recipe = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
     recipe.eaten = not recipe.eaten
     db.session.commit()
     return json.dumps({'result': 'success'})
