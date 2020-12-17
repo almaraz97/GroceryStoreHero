@@ -140,6 +140,8 @@ def friend_recipes_choice(friend=None):  # todo handle deleted account ids
     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
     all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
                    for F in all_followees if F.status == 1}
+    borrows = {x.recipe_id: x.in_menu for x in
+               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
     if followee.status == 1:
         user_recipes = Recipes.query.filter_by(author=current_user).all()
         friend = User.query.filter_by(id=friend).first()
@@ -149,7 +151,7 @@ def friend_recipes_choice(friend=None):  # todo handle deleted account ids
     else:
         return redirect(url_for('recipes.friend_recipes'))
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
-                           recommended=None,  colors=colors, search_recipes=recipe_list,
+                           recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
                            friend_dict=friend_dict, all_friends=all_friends, friends=True)
 
 
