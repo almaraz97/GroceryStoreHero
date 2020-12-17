@@ -159,15 +159,11 @@ def friend_feed():  # todo pagination for posts or limit by date?
     colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2'}
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    # friend_dict[current_user.id] = current_user.username  # for testing
     cards = Actions.query.filter(Actions.user_id.in_(followees)).all()
-    # print(cards[0])
     # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
     recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
     recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
     rec_dict = {r.id: r for r in recs}
-    # print(rec_dict)
-    # cards = cards + Actions.query.filter_by(user_id=current_user.id).all()  # for testing
     return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True,#search=None
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True)
 
@@ -223,10 +219,10 @@ def new_recipe_quantity():
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''))
-        content = f'{recipe.title}'
-        action = Actions(user_id=current_user.id, type_='Add', content=content)
-        db.session.add(action)
         db.session.add(recipe)
+        db.session.commit()  # todo does recipe have ID before commit()?
+        action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id])
+        db.session.add(action)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
         return redirect(url_for('recipes.recipes_page'))
@@ -322,8 +318,7 @@ def update_recipe_quantity(recipe_id):
         rec.notes = recipe['notes']
         rec.recipe_type = recipe['type']
         update_grocery_list(current_user)
-        content = f'{rec.title}'
-        action = Actions(user_id=current_user.id, type_='Update', content=content)
+        action = Actions(user_id=current_user.id, type_='Update', recipe_ids=[recipe_id])
         db.session.add(action)
         db.session.commit()
         flash('Your recipe has been updated!', 'success')
@@ -363,14 +358,22 @@ def recipe_borrow(recipe_id):
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = False, False, False
                 borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
                 flash(f"You have returned {recipe_post.title}", 'info')
+                if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time unborrowing
+                    action = Actions(user_id=current_user.id, type_='Unborrow', recipe_ids=[recipe_id])
+                    db.session.add(action)
             else:  # Not currently borrowed
                 borrowed.borrowed = True
                 borrowed.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d'))
                 flash(f"{recipe_post.title} borrowed!", 'success')
+                if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time borrowing
+                    action = Actions(user_id=current_user.id, type_='borrow', recipe_ids=[recipe_id])
+                    db.session.add(action)
         else:  # Create new borrow
             borrow = User_Rec(user_id=current_user.id, recipe_id=recipe_id, borrowed=True,
                               borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d')], 'Unborrowed': []})
             flash(f"{recipe_post.title} borrowed!", 'success')
+            action = Actions(user_id=current_user.id, type_='Borrow', recipe_ids=[recipe_id])
+            db.session.add(action)
             db.session.add(borrow)
         db.session.commit()
     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
@@ -418,6 +421,7 @@ def delete_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only change your own recipes
         abort(403)
+        return redirect(url_for('recipes.recipes_page'))
     db.session.delete(recipe)
     if recipe.title in current_user.harmony_preferences['recommended']:  # If delete recipe in recommended
         temp = {key: value for key, value in current_user.harmony_preferences.items()}
@@ -425,8 +429,7 @@ def delete_recipe(recipe_id):
         temp['possible'] = 0
         current_user.harmony_preferences = temp
     update_grocery_list(current_user)
-    content = f'{recipe.title}'
-    action = Actions(user_id=current_user.id, type_='Add', content=content)
+    action = Actions(user_id=current_user.id, type_='Delete', recipe_ids=[recipe_id])
     db.session.add(action)
     db.session.commit()
     flash('Your recipe has been deleted!', 'success')
@@ -437,14 +440,13 @@ def delete_recipe(recipe_id):
 @login_required
 def change_to_menu():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
-    # print(recipe_id)
     recipe = Recipes.query.get_or_404(recipe_id)
-    if recipe.author != current_user:  # You can only update your own recipes # Might not be needed
+    if recipe.author != current_user:
         recipe = User_Rec.query.get([current_user.id, recipe_id])
-
+        if recipe is None:
+            json.dumps({'result': 'success'})
     recipe.in_menu = not recipe.in_menu
     recipe.eaten = False
-    # print(recipe, recipe.eaten)
     update_grocery_list(current_user)
     db.session.commit()
     return json.dumps({'result': 'success'})
@@ -454,8 +456,10 @@ def change_to_menu():  # JavaScript way of adding to menu without reload
 @login_required
 def add_to_menu(recipe_id):  # Adding from RHT recommendations
     recipe = Recipes.query.get_or_404(recipe_id)
-    if recipe.author != current_user:  # You can only update your own recipes # Might not be needed
-        abort(403)
+    if recipe.author != current_user:
+        recipe = User_Rec.query.get([current_user.id, recipe_id])
+        if recipe is None:
+            json.dumps({'result': 'success'})
     recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
@@ -468,7 +472,9 @@ def multi_add_to_menu():
     for recipe_id in request.form.getlist('harmony'):
         recipe = Recipes.query.get_or_404(recipe_id)
         if recipe.author != current_user:  # You can only add your own recipes # Might not be needed
-            abort(403)
+            recipe = User_Rec.query.get([current_user.id, recipe_id])
+            if recipe is None:  # User added to menu a not borrowed recipe??
+                continue
         recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
@@ -483,8 +489,10 @@ def multi_add_to_menu2(ids=None):
         return redirect(url_for('recipes.recipes_page'))  # Potential bug
     for recipe_id in ids:
         recipe = Recipes.query.get_or_404(recipe_id)
-        if recipe.author != current_user:  # You can only add your own recipes # Might not be needed
-            abort(403)
+        if recipe.author != current_user:
+            recipe = User_Rec.query.get([current_user.id, recipe_id])
+            if recipe is None:  # User added to menu a not borrowed recipe??
+                continue
         recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
