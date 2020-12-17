@@ -230,7 +230,8 @@ def new_recipe_quantity():
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''))
         db.session.add(recipe)
         db.session.commit()  # todo does recipe have ID before commit()?
-        action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id], date_created=datetime.utcnow())
+        action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id], date_created=datetime.utcnow(),
+                         titles=[recipe.title])
         db.session.add(action)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
@@ -327,7 +328,8 @@ def update_recipe_quantity(recipe_id):
         rec.notes = recipe['notes']
         rec.recipe_type = recipe['type']
         update_grocery_list(current_user)
-        action = Actions(user_id=current_user.id, type_='Update', recipe_ids=[recipe_id], date_created=datetime.utcnow())
+        action = Actions(user_id=current_user.id, type_='Update', recipe_ids=[recipe_id],
+                         date_created=datetime.utcnow(), titles=[rec.title])
         db.session.add(action)
         db.session.commit()
         flash('Your recipe has been updated!', 'success')
@@ -358,7 +360,7 @@ def recipe_single(recipe_id):
 @login_required
 def recipe_borrow(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
-    if recipe_post.user_id == current_user.id:
+    if recipe_post.user_id == current_user.id:  # todo redirect should be better
         return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
     else:
         borrowed = User_Rec.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
@@ -369,7 +371,7 @@ def recipe_borrow(recipe_id):
                 flash(f"You have returned {recipe_post.title}", 'info')
                 if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time unborrowing
                     action = Actions(user_id=current_user.id, type_='Unborrow', recipe_ids=[recipe_id],
-                                     date_created=datetime.utcnow())
+                                     date_created=datetime.utcnow(), titles=[recipe_post.title])
                     db.session.add(action)
             else:  # Not currently borrowed
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = True, False, False
@@ -377,14 +379,14 @@ def recipe_borrow(recipe_id):
                 flash(f"{recipe_post.title} borrowed!", 'success')
                 if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time borrowing
                     action = Actions(user_id=current_user.id, type_='borrow', recipe_ids=[recipe_id],
-                                     date_created=datetime.utcnow())
+                                     date_created=datetime.utcnow(), titles=[recipe_post])
                     db.session.add(action)
         else:  # Create new borrow
             borrow = User_Rec(user_id=current_user.id, recipe_id=recipe_id, borrowed=True,
                               borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
             flash(f"{recipe_post.title} borrowed!", 'success')
             action = Actions(user_id=current_user.id, type_='Borrow', recipe_ids=[recipe_id],
-                             date_created=datetime.utcnow())
+                             date_created=datetime.utcnow(), titles=[recipe_post.title])
             db.session.add(action)
             db.session.add(borrow)
         db.session.commit()
@@ -442,7 +444,7 @@ def delete_recipe(recipe_id):
         current_user.harmony_preferences = temp
     update_grocery_list(current_user)
     action = Actions(user_id=current_user.id, type_='Delete', recipe_ids=[recipe_id],
-                     date_created=datetime.utcnow())
+                     date_created=datetime.utcnow(), titles=[recipe.title])
     db.session.add(action)
     db.session.commit()
     flash('Your recipe has been deleted!', 'success')
@@ -471,12 +473,14 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
+        title = recipe.title.copy()
         recipe = User_Rec.query.get([current_user.id, recipe_id])
         if recipe is None:  # If user hasn't borrowed this recipe before make new entry
             user_id = current_user.id
             borrow = User_Rec(user_id=user_id, recipe_id=recipe_id, borrowed=True,
                               borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
-            action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow())
+            action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow(),
+                             titles=[title])
             db.session.add(action)
             db.session.add(borrow)
             db.session.commit()
