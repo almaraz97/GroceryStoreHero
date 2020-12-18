@@ -248,7 +248,7 @@ def new_recipe_quantity():
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
-        pic_fn = pic_fn if pic_fn is not None else ''
+        pic_fn = pic_fn if pic_fn is not None else 'default.png'
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn)
