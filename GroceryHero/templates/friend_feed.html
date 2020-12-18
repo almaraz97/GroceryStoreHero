@@ -47,16 +47,16 @@
     {% set title_tracker = action.titles %}
      {# for id in action.recipe_ids %}{% if id in rec_dict %}{% set title_tracker = title_tracker.remove(title_tracker.index(rec_dict[id].title)) %}{% endif %}{% endfor #}
     <!--style="border-right:solid 20px #9C1A1C;"-->
-    <article class="media content-section mt-0" style="border-top-color:{{colors[action.type_]}}; border-top-width: 5px; border-radius: 0px;border-bottom-color:{{colors[action.type_]}}; border-bottom-width: 5px;"> <!--border-right-color-->
+    <article class="media content-section mt-0" style="border-top-color:{{colors[action.type_]}}; border-top-width: 5px; border-radius: 0px;"> <!--border-right-color-->
       <a href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">
-        <img class="rounded-circle account-img mb-0 mr-0" style="width:135px; height: 135px" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+        <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
       </a>
       <div class="media-body ml-4 my-0 py-0">
         {% if friends is defined %}
           <div class="text-muted" style="float: right;">{{ action.date_created.strftime('%Y-%m-%d %H:%M') }}</div>
         {% endif %}
-        <div class="article-content my-0 py-0">
-          <p style="display:inline-block; font-size: 20px; float: left" class="m-0 p-0">
+        <div class="article-content my-0" style="white-space: unset">
+          <p style="display:inline-block; font-size: 20px; float: left" class="m-0 pt-4">
           <a style="font-size: 20px;display:inline-block"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }}</a> {% if action.type_ == 'Clear' %}
             {% set index = namespace(value=0) %}ate
 {% else %}{{ action.type_.lower() }}ed{% endif %}{% if action.type_ == 'Clear' %}

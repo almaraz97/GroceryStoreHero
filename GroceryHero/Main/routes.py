@@ -50,6 +50,7 @@ def home():
             groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
                                 for item in groceries[aisle]]
         aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
+        menu_list = sorted(menu_list, key=lambda x: x.eaten)
         if len(menu_list) > 1:
             preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
             recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
