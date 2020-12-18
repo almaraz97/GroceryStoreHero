@@ -44,19 +44,43 @@
   </div>
   <!--Action Cards-->
   {% for action in cards %}
+    {% set title_tracker = action.titles %}
+     {# for id in action.recipe_ids %}{% if id in rec_dict %}{% set title_tracker = title_tracker.remove(title_tracker.index(rec_dict[id].title)) %}{% endif %}{% endfor #}
     <!--style="border-right:solid 20px #9C1A1C;"-->
     <article class="media content-section mt-0" style="border-left-color:{{colors[action.type_]}}; border-left-width: 5px; border-radius: 5px;"> <!--border-right-color-->
       <a href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">
-        <img class="rounded-circle account-img mb-0 mr-0" style="width:110px; height: 110px" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+        <img class="rounded-circle account-img mb-0 mr-0" style="width:150px; height: 150px" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
       </a>
-      <div class="media-body ml-4">
-        <div class="">  <!--article-metadata-->
-          {% if friends is defined %}
-            <div class="text-muted" style="float: right">{{ action.date_created.strftime('%Y-%m-%d %H:%M') }}</div>
-          {% endif %}
+      <div class="media-body ml-4 my-0 py-0">
+        {% if friends is defined %}
+          <div class="text-muted" style="float: right;">{{ action.date_created.strftime('%Y-%m-%d %H:%M') }}</div>
+        {% endif %}
+        <div class="article-content my-0 py-0">
+          <p style="display:inline-block; font-size: 20px; float: left" class="m-0 p-0">
+          <a style="font-size: 20px;display:inline-block"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }}</a> {% if action.type_ == 'Clear' %}
+            {% set index = namespace(value=0) %}ate
+{% else %}{{ action.type_.lower() }}ed{% endif %}{% if action.type_ == 'Clear' %}
+            {% for id in action.recipe_ids %}
+              {% if id not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %}
+              {% if found %}
+                {% if index.value + 1 != action.recipe_ids|length %}<!-- hasn't looped through all recipes --><a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }},</a>
+                {% else %}  <!-- Has looped through all recipes -->and <a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }}</a> this week!{% endif %}
+                {% set index.value = index.value + 1 %}
+              {% endif %}
+            {% endfor %}
+            {% if title_tracker|length > 0 %}  <!-- Go through titles that have no ids -->
+              {% for title in title_tracker %}
+                {% if index.value + 1 != action.recipe_ids|length %}  <!-- hasn't looped through all recipes -->{{ rec_dict.get(id).title }},
+{% else %}  <!-- Has looped through all recipes -->and {{ rec_dict.get(id).title }} this week!
+                {% endif %}
+                {% set index.value = index.value + 1 %}
+              {% endfor %}
+            {% endif %}
+          {% else %}  <!-- Action other than Clear -->{% if action.recipe_ids[0] not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %} {% if found %}<a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=action.recipe_ids[0]) }}">{{ rec_dict[action.recipe_ids[0]].title }}</a>
+{% else %}{{ title_tracker[0] }}{% if title_tracker[0][-1].lower() != 's' %}s{% endif %}
+            {% endif %}
+          {% endif %}</p>
         </div>
-        <p class="article-content mt-2 mb-2"> <!-- todo what happens with a deleted recipe!??? -->
-      <a style="font-size: 18px;"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }} </a>{% if action.type_ == 'Clear' %}ate{% set index = namespace(value=0) %}{% else %}{{ action.type_.lower() }}ed{% endif %} {% if action.type_ == 'Clear' %}{% for id in action.recipe_ids %}{% if index.value + 1 != action.recipe_ids|length %}<a href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }},</a>{% else %} and <a href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }}</a> this week!{% endif %} {% set index.value = index.value + 1 %}{% endfor %}{% else %}{{ rec_dict.get(id) }}{% endif %}<a href="{{ url_for('recipes.recipe_single', recipe_id=action.recipe_ids[0]) }}">{{ rec_dict.get(action.recipe_ids[0]).title }}</a></a></p>
       </div>
     </article>
   {% endfor %}

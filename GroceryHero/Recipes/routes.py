@@ -165,10 +165,11 @@ def friend_feed():  # todo pagination for posts or limit by date?
     recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
     recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
     rec_dict = {r.id: r for r in recs}
+    title_dict = {v.title: k for k, v in rec_dict.items()}
     all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
     return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
-                           all_friend_recs=all_friend_recs)
+                           all_friend_recs=all_friend_recs, title_dict=title_dict)
 
 
 @recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
@@ -196,6 +197,26 @@ def friend_feed_choice(friend_id=None):
         return redirect(url_for('recipes.friend_recipes'))
     return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True, rec_dict=rec_dict,
                            colors=colors, all_friends=all_friends, friend_dict=friend_dict, friends=True, feed=True)
+
+
+@recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
+@login_required
+def linked_user():  # todo pagination for posts or limit by date?
+    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
+              'Unborrow': '#6c757d'}
+    # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    # friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    # cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)
+    # # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
+    # recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
+    # recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
+    # rec_dict = {r.id: r for r in recs}
+    # title_dict = {v.title: k for k, v in rec_dict.items()}
+    # all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
+    return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
+                           colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
+                           all_friend_recs=all_friend_recs, title_dict=title_dict)
+
 
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
