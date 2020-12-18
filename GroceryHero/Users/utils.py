@@ -18,7 +18,6 @@ from GroceryHero.models import Aisles, Recipes
 
 
 def save_picture(form_picture, filepath='static/profile_pics', download=False):
-    print(form_picture)
     if form_picture is None:
         return None
     random_hex = secrets.token_hex(8)
