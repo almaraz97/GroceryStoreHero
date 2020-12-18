@@ -494,7 +494,7 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
-        title = recipe.title.copy()
+        title = recipe.title
         recipe = User_Rec.query.get([current_user.id, recipe_id])
         if recipe is None:  # If user hasn't borrowed this recipe before make new entry
             user_id = current_user.id
