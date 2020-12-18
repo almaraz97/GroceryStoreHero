@@ -56,7 +56,7 @@
           <div class="text-muted" style="float: right;">{{ action.date_created.strftime('%Y-%m-%d %H:%M') }}</div>
         {% endif %}
         <div class="article-content my-0" style="white-space: unset">
-          <p style="display:inline-block; font-size: 20px; float: left" class="m-0 pt-4">
+          <p style="display:inline-block; font-size: 18px; float: left" class="m-0 pt-4">
           <a style="font-size: 20px;display:inline-block"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }}</a> {% if action.type_ == 'Clear' %}
             {% set index = namespace(value=0) %}ate
 {% else %}{{ action.type_.lower() }}ed{% endif %}{% if action.type_ == 'Clear' %}

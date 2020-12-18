@@ -12,6 +12,7 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients
 from GroceryHero.Users.forms import HarmonyForm
+from GroceryHero.Users.utils import save_picture
 from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
@@ -199,11 +200,11 @@ def friend_feed_choice(friend_id=None):
                            colors=colors, all_friends=all_friends, friend_dict=friend_dict, friends=True, feed=True)
 
 
-@recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
-@login_required
-def linked_user():  # todo pagination for posts or limit by date?
-    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
-              'Unborrow': '#6c757d'}
+# @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
+# @login_required
+# def linked_user():  # todo pagination for posts or limit by date?
+#     colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
+#               'Unborrow': '#6c757d'}
     # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     # cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)
@@ -213,10 +214,9 @@ def linked_user():  # todo pagination for posts or limit by date?
     # rec_dict = {r.id: r for r in recs}
     # title_dict = {v.title: k for k, v in rec_dict.items()}
     # all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
-    return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
-                           colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
-                           all_friend_recs=all_friend_recs, title_dict=title_dict)
-
+    # return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
+    #                        colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
+    #                        all_friend_recs=all_friend_recs, title_dict=title_dict)
 
 
 @recipes.route('/post/new', methods=['GET', 'POST'])
@@ -247,10 +247,12 @@ def new_recipe_quantity():
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
+        pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
+        pic_fn = pic_fn if pic_fn is not None else ''
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
-                         notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''))
+                         notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
+                         picture=pic_fn)
         db.session.add(recipe)
-        db.session.commit()  # todo does recipe have ID before commit()?
         action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id], date_created=datetime.utcnow(),
                          titles=[recipe.title])
         db.session.add(action)
@@ -276,8 +278,10 @@ def recipe_from_link():
                 return redirect(url_for('recipes.recipe_from_link'))
         ingredients = [x.lower() for x in scraper.ingredients()]
         ings, quantity = parse_ingredients(ingredients)
+        im_path = scraper.image()
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
-                                 'measures': quantity, 'link': form.link.data if len(form.link.data) <= 20 else ''}
+                                 'measures': quantity, 'link': form.link.data if len(form.link.data) <= 20 else '',
+                                 'im_path': im_path}
         return redirect(url_for('recipes.new_recipe_link'))  # todo change link string limit
     return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
 
@@ -299,9 +303,9 @@ def new_recipe_link():  # filling out the form data from link page
         for i, ing in enumerate(ingredients):
             # todo figure out how to link quantity with ingredients, despite deletion and modification
             ings[ing] = session['recipe_raw']['measures'][i]  # except IndexError: ings[ing] = [1, 'Unit']
-
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ings,
-                             'notes': form.notes.data, 'type': form.type_.data, 'link': session['recipe_raw']['link']}
+                             'notes': form.notes.data, 'type': form.type_.data, 'link': session['recipe_raw']['link'],
+                             'im_path': session['recipe_raw']['im_path']}
         return redirect(url_for('recipes.new_recipe_quantity'))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
@@ -366,23 +370,26 @@ def recipe_single(recipe_id):
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
                 for ingredient in recipe_post.quantity}  # todo is this still necessary?
     recipe_post.quantity = quantity
+    url = recipe_post.picture
+    url = url if url is not None else False  # todo might not be neccesary
     if request.method == 'POST':  # Download recipe
         if recipe_post.user_id == current_user.id:
             title = recipe_post.title
             recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
             return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
                                                                      f"attachment; filename={title}.txt"})
-        else:
+        else:  # POST on recipe single borrows if not same user
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
-    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True)
+    return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
+                           url=url)
 
 
 @recipes.route('/borrow/<int:recipe_id>', methods=['GET', 'POST'])
 @login_required
-def recipe_borrow(recipe_id):
+def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
     recipe_post = Recipes.query.get_or_404(recipe_id)
-    if recipe_post.user_id == current_user.id:  # todo redirect should be better
-        return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post)
+    if recipe_post.user_id == current_user.id:
+        return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
     else:
         borrowed = User_Rec.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
         if borrowed is not None:  # If user currently has history with recipe
@@ -508,10 +515,8 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload
             return json.dumps({'result': 'success'})
         # Person has borrowed this recipe before (entry exists)
         recipe.borrowed = not recipe.borrowed
-        if recipe.borrowed:  # Now Borrowed
-            recipe.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
-        else:  # Now Unborrowed
-            recipe.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
+        date = datetime.utcnow().strftime('%Y-%m-%d-%H-%M')
+        recipe.borrowed_dates['Borrowed'].append(date) if recipe.borrowed else recipe.borrowed_dates['Unborrowed'].append(date)
         recipe.in_menu = False
         recipe.eaten = False
         db.session.commit()

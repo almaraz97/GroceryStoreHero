@@ -48,11 +48,12 @@ class User(db.Model, UserMixin):
     public = db.Column(db.Boolean, nullable=False, default=False)  # Whether they are discoverable to others
     feed_see = db.Column(db.JSON, nullable=False, default=[])  # Updates, Adds, Deletes, Clears
     feed_show = db.Column(db.JSON, nullable=False, default=[])  # Updates, Adds, Deletes, Clears
-    recipe_hide = db.Column(db.JSON, nullable=False, default=[])  # Hidden recipe ids
+    # ## recipe_hide = db.Column(db.JSON, nullable=False, default=[])  # Hidden recipe ids
     grocery_bills = db.Column(db.JSON, nullable=False, default={})  # Track bill amount  ({datetime:float})
     ingredients = db.Column(db.JSON, nullable=False, default={})   # {Ingredient: [quantity, unit, price]}
     subscription = db.Column(db.JSON, nullable=False, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
     # reports = db.Column(db.JSON, nullable=False, default={})   # {'Report':[], 'Reported'[]}
+    # timezone = db.Column(db.String(60), nullable=True)
 
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
@@ -184,6 +185,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
+    # hidden = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"

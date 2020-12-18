@@ -2,22 +2,39 @@ import itertools
 import json
 import os
 import secrets
+import shutil
 import string
+
+import requests
 from PIL import Image
 from flask import url_for, current_app, flash
 from flask_login import current_user
 from flask_mail import Message
 from werkzeug.utils import redirect
+from werkzeug.datastructures import FileStorage
 from GroceryHero import mail, db
 from GroceryHero.Recipes.forms import Measurements
 from GroceryHero.models import Aisles, Recipes
 
 
-def save_picture(form_picture):
+def save_picture(form_picture, filepath='static/profile_pics', download=False):
+    print(form_picture)
+    if form_picture is None:
+        return None
     random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
+    if download:
+        url = form_picture
+        r = requests.get(url, stream=True)
+        if r.status_code == 200:  # Downloaded
+            _, f_ext = os.path.splitext(url)
+            r.raw.decode_content = True  # Decode_content otherwise file size will be zero
+            form_picture = r.raw
+        else:  # Not downloaded
+            return None
+    else:
+        _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(current_app.root_path, 'static/profile_pics', picture_fn)
+    picture_path = os.path.join(current_app.root_path, filepath, picture_fn)
 
     output_size = (125, 125)
     i = Image.open(form_picture)
