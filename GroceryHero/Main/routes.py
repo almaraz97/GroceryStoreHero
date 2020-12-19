@@ -33,6 +33,7 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
 # todo being able to download and upload recipes in json still necessary?
+# todo prevent update on feed abuse
 
 
 @main.route('/')
