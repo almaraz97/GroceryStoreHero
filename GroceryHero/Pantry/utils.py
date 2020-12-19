@@ -20,12 +20,13 @@ def update_pantry(user, recipes):  # From the clear menu using recipes
             for shelf in pantry:  # Look for it in each shelf
                 if item in pantry[shelf]:
                     pantry_unit = pantry[shelf][item][1]
+                    print(pantry_unit)
                     if Measurements.str_compatibility(ing_unit, pantry[shelf][item][1]):
                         print(type(pantry[shelf][item][0]))
                         pantry_value = float(pantry[shelf][item][0])
-                        print(ing[1], ing[2])
+                        print(ing_value, ing_unit)
                         print(pantry_value, pantry_unit)
-                        recipe_ing = Measurements(value=ing_unit, unit=ing_value)  # Get recipe ing that is being used
+                        recipe_ing = Measurements(value=ing_value, unit=ing_unit)  # Get recipe ing that is being used
                         pantry_ing = Measurements(value=pantry_value, unit=pantry_unit)
                         remaining = pantry_ing - recipe_ing  # Subtract the two (creates new object)
                         print(recipe_ing)
