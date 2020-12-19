@@ -95,6 +95,7 @@ class Measurements:
                     total = total / self.Convert[volume]
                     self.unit = volume
                     return Measurements(round(total, 2), unit=volume)
+            return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
@@ -102,23 +103,25 @@ class Measurements:
                     total = total / self.Convert[weight]
                     self.unit = weight
                     return Measurements(round(total, 2), unit=weight)
+            return Measurements(round(total, 2), unit=weight)
 
     def __sub__(self, other, rounding=2):  # todo this changes the unit since it is changing the self. stuff
         self.compatibility(other, error=True)
         if self.type == 'Generic':
             total = self.value + other.value
             return Measurements(round(total, rounding), unit=self.unit)
-
         self.value = self.Convert[self.unit] * self.value  # convert to lowest
         other.value = other.Convert[other.unit] * other.value  # convert to lowest
         total = self.value - other.value
-        if self.type == 'Volume':
+
+        if self.type == 'Volume':  # todo WHAT IF THERE IS NO UNIT GREATER THAN 1?
             volumes = self.Metric_Volumes if self.metric else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     self.unit = volume
                     return Measurements(round(total, 2), unit=volume)
+            return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric else self.Weights
             for weight in weights:
@@ -126,11 +129,11 @@ class Measurements:
                     total = total / self.Convert[weight]
                     self.unit = weight
                     return Measurements(round(total, 2), unit=weight)
+            return Measurements(round(total, 2), unit=weight)
+
 
     def __repr__(self):
-        return f'{self.value} {self.unit}s' if self.value != 1 else f'{self.value} {self.unit}'
-
-
+        return f'Measure({self.value} {self.unit}s' if self.value != 1 else f'{self.value} {self.unit})'
 
 
 class RecipeForm(FlaskForm):
