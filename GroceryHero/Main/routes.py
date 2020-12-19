@@ -84,15 +84,15 @@ def clear_menu():
             recipe.in_menu = False
             recipe.eaten = False
         update_pantry(current_user, menu_recipes)
-        update_grocery_list(current_user)
-        histories.append(history)
-        current_user.history = histories
-        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
-        ids = [rec.id for rec in recipes]
-        action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow(),
-                         titles=[x.title for x in recipes])
-        db.session.add(action)
-        db.session.commit()
+        # update_grocery_list(current_user)
+        # histories.append(history)
+        # current_user.history = histories
+        # recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
+        # ids = [rec.id for rec in recipes]
+        # action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow(),
+        #                  titles=[x.title for x in recipes])
+        # db.session.add(action)
+        # db.session.commit()
     return redirect(url_for('main.home'))
 
 
