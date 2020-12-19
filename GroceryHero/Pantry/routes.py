@@ -3,7 +3,8 @@ from flask import (render_template, url_for, flash,
 from flask_login import current_user, login_required
 
 from GroceryHero.Main.forms import ExtrasForm
-from GroceryHero.Main.utils import add_pantry, convert_frac
+from GroceryHero.Main.utils import convert_frac
+from GroceryHero.Pantry.utils import add_pantry
 from GroceryHero.Pantry.forms import PantryBarForm, FullQuantityForm, ShelfForm, DeleteShelfForm, AddToShelfForm
 from GroceryHero.Recipes.forms import Measurements
 from GroceryHero.models import Recipes
