@@ -26,15 +26,15 @@ def update_pantry(user, recipes):  # From the clear menu using recipes
                     print(recipe_ing)
                     print(pantry_ing)
                     print(remaining)
-                    if remaining.value > 0:  # If there is anything remaining
-                        pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
-                    else:
-                        del pantry[shelf][item]  # Ingredient is gone
-                    break
-        user.pantry = {}
-        db.session.commit()  # todo why does it need 2 commits to update value?
-        user.pantry = pantry
-        db.session.commit()
+                    # if remaining.value > 0:  # If there is anything remaining
+                    #     pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
+                    # else:
+                    #     del pantry[shelf][item]  # Ingredient is gone
+                    # break
+        # user.pantry = {}
+        # db.session.commit()  # todo why does it need 2 commits to update value?
+        # user.pantry = pantry
+        # db.session.commit()
 
 
 def add_pantry(user, ingredients, shelf, add):
