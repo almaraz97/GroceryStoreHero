@@ -9,7 +9,8 @@ from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, update_pantry, apriori_test, convert_frac)
+                                    show_harmony_weights, apriori_test, convert_frac)
+from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 
 main = Blueprint('main', __name__)
@@ -31,7 +32,7 @@ use of session in new and update recipe route handoffs, cython working, load rec
 handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
-# todo being able to download and upload recipes still necessary?
+# todo being able to download and upload recipes in json still necessary?
 
 
 @main.route('/')
@@ -70,7 +71,8 @@ def home():
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
     menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
-    menu_recipes = menu_recipes + [x for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()]
+    borrowed_recipes = [x.recipe_id for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()]
+    menu_recipes = menu_recipes + Recipes.query.filter(Recipes.id.in_(borrowed_recipes)).all()
     if len(menu_recipes) > 0:
         histories = current_user.history.copy()
         history = []
