@@ -130,9 +130,9 @@ class Measurements:
                     return Measurements(round(total, 2), unit=weight)
         return Measurements(round(total, 2), unit=self.unit)
 
-
     def __repr__(self):
-        return f'Measure({self.value} {self.unit}s' if self.value != 1 else f'{self.value} {self.unit})'
+        unit = self.unit + 's' if self.value != 1 else self.unit
+        return f'Measure({self.name}: {self.value} {unit})'
 
 
 class RecipeForm(FlaskForm):
