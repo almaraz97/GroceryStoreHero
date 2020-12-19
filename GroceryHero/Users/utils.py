@@ -206,11 +206,11 @@ def import_recipes_terminal(recipe_dictionary, user, database):
     database.session.commit()
 
 
-def starter_recipes():
-    recipes = []
-    recipes.append(Recipes(title='Hamburgers', quantity={'Beef': ['1', 'Pound'], 'Buns': ['1', 'Package'], 'Ketchup': ['3', 'US Tablespoon']}, author=current_user))
-    recipes.append(Recipes(title='Tacos', quantity={}), author=current_user)
-    recipes.append(Recipes(title='Ramen', quantity={}), author=current_user)
-    recipes.append(Recipes(title='Chili', quantity={}), author=current_user)
-    recipes.append(Recipes(title='Mac and Cheese', quantity={}), author=current_user)
-    return recipes
+# def starter_recipes():
+#     recipes = []
+#     recipes.append(Recipes(title='Hamburgers', quantity={'Beef': ['1', 'Pound'], 'Buns': ['1', 'Package'], 'Ketchup': ['3', 'US Tablespoon']}, author=current_user))
+#     recipes.append(Recipes(title='Tacos', quantity={}), author=current_user)
+#     recipes.append(Recipes(title='Ramen', quantity={}), author=current_user)
+#     recipes.append(Recipes(title='Chili', quantity={}), author=current_user)
+#     recipes.append(Recipes(title='Mac and Cheese', quantity={}), author=current_user)
+#     return recipes

@@ -8,7 +8,7 @@ from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountF
                                      RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
 from GroceryHero.Main.forms import ImportForm
 from GroceryHero.Users.utils import save_picture, send_reset_email, import_files, update_harmony_preferences, \
-    load_harmony_form, starter_recipes
+    load_harmony_form
 from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights, ensure_harmony_keys
 import json
 
@@ -37,9 +37,9 @@ def register():
         #            Recipes(title='Potato Salad', quantity=None, notes=None, link=None, in_menu=False)]
         db.session.add(user)
         db.session.commit()
-        for recipe in starter_recipes():
-            db.session.add(recipe)
-        db.session.commit()
+        # for recipe in starter_recipes():
+        #     db.session.add(recipe)
+        # db.session.commit()
         flash(f'Your account has been created. You can now log in!', 'success')
         return redirect(url_for("users.login"))
     return render_template('register.html', title='Register', form=form)

@@ -21,7 +21,7 @@ recipes = Blueprint('recipes', __name__)
 
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
-    if current_user.is_authenticated:  # todo allow borrowed recipe to be put on menu and display it correctly
+    if current_user.is_authenticated:
         followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
         friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
