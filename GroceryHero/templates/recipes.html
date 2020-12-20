@@ -32,7 +32,7 @@
     </form>
   </div>
 <div class="row p-0 mx-0 mb-1">
-  {% if borrows is defined %}
+  {% if title == 'Friend Recipes' %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
   {% else %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
