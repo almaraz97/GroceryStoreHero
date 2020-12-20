@@ -107,7 +107,7 @@ def friend_recipes():  # todo handle deleted account ids
         for recipe in Recipes.query.filter_by(user_id=friend).all():
             if recipe not in user_recipes:
                 borrowed_list.append(recipe) if recipe.id in borrows else recipe_list.append(recipe)
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     recipe_list = recipe_list + borrowed_list
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
@@ -120,7 +120,7 @@ def public_recipes():  # todo handle deleted account ids
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     recipe_list = [x for x in Pub_Rec.query.all()]
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
