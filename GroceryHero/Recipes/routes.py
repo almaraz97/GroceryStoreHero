@@ -123,7 +123,7 @@ def public_recipes():  # todo handle deleted account ids
     recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
+    return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
                            friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
 
