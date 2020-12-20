@@ -128,13 +128,23 @@ margin: 25px 10px 0 0 !important;
 
 .list-group-item.active {
 background-color: #28a745;
-border-color: #28a745; }
+border-color: #28a745;
+}
 
 
 .callout {
   border: 1px solid #eee;
   border-right-width: 5px;
   border-radius: 5px;
+}
+
+.footer {
+  max-width: 100%;
+  background-color: grey;
+  bottom: 0;
+  min-height: 100px;
+  display: block;
+
 }
 
 /*@each $name,$color in (default,#777),(primary,#428bca),(success,#5cb85c),(danger,#d9534f),(warning,#f0ad4e),(info,#5bc0de), (bdc,#29527a) {*/
