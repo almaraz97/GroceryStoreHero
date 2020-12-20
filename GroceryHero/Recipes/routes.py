@@ -133,9 +133,11 @@ def public_recipes():  # todo handle deleted account ids
 def friend_recipes_choice(friend=None):  # todo handle deleted account ids
     if friend is None or friend == current_user.id:
         return redirect(url_for('recipes.friend_recipes'))
+    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
+    if followee is None:
+        return redirect(url_for('recipes.friend_recipes'))
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
     all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
                    for F in all_followees if F.status == 1}
@@ -146,7 +148,7 @@ def friend_recipes_choice(friend=None):  # todo handle deleted account ids
         friend = User.query.filter_by(id=friend).first()
         friend_dict = {friend.id: friend}
         recipe_list = [x for x in Recipes.query.filter_by(user_id=friend.id).all() if x not in user_recipes]
-        recipe_list = sorted(recipe_list, key=lambda x: x.date_created)
+        recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     else:
         return redirect(url_for('recipes.friend_recipes'))
     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
