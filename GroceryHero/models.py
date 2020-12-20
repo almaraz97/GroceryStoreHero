@@ -148,7 +148,7 @@ class Followers(db.Model):
         return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
 
 
-class Pub_Rec(db.Model):  # Add picture of recipe in recipe page
+class Pub_Rec(db.Model):
     p_id = db.Column(db.Integer, primary_key=True)
     origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -201,9 +201,10 @@ class User_PubRec(db.Model):  # For borrowed recipes
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
+    # hidden = db.Column(db.Boolean, nullable=False, default=False)
 
 
-class User_Act(db.Model):  # For borrowed recipes
+class User_Act(db.Model):  # For comments and likes on other's actions
     act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     comment = db.Column(db.String(200), nullable=True)

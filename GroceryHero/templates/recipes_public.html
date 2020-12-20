@@ -1,25 +1,7 @@
 {% extends 'layout.html' %}
 {% block content %}
-{% if public is not defined %}
-  <h1 class="mb-3" style="">Your Recipes</h1> <!--<a class="btn btn-sm btn-success mt-2 ml-4" style="color: white; float: right">New Recipe</a>-->
-{% else %}
-  <h1 class="mb-3">Public Recipes</h1>
-{% endif %}
+<h1 class="mb-3">Public Recipes</h1>
 {% if current_user.is_authenticated %}
-<!--&lt;!&ndash;Drop down menu search bar&ndash;&gt;-->
-<!--<form action="{# url_for('recipes.recipes_search') #}" method="POST">-->
-<!--    <div class="input-group mb-3">-->
-<!--        <div class="input-group-prepend">-->
-<!--            <button class="input-group-text" for="inputGroupSelect01">Select</button>-->
-<!--        </div>-->
-<!--        <select class="custom-select" id="inputGroupSelect01" name="search">-->
-<!--                <option selected>Recipe Options</option>-->
-<!--            {#% for recipe in search_recipes %#}-->
-<!--                <option value="{#{ recipe.title }#}">{#{ recipe.title }#}</option>-->
-<!--            {#% endfor %#}-->
-<!--        </select>-->
-<!--    </div>-->
-<!--</form>-->
   <!--Search bar with button-->
   <div style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
@@ -31,11 +13,11 @@
       </div>
     </form>
   </div>
-<div class="row p-0 mx-0 mb-1">
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
-</div>
+  <div class="row p-0 mx-0 mb-1">
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+  </div>
 {% endif %}
 {% if cards is not defined or cards|length < 1 %}
   <div class="card mt-4 mb-2">

@@ -143,7 +143,7 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
                     del dictionary['ingredient_weights'][ingredient]
                 else:  # Else change the weight
                     dictionary['ingredient_weights'][ingredient] = str(form.ingredient_weights.data)
-        dictionary['ingredient_weights'] = json.dumps(dictionary['ingredient_weights'])  # Modify dic with changes
+        dictionary['ingredient_weights'] = json.dumps(dictionary['ingredient_weights'])  # Modify dic with changes  # todo dump not needed here
     # Recipe pairs
     if isinstance(dictionary['tastes'], str):  # If the entries are JSON for some reason?
         dictionary['tastes'] = json.loads(dictionary['tastes'])
@@ -178,7 +178,7 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
                     del dictionary['sticky_weights'][ingredient]
                 else:  # Else change the weight
                     dictionary['sticky_weights'][ingredient] = str(form.sticky_weights.data)
-        dictionary['sticky_weights'] = json.dumps(dictionary['sticky_weights'])
+        dictionary['sticky_weights'] = json.dumps(dictionary['sticky_weights'])  # todo why dump here and load earlier?
     # Ingredient excludes (or undoing exclude)
     if '--select options (ctl+click)--' not in form.ingredient_ex.data:
         dictionary['ingredient_excludes'] = dictionary['ingredient_excludes'] + form.ingredient_ex.data

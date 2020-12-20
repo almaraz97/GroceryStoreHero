@@ -103,6 +103,9 @@ def account():
         db.session.commit()
         flash('Your settings have been updated', 'success')
         return redirect(url_for('users.account'))
+    if form4.validate_on_submit():
+        token = []
+        return redirect(url_for('account.delete_account'), token=token)
     if request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
@@ -123,9 +126,24 @@ def delete_account(token):
         aisles = Aisles.query.filter_by(author=current_user).all()
         for aisle in aisles:  # delete aisles
             db.session.delete(aisle)
+        followers = []
+        for follower in followers:  # delete followers
+            db.session.delete(follower)
+        actions = []
+        for action in actions:  # delete actions
+            db.session.delete(action)
+        User_rec = []
+        for rec in User_rec:  # delete user borrows
+            db.session.delete(rec)
+        User_pubrec = []
+        for rec in User_pubrec:  # delete user borrows
+            db.session.delete(rec)
+        User_act = []
+        for act in User_act:  # delete user comments
+            db.session.delete(act)
         db.session.delete(current_user)  # delete user
         db.session.commit()
-        flash('Your account has been deleted!', 'success')
+        flash('Your account and everything associated has been deleted!', 'success')
         return redirect(url_for('main.home'))
 
 

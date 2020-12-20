@@ -130,7 +130,7 @@ def public_recipes():  # todo handle deleted account ids
 
 @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 @login_required
-def friend_recipes_choice(friend=None):  # todo handle deleted account ids
+def friend_recipes_choice(friend=None):
     if friend is None or friend == current_user.id:
         return redirect(url_for('recipes.friend_recipes'))
     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()

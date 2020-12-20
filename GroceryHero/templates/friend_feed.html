@@ -14,13 +14,9 @@
     </form>
   </div>
 <div class="row p-0 mx-0 mb-1">
-  {% if friends is defined and switch is defined %}
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
-  {% else %}
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
-  {% endif %}
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
   <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
 </div>
 {% endif %}
 {% if cards is not defined or cards|length < 1 %}
