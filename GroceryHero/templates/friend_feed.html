@@ -45,7 +45,7 @@
   <!--Action Cards-->
   {% for action in cards %}
     {% set title_tracker = action.titles %}
-     {% for id in action.recipe_ids %}{% if id is not none and rec_dict[id].title in title_tracker %}{% set title_tracker = title_tracker.remove(rec_dict[id].title) %}{% endif %}{% endfor %}
+     {% for id in action.recipe_ids %}{% if id is not none and id in rec_dict and rec_dict[id].title in title_tracker %}{% set title_tracker = title_tracker.remove(rec_dict[id].title) %}{% endif %}{% endfor %}
     <!--style="border-right:solid 20px #9C1A1C;"-->
     <article class="media content-section mt-0" style="border-top-color:{{colors[action.type_]}}; border-top-width: 5px; border-radius: 0px;"> <!--border-right-color-->
       <a href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">

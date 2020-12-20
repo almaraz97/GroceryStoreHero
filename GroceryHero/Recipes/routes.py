@@ -163,7 +163,7 @@ def friend_feed():  # todo pagination for posts or limit by date?
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees)).all()
     cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
-    # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
+    # Get friend recipe dict(id:Recipe) to hyperlink their recipe actions
     recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
     recs = Recipes.query.filter(Recipes.id.in_(recs)).all() + Recipes.query.filter_by(user_id=current_user.id).all()
     rec_dict = {r.id: r for r in recs}
