@@ -1,10 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-{% if public is not defined %}
-  <h1 class="mb-3" style="">Your Recipes</h1> <!--<a class="btn btn-sm btn-success mt-2 ml-4" style="color: white; float: right">New Recipe</a>-->
-{% else %}
-  <h1 class="mb-3">Public Recipes</h1>
-{% endif %}
+<h1 class="mb-3" style="">{{ title }}</h1> <!--<a class="btn btn-sm btn-success mt-2 ml-4" style="color: white; float: right">New Recipe</a>-->
 {% if current_user.is_authenticated %}
 <!--&lt;!&ndash;Drop down menu search bar&ndash;&gt;-->
 <!--<form action="{# url_for('recipes.recipes_search') #}" method="POST">-->
