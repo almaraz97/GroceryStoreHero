@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from GroceryHero.config import Config
 from flask_migrate import Migrate
+from authlib.integrations.flask_client import OAuth
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -24,6 +25,20 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db=db, render_as_batch=True)
+
+    oauth = OAuth(app)
+
+    auth0 = oauth.register(
+        'auth0',
+        client_id='HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7',
+        client_secret=Config['SECRET_KEY'],
+        api_base_url='https://dev-7z79kd24.us.auth0.com',
+        access_token_url='https://dev-7z79kd24.us.auth0.com/oauth/token',
+        authorize_url='https://dev-7z79kd24.us.auth0.com/authorize',
+        client_kwargs={
+            'scope': 'openid profile email',
+        },
+    )
 
     from GroceryHero.Users.routes import users
     from GroceryHero.Recipes.routes import recipes

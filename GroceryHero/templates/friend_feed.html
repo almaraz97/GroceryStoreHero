@@ -54,6 +54,7 @@
           <a style="font-size: 20px;display:inline-block"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }}</a> {% if action.type_ == 'Clear' %}
             {% set index = namespace(value=0) %}ate
 {% else %}{{ action.type_.lower() }}{% if action.type_ != 'Delete' and action.type_ != 'Update' %}ed{% else %}d{% endif %}{% endif %}{% if action.type_ == 'Clear' %}
+            {% if cards|length > 1 %}
             {% for id in action.recipe_ids %}
               {% if id not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %}  <!-- See if recipe is still in database -->
               {% if found %}
@@ -65,15 +66,16 @@
             {% if title_tracker|length > 0 %}  <!-- Go through titles that have no ids -->
               {% for title in title_tracker %}
                 {% if index.value + 1 >= action.recipe_ids|length %}  <!-- hasn't looped through all recipes -->{{ rec_dict.get(id).title }},
-{% else %}  <!-- Has looped through all recipes -->and {{ rec_dict.get(id).title }} this week!
+{% else %}  <!-- Has looped through all recipes -->{% if cards|length > 0 %}and{% endif %} {{ rec_dict.get(id).title }} this week!
                 {% endif %}
                 {% set index.value = index.value + 1 %}
               {% endfor %}
             {% endif %}
           {% else %}  <!-- Action other than Clear -->{% if action.recipe_ids[0] not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %} {% if found %}<a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=action.recipe_ids[0]) }}">{{ rec_dict[action.recipe_ids[0]].title }}</a>
-{% else %}{{ title_tracker[0] }}{% if title_tracker[0][-1].lower() != 's' %}s{% endif %}
+{% else %}{{ title_tracker[0] }}
             {% endif %}
-          {% endif %}</p>
+          {% endif %}
+          {% endif %}
         </div>
       </div>
     </article>

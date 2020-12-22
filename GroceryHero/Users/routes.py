@@ -1,6 +1,7 @@
 import itertools
+from functools import wraps
 
-from flask import render_template, url_for, flash, redirect, request, Blueprint, Response
+from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
 from GroceryHero import db, bcrypt
 from GroceryHero.models import User, Recipes, Aisles
@@ -46,16 +47,9 @@ def register():
 
 
 @users.route('/login', methods=['GET', 'POST'])
-def login():  # todo Auth0 here
+def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    # if session['user']['email_validated']
-    #   email = session['user']['email']
-    #   users = User.query.filter_by(email=email).first()
-    #   if email in users:
-    #       user = User.query.filter_by(email=email).first()
-    #   else:
-    #       #SEND TO REGISTER AND AUTOMATICALLY REGISTER with just username and email
     form = LoginForm()  # Won't be necessary
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -67,6 +61,89 @@ def login():  # todo Auth0 here
         else:
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
     return render_template('login.html', title='Login', form=form)
+
+
+
+
+# @users.route('/auth_register', methods=['GET', 'POST'])
+# def auth_register():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         email = session['auth0']['email']
+#         # hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+#         user = User()
+#         user.username = form.username.data
+#         user.email = form.email.data
+#         # user.password = hashed_password
+#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+#         db.session.add(user)
+#         db.session.commit()
+#         flash(f'Your account has been created. You can now log in!', 'success')
+#         return redirect(url_for("users.login"))
+#     return render_template('auth_register.html', title='Register', form=form)
+#
+#
+# @users.route('/auth_login', methods=['GET', 'POST'])
+# def auth_login():  # SEND TO REGISTER AND AUTOMATICALLY REGISTER with just username and email
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     if session['user']['email_validated']:
+#         email = session['user']['email']
+#         user = User.query.filter_by(email=email).first()
+#         if user is not None:
+#             login_user(user)
+#             next_page = request.args.get('next')
+#             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
+#             return redirect(next_page) if next_page else redirect(url_for('main.home'))
+#         else:
+#             flash(f"Login Unsuccessful. Please check email or password", 'danger')
+#             return redirect(url_for('users.login'))
+#     return render_template('auth_login.html', title='Login')
+# Here we're using the /callback route.
+
+def requires_auth(f):
+  @wraps(f)
+  def decorated(*args, **kwargs):
+    if 'profile' not in session:
+      # Redirect to Login page here
+      return redirect('/')
+    return f(*args, **kwargs)
+
+  return decorated
+
+
+@users.route('/dashboard')
+@requires_auth
+def dashboard():
+    return render_template('dashboard.html',
+                           userinfo=session['profile'],
+                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4))
+
+
+@users.route('/callback')
+def callback_handling():
+    # Handles response from token endpoint
+    auth0.authorize_access_token()
+    resp = auth0.get('userinfo')
+    userinfo = resp.json()
+
+    # Store the user information in flask session.
+    session['jwt_payload'] = userinfo
+    session['profile'] = {
+        'user_id': userinfo['sub'],
+        'name': userinfo['name'],
+        'picture': userinfo['picture']
+    }
+    return redirect('/dashboard')
+
+@users.route('/login')
+def login():
+    return auth0.authorize_redirect(redirect_uri='YOUR_CALLBACK_URL')
+
 
 
 @users.route('/logout')

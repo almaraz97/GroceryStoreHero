@@ -15,6 +15,7 @@ from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture
 from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+from GroceryHero import config
 
 recipes = Blueprint('recipes', __name__)
 
@@ -116,7 +117,7 @@ def friend_recipes():  # todo handle deleted account ids
 
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
 @login_required
-def public_recipes():  # todo handle deleted account ids
+def public_recipes():
     colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
               'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     recipe_list = [x for x in Pub_Rec.query.all()]
@@ -126,6 +127,12 @@ def public_recipes():  # todo handle deleted account ids
     return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
                            friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
+
+
+@recipes.route('/publify', methods=['GET', 'POST'])
+@login_required
+def publify_recipe():
+    return None
 
 
 @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
@@ -467,12 +474,15 @@ def delete_recipe(recipe_id):
     if recipe.author != current_user:  # You can only change your own recipes
         abort(403)
         return redirect(url_for('recipes.recipes_page'))
-    db.session.delete(recipe)
     if recipe.title in current_user.harmony_preferences['recommended']:  # If delete recipe in recommended
         temp = {key: value for key, value in current_user.harmony_preferences.items()}
         temp['recommended'] = {}  # Reset recipe tool recommendations
         temp['possible'] = 0
         current_user.harmony_preferences = temp
+    for rec in User_Rec.query.filter_by(recipe_id=recipe.id).all():
+        db.session.delete(rec)
+        pass
+    db.session.delete(recipe)
     update_grocery_list(current_user)
     action = Actions(user_id=current_user.id, type_='Delete', recipe_ids=[recipe_id],
                      date_created=datetime.utcnow(), titles=[recipe.title])

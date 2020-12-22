@@ -12,6 +12,7 @@ from flask import current_app
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 # Add ogusernmane, creadit columns to PubRec, Add User_Act and User_PubRec tables. Add times_eaten column to recipes
 class User(db.Model, UserMixin):
     """
