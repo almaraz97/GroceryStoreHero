@@ -19,19 +19,11 @@ mail = Mail()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
-
-    db.init_app(app)
-    bcrypt.init_app(app)
-    login_manager.init_app(app)
-    mail.init_app(app)
-    migrate.init_app(app, db=db, render_as_batch=True)
-
     oauth = OAuth(app)
-
     auth0 = oauth.register(
         'auth0',
         client_id='HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7',
-        client_secret=Config['SECRET_KEY'],
+        client_secret='7gGG-5PplKgY3DLo7ImcwlFVgmLw_kgjWOQmTCrDuHTRFKGkwiZXoMsC1ET2tAcq',
         api_base_url='https://dev-7z79kd24.us.auth0.com',
         access_token_url='https://dev-7z79kd24.us.auth0.com/oauth/token',
         authorize_url='https://dev-7z79kd24.us.auth0.com/authorize',
@@ -39,6 +31,13 @@ def create_app(config_class=Config):
             'scope': 'openid profile email',
         },
     )
+    app.auth0 = auth0
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    mail.init_app(app)
+    migrate.init_app(app, db=db, render_as_batch=True)
 
     from GroceryHero.Users.routes import users
     from GroceryHero.Recipes.routes import recipes

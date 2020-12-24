@@ -1,9 +1,11 @@
 import itertools
 from functools import wraps
-
+from urllib.parse import urlencode
+from flask import current_app
+from authlib.integrations.flask_client import OAuth
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
-from GroceryHero import db, bcrypt
+from GroceryHero import db, bcrypt, Config
 from GroceryHero.models import User, Recipes, Aisles
 from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountForm, DeleteAccountForm,
                                      RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
@@ -63,89 +65,6 @@ def login():
     return render_template('login.html', title='Login', form=form)
 
 
-
-
-# @users.route('/auth_register', methods=['GET', 'POST'])
-# def auth_register():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('main.home'))
-#     form = RegistrationForm()
-#     if form.validate_on_submit():
-#         email = session['auth0']['email']
-#         # hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-#         user = User()
-#         user.username = form.username.data
-#         user.email = form.email.data
-#         # user.password = hashed_password
-#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-#         db.session.add(user)
-#         db.session.commit()
-#         flash(f'Your account has been created. You can now log in!', 'success')
-#         return redirect(url_for("users.login"))
-#     return render_template('auth_register.html', title='Register', form=form)
-#
-#
-# @users.route('/auth_login', methods=['GET', 'POST'])
-# def auth_login():  # SEND TO REGISTER AND AUTOMATICALLY REGISTER with just username and email
-#     if current_user.is_authenticated:
-#         return redirect(url_for('main.home'))
-#     if session['user']['email_validated']:
-#         email = session['user']['email']
-#         user = User.query.filter_by(email=email).first()
-#         if user is not None:
-#             login_user(user)
-#             next_page = request.args.get('next')
-#             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-#             return redirect(next_page) if next_page else redirect(url_for('main.home'))
-#         else:
-#             flash(f"Login Unsuccessful. Please check email or password", 'danger')
-#             return redirect(url_for('users.login'))
-#     return render_template('auth_login.html', title='Login')
-# Here we're using the /callback route.
-
-def requires_auth(f):
-  @wraps(f)
-  def decorated(*args, **kwargs):
-    if 'profile' not in session:
-      # Redirect to Login page here
-      return redirect('/')
-    return f(*args, **kwargs)
-
-  return decorated
-
-
-@users.route('/dashboard')
-@requires_auth
-def dashboard():
-    return render_template('dashboard.html',
-                           userinfo=session['profile'],
-                           userinfo_pretty=json.dumps(session['jwt_payload'], indent=4))
-
-
-@users.route('/callback')
-def callback_handling():
-    # Handles response from token endpoint
-    auth0.authorize_access_token()
-    resp = auth0.get('userinfo')
-    userinfo = resp.json()
-
-    # Store the user information in flask session.
-    session['jwt_payload'] = userinfo
-    session['profile'] = {
-        'user_id': userinfo['sub'],
-        'name': userinfo['name'],
-        'picture': userinfo['picture']
-    }
-    return redirect('/dashboard')
-
-@users.route('/login')
-def login():
-    return auth0.authorize_redirect(redirect_uri='YOUR_CALLBACK_URL')
-
-
-
 @users.route('/logout')
 def logout():
     logout_user()
@@ -203,7 +122,7 @@ def delete_account(token):
         aisles = Aisles.query.filter_by(author=current_user).all()
         for aisle in aisles:  # delete aisles
             db.session.delete(aisle)
-        followers = []
+        followers = []  # todo finish here
         for follower in followers:  # delete followers
             db.session.delete(follower)
         actions = []
@@ -269,3 +188,113 @@ def reset_token(token):  # Where they reset password with active token
         flash(f'Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for("users.login"))
     return render_template('reset_token.html', title='Reset Password', form=form)
+
+
+def requires_auth(f): # Here we're using the /callback route.
+  @wraps(f)
+  def decorated(*args, **kwargs):
+    if 'profile' not in session:
+      # Redirect to Login page here
+      return redirect('/')
+    return f(*args, **kwargs)
+  return decorated
+
+
+@users.route('/callback')
+def callback_handling():
+    # Handles response from token endpoint
+    current_app.auth0.authorize_access_token()
+    resp = current_app.auth0.get('userinfo')
+    userinfo = resp.json()
+
+    # Store the user information in flask session.
+    session['jwt_payload'] = userinfo
+    session['profile'] = {
+        'user_id': userinfo['sub'],
+        'name': userinfo['name'],
+        'picture': userinfo['picture']
+    }
+    # print(session)
+    return redirect(url_for('users.auth_login'))
+
+
+"""
+"<SecureCookieSession 
+{
+'_auth0_authlib_nonce_': 'QiB81IV6QaVkBjDtUaOf', 
+'_fresh': False, 
+'csrf_token': '72cff6566f5bda048a2adc4c24953da720a5a955', 
+'jwt_payload': {
+    'sub': 'auth0|5fe4035dbbc4f9006f1f9f55', 
+    'nickname': 'nintendoboy7', 
+    'name': 'nintendoboy7@msn.com', 
+    'picture': 'https://s.gravatar.com/avatar/d893c1fdc5d09d9244566259ea2cf744?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fni.png', 
+    'updated_at': '2020-12-24T03:20:16.007Z', 
+    'email': 'nintendoboy7@msn.com', 
+    'email_verified': True
+                }, 
+'profile': {
+    'user_id': 'auth0|5fe4035dbbc4f9006f1f9f55', 
+    'name': 'nintendoboy7@msn.com', 
+    'picture': 'https://s.gravatar.com/avatar/d893c1fdc5d09d9244566259ea2cf744?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fni.png'
+    }
+}>
+"""
+
+
+# @users.route('/auth_register', methods=['GET', 'POST'])
+# def auth_register():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         email = session['auth0']['email']
+#         # hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+#         user = User()
+#         user.username = form.username.data
+#         user.email = form.email.data
+#         # user.password = hashed_password
+#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+#         db.session.add(user)
+#         db.session.commit()
+#         flash(f'Your account has been created. You can now log in!', 'success')
+#         return redirect(url_for("users.login"))
+#     return render_template('auth_register.html', title='Register', form=form)
+
+
+@users.route('/auth_login', methods=['GET', 'POST'])
+def auth_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
+    if session.get('jwt_payload', None) is not None and session['jwt_payload']['email']:
+        email = session['jwt_payload']['email']
+        user = User.query.filter_by(email=email).first()
+        if user is not None:  # User is in database
+            login_user(user)
+            next_page = request.args.get('next')
+            ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
+            return redirect(next_page) if next_page else redirect(url_for('main.home'))
+        else:  # User is not in database
+            user = User()
+            user.username = session['jwt_payload']['name']
+            user.email = email
+            user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+                                        'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+                                        'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+            db.session.add(user)
+            db.session.commit()
+            flash(f"Login Unsuccessful. Please check email or password", 'danger')
+            return redirect(url_for('users.auth_login'))  # url_for('users.callback_handling')
+    return current_app.auth0.authorize_redirect(redirect_uri='https://127.0.0.1:5000/callback')
+
+
+@users.route('/auth_logout')
+def auth_logout():
+    # Clear session stored data
+    session.clear()
+    # Redirect user to logout endpoint
+    params = {'returnTo': url_for('home', _external=True), 'client_id': 'YOUR_CLIENT_ID'}
+    return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
+
