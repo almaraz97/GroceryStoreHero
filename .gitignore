@@ -193,9 +193,9 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 /GroceryHero/Modeling/harmonytesting.py
 /build/
-/venv/
 
 # MY IGNORES
 GroceryHero/static/recipe_pics/*
 GroceryHero/static/profile_pics/*
 /test/
+.idea/*

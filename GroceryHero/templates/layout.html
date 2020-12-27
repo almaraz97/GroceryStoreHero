@@ -8,7 +8,20 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-  
+  <meta charset="UTF-8">
+
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">-->
+<!--    <meta name="description" content="Free bootstrap template Atlas">-->
+<!--    <link rel="icon" href="img/favicon.png" sizes="32x32" type="image/png">-->
+<!--    &lt;!&ndash; custom.css &ndash;&gt;-->
+<!--    <link rel="stylesheet" href="css/custom.css">-->
+<!--    &lt;!&ndash; bootstrap.min.css &ndash;&gt;-->
+<!--    <link rel="stylesheet" href="css/bootstrap.min.css">-->
+<!--	&lt;!&ndash; font-awesome &ndash;&gt;-->
+<!--    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">-->
+
+<!--    &lt;!&ndash; AOS &ndash;&gt;-->
+<!--    <link rel="stylesheet" href="css/aos.css">-->
 
   {% if title %}
   <title>Grocery Store Hero - {{ title }}</title>
@@ -45,6 +58,7 @@
             <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
             <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
             <a class="nav-item nav-link" href="{{ url_for('users.logout') }}">Logout</a>
+          <a class="nav-item nav-link" href="{{ url_for('users.auth_logout') }}">Auth Logout</a>
           {% else %}
             <a class="nav-item nav-link" href="{{ url_for('users.login') }}">Login</a>
             <a class="nav-item nav-link" href="{{ url_for('users.auth_login') }}">Auth Login</a>

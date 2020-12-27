@@ -36,12 +36,12 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 # todo prevent update on feed abuse
 
 
+# @main.route('/landing_page')
+# def landing():
+#     return render_template('landing.html')
+
+
 @main.route('/')
-@main.route('/landing_page')
-def landing():
-    return render_template('landing.html')
-
-
 @main.route('/home')
 def home():
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \

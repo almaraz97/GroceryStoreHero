@@ -190,6 +190,8 @@ def reset_token(token):  # Where they reset password with active token
     return render_template('reset_token.html', title='Reset Password', form=form)
 
 
+# Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero
+
 def requires_auth(f): # Here we're using the /callback route.
   @wraps(f)
   def decorated(*args, **kwargs):
@@ -214,7 +216,6 @@ def callback_handling():
         'name': userinfo['name'],
         'picture': userinfo['picture']
     }
-    # print(session)
     return redirect(url_for('users.auth_login'))
 
 
@@ -274,27 +275,31 @@ def auth_login():
         if user is not None:  # User is in database
             login_user(user)
             next_page = request.args.get('next')
+            # todo change the columns
             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:  # User is not in database
-            user = User()
-            user.username = session['jwt_payload']['name']
-            user.email = email
-            user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-                                        'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-                                        'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-            db.session.add(user)
-            db.session.commit()
+            # user = User()
+            # user.username = session['jwt_payload']['name']
+            # user.email = email
+            # user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+            #                             'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+            #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+            # db.session.add(user)
+            # db.session.commit()
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
             return redirect(url_for('users.auth_login'))  # url_for('users.callback_handling')
-    return current_app.auth0.authorize_redirect(redirect_uri='https://127.0.0.1:5000/callback')
+    # 'https://127.0.0.1:5000/callback')
+    return current_app.auth0.authorize_redirect(redirect_uri='https://www.grocerystore-hero.com/callback')
 
 
 @users.route('/auth_logout')
 def auth_logout():
+    logout_user()
     # Clear session stored data
     session.clear()
     # Redirect user to logout endpoint
-    params = {'returnTo': url_for('home', _external=True), 'client_id': 'YOUR_CLIENT_ID'}
+    # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
+    params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}  # todo
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 

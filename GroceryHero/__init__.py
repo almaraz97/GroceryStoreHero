@@ -22,8 +22,8 @@ def create_app(config_class=Config):
     oauth = OAuth(app)
     auth0 = oauth.register(
         'auth0',
-        client_id='HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7',
-        client_secret='7gGG-5PplKgY3DLo7ImcwlFVgmLw_kgjWOQmTCrDuHTRFKGkwiZXoMsC1ET2tAcq',
+        client_id='mKcsol3URUljy1p7wEqgAwxOVRW4KFnd',  #'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7',
+        client_secret='SsV4jWNmXTm-icN8LO4ScwlBKKXucwfHax7tLt3eGrnZI2eW4PovAIgyl57OJQ9_',
         api_base_url='https://dev-7z79kd24.us.auth0.com',
         access_token_url='https://dev-7z79kd24.us.auth0.com/oauth/token',
         authorize_url='https://dev-7z79kd24.us.auth0.com/authorize',
