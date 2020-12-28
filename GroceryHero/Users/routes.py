@@ -290,7 +290,7 @@ def auth_login():
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
             return redirect(url_for('users.auth_login'))  # url_for('users.callback_handling')
     # 'https://127.0.0.1:5000/callback')
-    return current_app.auth0.authorize_redirect(redirect_uri='https://www.grocerystore-hero.com/callback')
+    return current_app.auth0.authorize_redirect(redirect_uri='https://grocerystore-hero.com/callback')
 
 
 @users.route('/auth_logout')
