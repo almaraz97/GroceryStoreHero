@@ -2,7 +2,7 @@ import itertools
 from functools import wraps
 from urllib.parse import urlencode
 from flask import current_app
-from authlib.integrations.flask_client import OAuth
+# from authlib.integrations.flask_client import OAuth
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
 from GroceryHero import db, bcrypt, Config
