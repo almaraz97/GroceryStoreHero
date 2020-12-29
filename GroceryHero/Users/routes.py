@@ -242,7 +242,6 @@ def callback_handling():
 }>
 """
 
-
 # @users.route('/auth_register', methods=['GET', 'POST'])
 # def auth_register():
 #     if current_user.is_authenticated:
@@ -298,8 +297,7 @@ def auth_logout():
     logout_user()
     # Clear session stored data
     session.clear()
-    # Redirect user to logout endpoint
-    # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
+    # Redirect user to logout endpoint  # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
     params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}  # todo
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 
