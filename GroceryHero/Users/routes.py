@@ -274,7 +274,7 @@ def auth_login():
         if user is not None:  # User is in database
             login_user(user)
             next_page = request.args.get('next')
-            # todo change the columns
+            # todo change the columns with defaults
             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:  # User is not in database
@@ -287,7 +287,7 @@ def auth_login():
             # db.session.add(user)
             # db.session.commit()
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
-            return redirect(url_for('users.auth_login'))  # url_for('users.callback_handling')
+            return redirect(url_for('users.login'))  # url_for('users.callback_handling')
     # 'https://127.0.0.1:5000/callback')
     return current_app.auth0.authorize_redirect(redirect_uri='https://grocerystore-hero.com/auth_login/callback')
 
@@ -298,6 +298,6 @@ def auth_logout():
     # Clear session stored data
     session.clear()
     # Redirect user to logout endpoint  # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
-    params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}  # todo
+    params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 
