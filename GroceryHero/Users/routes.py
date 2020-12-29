@@ -202,7 +202,7 @@ def requires_auth(f): # Here we're using the /callback route.
   return decorated
 
 
-@users.route('/callback')
+@users.route('/auth_login/callback')
 def callback_handling():
     # Handles response from token endpoint
     current_app.auth0.authorize_access_token()
@@ -289,7 +289,7 @@ def auth_login():
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
             return redirect(url_for('users.auth_login'))  # url_for('users.callback_handling')
     # 'https://127.0.0.1:5000/callback')
-    return current_app.auth0.authorize_redirect(redirect_uri='https://grocerystore-hero.com/callback')
+    return current_app.auth0.authorize_redirect(redirect_uri='https://grocerystore-hero.com/auth_login/callback')
 
 
 @users.route('/auth_logout')
