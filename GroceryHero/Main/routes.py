@@ -34,7 +34,8 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 
 # todo being able to download and upload recipes in json still necessary?
 # todo prevent update on feed abuse
-
+# todo Use "name": "Alejandro Almaraz", "picture": "https://lh3.googleusercontent.com/" Save those to profile pic + name
+# todo compile actions formatting within view not through jinja
 
 # @main.route('/landing_page')
 # def landing():

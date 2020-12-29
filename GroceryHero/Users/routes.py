@@ -286,6 +286,7 @@ def auth_login():
             #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
             # db.session.add(user)
             # db.session.commit()
+            session.clear()
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
             return redirect(url_for('users.login'))  # url_for('users.callback_handling')
     # 'https://127.0.0.1:5000/callback')
@@ -298,6 +299,7 @@ def auth_logout():
     # Clear session stored data
     session.clear()
     # Redirect user to logout endpoint  # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
+    # todo redirect to landing page once finished
     params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 
