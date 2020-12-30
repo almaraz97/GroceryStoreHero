@@ -306,4 +306,4 @@ def auth_logout():
 
 @users.route('/privacy', methods=['GET', 'POST'])
 def privacy():
-    return redirect(url_for('main.home'))
+    return render_template('privacy.html', title='Privacy')
