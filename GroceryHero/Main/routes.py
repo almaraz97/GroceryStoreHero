@@ -36,6 +36,8 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 # todo prevent update on feed abuse
 # todo Use "name": "Alejandro Almaraz", "picture": "https://lh3.googleusercontent.com/" Save those to profile pic + name
 # todo compile actions formatting within view not through jinja
+# todo fix friends sidebar formatting: pic next to name not above it
+# todo do specific action checks that user specifies
 
 # @main.route('/landing_page')
 # def landing():

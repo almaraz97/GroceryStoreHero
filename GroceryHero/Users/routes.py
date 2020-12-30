@@ -303,3 +303,7 @@ def auth_logout():
     params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 
+
+@users.route('/privacy', methods=['GET', 'POST'])
+def privacy():
+    return redirect(url_for('main.home'))
