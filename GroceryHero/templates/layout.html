@@ -179,7 +179,8 @@
               <li class='text-muted mt-0'>{{ overlap }} recipe ingredient{% if overlap > 1 %}s{% endif %} overlapped</li>
             </ul>
           {% endif %}
-          <h4 class="mt-3"><a href="{{ url_for('main.stats') }}">Miscellaneous</a></h4>
+
+          <h4 class="mt-3">{% if current_user.is_authenticated %}<a href="{{ url_for('main.stats') }}">{% endif %}Miscellaneous</a></h4>
           {% if statistics is defined and statistics[0]|length > 0 %}
             <ul class='text-muted mt-0 mb-2'>
               <li class='text-muted mt-0'>Most eaten recipe: {{ statistics[0][0] }} ({{ statistics[0][1] }})</li>

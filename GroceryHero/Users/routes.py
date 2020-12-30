@@ -286,9 +286,8 @@ def auth_login():
             #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
             # db.session.add(user)
             # db.session.commit()
-            session.clear()
             flash(f"Login Unsuccessful. Please check email or password", 'danger')
-            return redirect(url_for('users.login'))  # url_for('users.callback_handling')
+            return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
     # 'https://127.0.0.1:5000/callback')
     return current_app.auth0.authorize_redirect(redirect_uri='https://grocerystore-hero.com/auth_login/callback')
 
