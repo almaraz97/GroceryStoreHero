@@ -168,7 +168,7 @@ def friend_feed():  # todo pagination for posts or limit by date? # todo create 
     colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
               'Unborrow': '#6c757d'}
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-    followees = followees + [current_user.id]
+    # followees = followees + [current_user.id]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees)).all()
     cards = generate_feed_contents(friend_acts)
