@@ -198,13 +198,13 @@ button {
 }
 
 .cta-green {
-    background: #00FFAD;
+    background: #28a745;
     color: #192440;
 }
 
 .cta-green:hover {
     color: #ffffff;
-    background: #00e69c;
+    background: #28a745;
 }
 
 .cta-blue {

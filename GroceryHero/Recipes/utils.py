@@ -1,11 +1,10 @@
-import itertools
-import json
-from flask import request, abort, redirect, url_for, flash
-from flask_login import login_required, current_user
+from difflib import SequenceMatcher
+
+from flask import url_for
+
 from GroceryHero import db
-from GroceryHero.Main.utils import update_grocery_list
 from GroceryHero.Recipes.forms import Measurements
-from GroceryHero.models import Recipes, Followers
+from GroceryHero.models import Recipes, Followers, User
 
 
 def parse_ingredients(ingredients):
@@ -141,6 +140,46 @@ def add_follow(users):
                 follow = Followers(user_id=user1.id, follow_id=user2.id, status=1)
                 db.session.add(follow)
     db.session.commit()
+
+
+def generate_feed_contents(friend_acts):
+    cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
+    actions = []
+    for act in cards:
+        titles = act.titles  # Get titles of recipe in action from when that action was recorded
+        rec_titles = {r.title: r.id for r in Recipes.query.filter(Recipes.id.in_(act.recipe_ids)).all()}
+        for t1 in rec_titles:  # If recipe title changed or no longer exists handle it here
+            for t2 in titles:
+                if SequenceMatcher(a=t1, b=t2).ratio() > .8:  # New title is similar to old one
+                    titles.remove(t1)
+        for title in titles:  # If recipe got deleted use its old title and dont link
+            rec_titles[title] = None
+        content = ''
+        if act.type_ == 'Clear':
+            content += 'ate '
+            for i, title in enumerate(rec_titles):
+                id_ = rec_titles[title]
+                url = url_for('recipes.recipe_single', recipe_id=id_) if id_ is not None else '#'
+                if len(rec_titles) == 1:
+                    content += f'<a href="{url}">{title}</a>'
+                elif i < len(rec_titles) - 1:
+                    content += f'<a href="{url}">{title}, </a> '
+                else:
+                    content += f'and <a href="{url}">{title} </a>'
+            content += ' this week!'
+        elif act.type_ not in ['Update', 'Delete']:  # Borrow, Add, Unborrow
+            title, id_ = list(rec_titles.items())[0]
+            url = url_for('recipes.recipe_single', recipe_id=id_) if id_ is not None else '#'
+            content += act.type_.lower() + 'ed '
+            content += f'<a href="{url}">{title} </a>'
+        else:  # Update, Delete
+            title, id_ = list(rec_titles.items())[0]
+            url = url_for('recipes.recipe_single', recipe_id=id_) if id_ is not None else '#'
+            content += act.type_.lower() + 'd '
+            content += f'<a href="{url}">{title} </a>'
+        card = {'user_id': act.user_id, 'content': content, 'date_created': act.date_created, 'type_': act.type_}
+        actions.append(card)
+    return actions
 
 # @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
 # @login_required

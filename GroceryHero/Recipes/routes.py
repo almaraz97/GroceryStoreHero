@@ -2,7 +2,7 @@ import itertools
 import json
 import string
 from datetime import datetime
-
+from difflib import SequenceMatcher
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
@@ -10,12 +10,11 @@ from GroceryHero import db
 from GroceryHero.HarmonyTool import recipe_stack
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
-from GroceryHero.Recipes.utils import parse_ingredients
+from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture
 from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
-from GroceryHero import config
 
 recipes = Blueprint('recipes', __name__)
 
@@ -27,7 +26,7 @@ def recipes_page(possible=0, recommended=None):
         friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
         borrows = {x.recipe_id: x.in_menu for x in
-                    User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
+                   User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
         in_menu = [recipe for recipe in recipe_list if recipe.in_menu]  # Recipe objects that are in menu
         in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()
         borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
@@ -165,22 +164,16 @@ def friend_recipes_choice(friend=None):
 
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
 @login_required
-def friend_feed():  # todo pagination for posts or limit by date?
+def friend_feed():  # todo pagination for posts or limit by date? # todo create html here
     colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
               'Unborrow': '#6c757d'}
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    followees = followees + [current_user.id]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees)).all()
-    cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
-    # Get friend recipe dict(id:Recipe) to hyperlink their recipe actions
-    recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
-    recs = Recipes.query.filter(Recipes.id.in_(recs)).all() + Recipes.query.filter_by(user_id=current_user.id).all()
-    rec_dict = {r.id: r for r in recs}
-    title_dict = {v.title: k for k, v in rec_dict.items()}
-    all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
-    return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
-                           colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
-                           all_friend_recs=all_friend_recs, title_dict=title_dict)
+    cards = generate_feed_contents(friend_acts)
+    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True, #search=None
+                           colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True)
 
 
 @recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])

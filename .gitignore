@@ -199,3 +199,4 @@ GroceryHero/static/recipe_pics/*
 GroceryHero/static/profile_pics/*
 /test/
 .idea/*
+/GroceryHero/static/visualizations/*

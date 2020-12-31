@@ -19,63 +19,32 @@
   <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
 </div>
 {% endif %}
-{% if cards is not defined or cards|length < 1 %}
+{% if cards is not defined or cards|length < 1 %}  <!-- User has no friend actions -->
   <div class="card">
     <div class="card-header p-0" id="headingMenu">
       <h5 class="mb-0">
         <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-         {% if current_user.is_authenticated %}
-           <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_page') }}">You have nothing on your feed yet.</a>
-         {% else %}
-           <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have nothing on your feed yet.</a>
-         {% endif %}
+            <a style="text-decoration:none; color: grey;" href="{% if current_user.is_authenticated %}{{ url_for('recipes.recipes_page') }}{% else %}{{ url_for('users.login') }}{% endif %}">You have nothing on your feed yet.</a>
         </button>
       </h5>
     </div>
   </div>
-{% else %}
+{% else %}  <!-- User has friend actions -->
   <div class="row mx-1 my-0 py-0">
     <p class="text-muted my-2 pb-0" style="float: left;">You have {{ cards|length }} action(s) in your feed</p>
-    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>
+    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">Go to Friends List</button>
   </div>
   <!--Action Cards-->
   {% for action in cards %}
-    {% set title_tracker = action.titles %}
-     {% for id in action.recipe_ids %}{% if id is not none and id in rec_dict and rec_dict[id].title in title_tracker %}{% set title_tracker = title_tracker.remove(rec_dict[id].title) %}{% endif %}{% endfor %}
-    <!--style="border-right:solid 20px #9C1A1C;"-->
-    <article class="media content-section mt-0" style="border-top-color:{{colors[action.type_]}}; border-top-width: 5px; border-radius: 0px;"> <!--border-right-color-->
-      <a href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">
-        <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + friend_dict[action.user_id].image_file) }}">
+    <article class="media content-section mt-0" style="border-top-color:{{colors[action['type_']]}}; border-top-width: 5px; border-radius: 0px;"> <!--border-right-color-->
+      <a href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">
+        <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + friend_dict[action['user_id']].image_file) }}">
       </a>
       <div class="media-body ml-4 my-0 py-0">
-        <div class="text-muted" style="float: right;">{{ action.date_created.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div class="text-muted" style="float: right;">{{ action['date_created'].strftime('%Y-%m-%d %H:%M') }}</div>
         <div class="article-content my-0" style="white-space: unset">
           <p style="display:inline-block; font-size: 18px; float: left" class="m-0 pt-4">
-          <a style="font-size: 20px;display:inline-block"href="{{ url_for('recipes.friend_recipes_choice', friend=action.user_id) }}">@{{ friend_dict[action.user_id].username }}</a> {% if action.type_ == 'Clear' %}
-            {% set index = namespace(value=0) %}ate
-{% else %}{{ action.type_.lower() }}{% if action.type_ != 'Delete' and action.type_ != 'Update' %}ed{% else %}d{% endif %}{% endif %}{% if action.type_ == 'Clear' %}
-            {% if cards|length > 1 %}
-            {% for id in action.recipe_ids %}
-              {% if id not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %}  <!-- See if recipe is still in database -->
-              {% if found %}
-                {% if index.value + 1 != action.recipe_ids|length %}<!-- hasn't looped through all recipes --><a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }},</a>
-                {% else %}  <!-- Has looped through all recipes -->and <a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=id) }}">{{ rec_dict.get(id).title }}</a> this week!{% endif %}
-                {% set index.value = index.value + 1 %}
-              {% endif %}
-            {% endfor %}
-            {% if title_tracker|length > 0 %}  <!-- Go through titles that have no ids -->
-              {% for title in title_tracker %}
-                {% if index.value + 1 >= action.recipe_ids|length %}  <!-- hasn't looped through all recipes -->{{ rec_dict.get(id).title }},
-{% else %}  <!-- Has looped through all recipes -->{% if cards|length > 0 %}and{% endif %} {{ rec_dict.get(id).title }} this week!
-                {% endif %}
-                {% set index.value = index.value + 1 %}
-              {% endfor %}
-            {% endif %}
-          {% else %}  <!-- Action other than Clear -->{% if action.recipe_ids[0] not in rec_dict %}{% set found = False %}{% else %}{% set found = True %}{% endif %} {% if found %}<a style="display:inline-block" href="{{ url_for('recipes.recipe_single', recipe_id=action.recipe_ids[0]) }}">{{ rec_dict[action.recipe_ids[0]].title }}</a>
-{% else %}{{ title_tracker[0] }}
-            {% endif %}
-          {% endif %}
-          {% endif %}
+          <a style="font-size: 20px;display:inline-block" href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
         </div>
       </div>
     </article>

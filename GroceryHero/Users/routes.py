@@ -268,27 +268,31 @@ def callback_handling():
 def auth_login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    if session.get('jwt_payload', None) is not None and session['jwt_payload']['email']:
-        email = session['jwt_payload']['email']
-        user = User.query.filter_by(email=email).first()
-        if user is not None:  # User is in database
-            login_user(user)
-            next_page = request.args.get('next')
-            # todo change the columns with defaults
-            ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-            return redirect(next_page) if next_page else redirect(url_for('main.home'))
-        else:  # User is not in database
-            # user = User()
-            # user.username = session['jwt_payload']['name']
-            # user.email = email
-            # user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-            #                             'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-            #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-            # db.session.add(user)
-            # db.session.commit()
-            flash(f"Login Unsuccessful. Please check email or password", 'danger')
+    if session.get('jwt_payload', None) is not None:  # User has been authenticated by auth0 and payload is in session
+        if session['jwt_payload'].get('email', None) is not None:  # User email has been provided
+            email = session['jwt_payload']['email']
+            user = User.query.filter_by(email=email).first()
+            if user is not None:  # User is in database
+                login_user(user)
+                next_page = request.args.get('next')
+                # todo change the columns with defaults
+                ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
+                return redirect(next_page) if next_page else redirect(url_for('main.home'))
+            else:  # User is not in database
+                # user = User()
+                # user.username = session['jwt_payload']['name']
+                # user.email = email
+                # user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+                #                             'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+                #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+                # db.session.add(user)
+                # db.session.commit()
+                flash(f"Login Unsuccessful. Please check email or password", 'danger')
+                return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
+        else:
+            flash(f"Login unsuccessful- email address was not provided. "
+                  f"Sign up here or sign in through another connection.", 'danger')
             return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
-    # 'https://127.0.0.1:5000/callback')
     return current_app.auth0.authorize_redirect(redirect_uri='https://www.grocerystore-hero.com/auth_login/callback')
 
 

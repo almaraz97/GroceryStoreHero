@@ -11,7 +11,6 @@ from flask import url_for, current_app, flash
 from flask_login import current_user
 from flask_mail import Message
 from werkzeug.utils import redirect
-from werkzeug.datastructures import FileStorage
 from GroceryHero import mail, db
 from GroceryHero.Recipes.forms import Measurements
 from GroceryHero.models import Aisles, Recipes
@@ -35,7 +34,7 @@ def save_picture(form_picture, filepath='static/profile_pics', download=False):
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(current_app.root_path, filepath, picture_fn)
 
-    output_size = (125, 125)
+    output_size = (250, 250)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
     i.save(picture_path)

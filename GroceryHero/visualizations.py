@@ -3,7 +3,6 @@ from GroceryHero.models import Recipes, User
 from kmodes.kmodes import KModes
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import plot, axes
-import umap
 import mplcursors
 
 app = create_app()
