@@ -40,12 +40,12 @@
       <a href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">
         <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + friend_dict[action['user_id']].image_file) }}">
       </a>
-      <div class="media-body ml-4 my-0 py-0">
-        <div class="text-muted" style="float: right;">{{ action['date_created'].strftime('%Y-%m-%d %H:%M') }}</div>
-        <div class="article-content my-0" style="white-space: unset">
+      <div class="media-body ml-4 my-0 py-0 row">
+        <div class="article-content my-0 col-8" style="white-space: unset">
           <p style="display:inline-block; font-size: 18px; float: left" class="m-0 pt-4">
           <a style="font-size: 20px;display:inline-block" href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
         </div>
+        <div class="text-muted col-4" style="float: right;">{{ action['date_created'].strftime('%Y-%m-%d %H:%M') }}</div>
       </div>
     </article>
   {% endfor %}

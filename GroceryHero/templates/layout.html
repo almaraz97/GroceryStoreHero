@@ -203,8 +203,7 @@
               {% endif %}
                 <li class="mb-2" style="list-style-type: None; font-size: 20px;">
                 <a href="{{ friend_send }}">
-                  <img class="rounded-circle account-img mb-0" style="width:30px;height: 30px" src="{{ url_for('static', filename='profile_pics/' + all_friends[friend].image_file) }}">
-                  {{ all_friends[friend].username }}
+                  <img class="rounded-circle account-img mb-0" style="width:30px;height: 30px; float:left;" src="{{ url_for('static', filename='profile_pics/' + all_friends[friend].image_file) }}">{{ all_friends[friend].username }}
                 </a>
                 </li>
             {% endfor %}
