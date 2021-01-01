@@ -213,7 +213,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         history_count_names, ingredient_history, ingredient_count, \
         harmony, avg_harmony, average_menu_len, rules = None, None, None, 0, 0, 0, None
     if len(current_user.recipes) > 1:
-        if not os.path.isfile(f'static/visualizations/{str(current_user.id)}.jpg'):
+        if not os.path.isfile(f'GroceryHero/static/visualizations/{str(current_user.id)}.jpg'):
             stats_graph(current_user, all_recipes)
         graph = url_for('static', filename='visualizations/' + str(current_user.id) + '.jpg')
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
