@@ -87,8 +87,8 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     servings = db.Column(db.Integer, nullable=True, default=0)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
-    price = db.Column(db.JSON, nullable=True, default={})  # Price per ingredient to total price
-    options = db.Column(db.JSON, nullable=True, default={})
+    price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
+    options = db.Column(db.JSON, nullable=False, default={})
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
@@ -161,8 +161,8 @@ class Pub_Rec(db.Model):
     picture = db.Column(db.String(20), nullable=True)
     servings = db.Column(db.Integer, nullable=True, default=0)
     credit = db.Column(db.Boolean, nullable=False, default=False)
-    price = db.Column(db.JSON, nullable=True, default={})  # Price per ingredient to total price
-    options = db.Column(db.JSON, nullable=True, default={})
+    price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
+    options = db.Column(db.JSON, nullable=False, default={})
 
     def __repr__(self):
         return f"Pub_Rec('{self.title}', '{list(self.quantity.keys())}')"
@@ -182,7 +182,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
-    times_eaten = db.Column(db.Integer, nullable=False, default=0)
+    times_eaten = db.Column(db.Integer, nullable=True, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
@@ -207,3 +207,4 @@ class User_Act(db.Model):  # For comments and likes on other's actions
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     comment = db.Column(db.String(200), nullable=True)
     liked = db.Column(db.Boolean, nullable=False, default=False)
+
