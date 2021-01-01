@@ -32,8 +32,6 @@
         <li class="groceries">{{ item }} <i style="font-size: 14px;">{{ recipe.quantity[item][0] }} {{ recipe.quantity[item][1] }}{% if recipe.quantity[item][0] != '1' %}s{% endif %}</i></li>
       {% endfor %}
     </ul>
-    <h4 class="mb-2 pb-1">Type: </h4>
-    <p class="pl-4">{{ recipe.recipe_type }}</p>
     <h4 class="mb-2 pb-1">Notes:</h4>
       <div class="pl-4">
         {% if recipe.notes is defined and recipe.notes!= '' and recipe.notes != None %}

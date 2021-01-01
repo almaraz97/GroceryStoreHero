@@ -12,7 +12,7 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents
 from GroceryHero.Users.forms import HarmonyForm
-from GroceryHero.Users.utils import save_picture
+from GroceryHero.Users.utils import save_picture, Colors
 from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
@@ -48,8 +48,7 @@ def recipes_page(possible=0, recommended=None):
         excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
         form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
-        colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+        colors = Colors.rec_colors
         # about, harmony = (None, True) if current_user.pro else (True, None)
         about = None if current_user.pro else True
         if request.method == 'GET':
@@ -94,8 +93,7 @@ def recipes_page(possible=0, recommended=None):
 @recipes.route('/friend_recipes', methods=['GET', 'POST'])
 @login_required
 def friend_recipes():  # todo handle deleted account ids
-    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    colors = Colors.rec_colors
     recipe_list = []
     borrows = {x.recipe_id: x.borrowed for x in
                User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
@@ -117,8 +115,7 @@ def friend_recipes():  # todo handle deleted account ids
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
 @login_required
 def public_recipes():
-    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    colors = Colors.rec_colors
     recipe_list = [x for x in Pub_Rec.query.all()]
     recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
@@ -142,8 +139,7 @@ def friend_recipes_choice(friend=None):
     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
     if followee is None:
         return redirect(url_for('recipes.friend_recipes'))
-    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    colors = Colors.rec_colors
     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
     all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
                    for F in all_followees if F.status == 1}
@@ -164,15 +160,14 @@ def friend_recipes_choice(friend=None):
 
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
 @login_required
-def friend_feed():  # todo pagination for posts or limit by date? # todo create html here
-    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
-              'Unborrow': '#6c757d'}
+def friend_feed():  # todo pagination for posts
+    colors = Colors.act_colors
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # followees = followees + [current_user.id]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees)).all()
     cards = generate_feed_contents(friend_acts)
-    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True, #search=None
+    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  # search=None
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True)
 
 
@@ -182,18 +177,17 @@ def friend_feed_choice(friend_id=None):
     if friend_id is None:
         return redirect(url_for('recipes.friend_feed'))
     # {'yellow': '#ffc107', 'pink': '#e83e8c', 'secondary': '#6c757d'}
-    colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
-              'Unborrow': '#6c757d'}
+    colors = Colors.act_colors
     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_id).first()
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    if followee.status == 1:
+    if followee is not None and followee.status == 1:
         followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
         all_friends = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         # friend = User.query.filter_by(id=followee.follow_id).all()
         # friend_dict = {friend.id: friend.username}
-        cards = Actions.query.filter_by(user_id=followee.follow_id).all()
-        cards = sorted(cards, key=lambda x: x.date_created, reverse=True)
+        friend_acts = Actions.query.filter_by(user_id=followee.follow_id).all()
+        cards = generate_feed_contents(friend_acts)
         recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
         recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
         rec_dict = {r.id: r for r in recs}

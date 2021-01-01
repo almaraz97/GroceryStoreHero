@@ -20,7 +20,7 @@
   <div style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
       <div class="input-group flex-nowrap">
-        <input type="text" class="form-control" placeholder="Recipe Name" name="search">
+        <input type="text" class="form-control" placeholder={% if friends is defined %}"Username"{% else %}"Recipe Name"{% endif %} name="search">
         <div class="input-group-prepend">
           <button class="input-group-text" id="addon-wrapping">Search</button>
         </div>

@@ -2,9 +2,7 @@ import itertools
 import json
 import os
 import secrets
-import shutil
 import string
-
 import requests
 from PIL import Image
 from flask import url_for, current_app, flash
@@ -14,6 +12,14 @@ from werkzeug.utils import redirect
 from GroceryHero import mail, db
 from GroceryHero.Recipes.forms import Measurements
 from GroceryHero.models import Aisles, Recipes
+
+
+class Colors:
+    rec_colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    act_colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997',
+                  'Clear': '#6610f2', 'Borrow': '#17a2b8', 'Unborrow': '#6c757d',
+                  'Award': '#fffff', 'Milestone': '#00000'}
 
 
 def save_picture(form_picture, filepath='static/profile_pics', download=False):
@@ -205,12 +211,3 @@ def import_recipes_terminal(recipe_dictionary, user, database):
             index += 1
     database.session.commit()
 
-
-# def starter_recipes():
-#     recipes = []
-#     recipes.append(Recipes(title='Hamburgers', quantity={'Beef': ['1', 'Pound'], 'Buns': ['1', 'Package'], 'Ketchup': ['3', 'US Tablespoon']}, author=current_user))
-#     recipes.append(Recipes(title='Tacos', quantity={}), author=current_user)
-#     recipes.append(Recipes(title='Ramen', quantity={}), author=current_user)
-#     recipes.append(Recipes(title='Chili', quantity={}), author=current_user)
-#     recipes.append(Recipes(title='Mac and Cheese', quantity={}), author=current_user)
-#     return recipes
