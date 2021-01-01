@@ -28,9 +28,10 @@ class User(db.Model, UserMixin):
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)  # Harmony Tool
+    # Format: [{Aisle: [Ingredients],...}, Overlapping_ings]
     grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False
+    # overlap = db.Column(db.Integer, nullable=False, default=0)  # todo
     extras = db.Column(db.JSON, nullable=False, default=[])  # todo False
-
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     messages = db.Column(db.JSON, nullable=False, default={})  # {}
     history = db.Column(db.JSON, nullable=False, default={})  # {datetime:[{title:[ingredients]},...]}
@@ -52,7 +53,7 @@ class User(db.Model, UserMixin):
     subscription = db.Column(db.JSON, nullable=False, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
-    #
+
     # def get_reset_token(self, expires_sec=1800):
     #     s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
     #     return s.dumps({'user_id': self.id}).decode('utf-8')

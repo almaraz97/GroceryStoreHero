@@ -10,7 +10,7 @@ from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, apriori_test, convert_frac)
+                                    show_harmony_weights, apriori_test, convert_frac, stats_graph)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 from sklearn.decomposition import PCA
@@ -40,8 +40,6 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 
 # todo is being able to download and upload recipes in json still necessary?
 # todo prevent update on feed abuse
-# todo Use "name": "Alejandro Almaraz", "picture": "https://lh3.googleusercontent.com/" Save those to profile pic + name
-# todo fix friends sidebar formatting: pic next to name not above it
 # todo do specific action checks that user specifies
 
 
@@ -61,8 +59,8 @@ def home():
         borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
         menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
         aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
-        groceries, overlap = current_user.grocery_list
-        for aisle in groceries:  # Turns ingredients into Measurement object
+        groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
+        for aisle in groceries:  # Turns ingredients into Measurement objects
             groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
                                 for item in groceries[aisle]]
         aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
@@ -215,94 +213,8 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         history_count_names, ingredient_history, ingredient_count, \
         harmony, avg_harmony, average_menu_len, rules = None, None, None, 0, 0, 0, None
     if len(current_user.recipes) > 1:
-        all_recipes = all_recipes if all_recipes is not None else Recipes.query.filter_by(author=current_user).all()
-        all_recipes = {k.title: k.quantity for k in all_recipes}
-        # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
-        recipe_ingredients = {item for sublist in all_recipes.values() for item in sublist}
-        # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
-        recipe_vec = {recipe: [1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_ingredients]
-                      for recipe in all_recipes}
-
-        values = np.array(list(recipe_vec.values()))
-
-        # def almaraz_algorithm(dictionary, n, norm=1):
-        #     recipes = one_hot_recipes(dictionary)
-        #     # Split recipes into n groups
-        #     splits = len(recipes) // n
-        #     temp, groups = 0, []
-        #     for _ in range(n):
-        #         groups.append(list(recipes.values())[temp:temp + splits])
-        #         temp += splits
-        #     # Find the 'average' recipe for each group
-        #     average_recipes = [[sum(values) / len(recipes) for values in zip(*group)] for group in groups]
-        #     # Find the cosine distance between each recipe and each 'average' recipe (dot product and norm)
-        #     distances = [tuple(sum([x * y for x, y in zip(recipe, average_recipe)]) ** (1 / norm)
-        #                        for average_recipe in average_recipes) for recipe in recipes.values()]
-        #     return distances
-
-            # coordinates = almaraz_algorithm(all_recipes, 25)
-        # coordinates = values
-        # labels = [x for x in all_recipes.keys()]
-        # dim = 2
-        # reducer = umap.UMAP(n_components=dim, metric='manhattan')
-        # embedding = reducer.fit_transform(coordinates)
-        # if dim == 3:
-        #     ax = plt.axes(projection='3d')
-        #     x, y, z = [x[0] for x in embedding], [x[1] for x in embedding], [x[2] for x in embedding]
-        #     ax.scatter3D(x, y, z, 'blue')
-        #     for xi, yi, zi, label in zip(x, y, z, labels):
-        #         ax.text(xi, yi, zi, label, None)
-        #     # mplcursors.cursor(hover=True)
-        # if dim == 2:
-        #     fig, ax = plt.subplots()
-        #     x, y = [x[0] for x in embedding], [x[1] for x in embedding]
-        #     ax.scatter(x, y)
-        #     for i, txt in enumerate(labels):
-        #         ax.annotate(txt, (x[i], y[i]))
-        # else:
-        #     pass
-        # plt.show()
-        # history = User.query.filter_by(id=1).first().history
-        # if len(history) > 0:
-        #     # Recipe History/Frequency
-        #     history = [item for sublist in history for item in sublist]
-        #     history_set = set(history)
-        #     history_count = {}
-        #     for item in history_set:
-        #         history_count[item] = history.count(item)
-        #     history_count = sorted(history_count.items(), key=lambda x: x[1], reverse=True)
-        #     history_count_names = {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}
-        #     plt.bar(history_count_names.keys(), history_count_names.values())
-        #     plt.show()
-        #     # Ingredient History/Frequency
-        #     ingredient_history = [[x for x in Recipes.query.filter_by(id=k).first().quantity.keys()] * v for
-        #                           k, v in history_count]
-        #     ingredient_history = [item for sublist in ingredient_history for item in sublist]
-        #     ingredient_set = set(ingredient_history)
-        #     ingredient_count = {}
-        #     for item in ingredient_set:
-        #         ingredient_count[item] = ingredient_history.count(item)
-        #     ingredient_count = sorted(ingredient_count.items(), key=lambda x: x[1], reverse=True)
-        #     plt.bar([x[0] for x in ingredient_count], [x[1] for x in ingredient_count])
-        #     plt.show()
-
-        # pca = PCA(n_components=2)
-        # pca = pca.fit_transform(values)
-        # pca_plot = plt.scatter(pca.T[0], pca.T[1])
-        # plt.show()
-        perp = .5; met = 'l2'
-        tsne = TSNE(n_components=2, perplexity=perp, metric=met)
-        tsne = tsne.fit_transform(values)
-        x, y = [x[0] for x in tsne], [x[1] for x in tsne]
-        fig, ax = plt.subplots(figsize=(5, 5))
-        ax.scatter(x, y)
-        for i, txt in enumerate(all_recipes.keys()):
-            ax.annotate(txt, (x[i], y[i]), fontsize=8)
-        plt.title(f'TSNE w/ perplexity: {perp}, metric: {met}')
-        # plt.show()
-        filepath = str(current_user.id) + '.jpg'
-        picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
-        plt.savefig(picture_path)
+        if not os.path.isfile(f'static/visualizations/{str(current_user.id)}.jpg'):
+            stats_graph(current_user, all_recipes)
         graph = url_for('static', filename='visualizations/' + str(current_user.id) + '.jpg')
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,

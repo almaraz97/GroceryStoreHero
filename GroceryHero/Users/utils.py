@@ -31,6 +31,7 @@ def save_picture(form_picture, filepath='static/profile_pics', download=False):
             return None
     else:
         _, f_ext = os.path.splitext(form_picture.filename)
+
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(current_app.root_path, filepath, picture_fn)
 

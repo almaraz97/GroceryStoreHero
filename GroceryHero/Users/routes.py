@@ -259,30 +259,32 @@ def callback_handling():
 def auth_login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    if session.get('jwt_payload', None) is not None:  # User has been authenticated by auth0 and payload is in session
-        email = session['jwt_payload'].get('email', None)
+    if session.get('jwt_payload') is not None:  # User has been authenticated by auth0 and payload is in session
+        email = session['jwt_payload'].get('email')
         verified = session['jwt_payload'].get('email_verified', False)
         if email is not None and verified:  # User email has been provided
             user = User.query.filter_by(email=email).first()
             if user is not None:  # User is in database
                 login_user(user)
                 next_page = request.args.get('next')
-                # todo change the columns with defaults
                 ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
                 return redirect(next_page) if next_page else redirect(url_for('main.home'))
             else:  # User is not in database
-                user = User()
-                user.username = session['jwt_payload']['name']
-                user.email = email
-                user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-                                            'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-                                            'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+                name = session['jwt_payload'].get('name')
+                username = name if name is not None else email
+                user = User(email=email, username=username)
+                picture_url = session['jwt_payload'].get('picture')
+                if picture_url is not None:
+                    filename = save_picture(picture_url, filepath='static/profile_pics', download=True)
+                    if filename is not None:
+                        user.picture = filename
                 db.session.add(user)
                 db.session.commit()
+                ensure_harmony_keys(user)
                 login_user(user)
                 redirect(url_for('main.home'))
         else:
-            flash(f"Login unsuccessful- email address was not provided. "
+            flash(f"Login unsuccessful- email address was not provided and/or verified."
                   f"Sign up here or sign in through another connection.", 'danger')
             return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
     return current_app.auth0.authorize_redirect(redirect_uri='https://www.grocerystore-hero.com/auth_login/callback')

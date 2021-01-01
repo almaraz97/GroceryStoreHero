@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from werkzeug.routing import ValidationError
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, FieldList, FormField, ValidationError
-from wtforms.validators import InputRequired, DataRequired, URL
+from wtforms.validators import InputRequired, DataRequired, URL, NoneOf
 
 
 class Measurements:
@@ -136,7 +136,8 @@ class Measurements:
 
 
 class RecipeForm(FlaskForm):
-    title = StringField('Recipe Name', validators=[DataRequired()])
+    title = StringField('Recipe Name', validators=[DataRequired(),
+                                                   NoneOf(values=['<', '>'], message=" '>' and '<' symbols not allowed")])
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
     type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']],
                         default='Dinner')
