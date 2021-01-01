@@ -25,14 +25,10 @@ def upgrade():
     with op.batch_alter_table('recipes', schema=None) as batch_op:
         batch_op.add_column(sa.Column('options', sa.JSON(), nullable=False, server_default='{}'))
         batch_op.add_column(sa.Column('price', sa.JSON(), nullable=False, server_default='{}'))
-        batch_op.alter_column('quantity', existing_type=sqlite.JSON(), nullable=False, server_default='{}')
 
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('reports', sa.JSON(), nullable=False, server_default='{"Reports": [], "Reported": []}'))
         batch_op.add_column(sa.Column('timezone', sa.String(length=60), nullable=True))
-        batch_op.alter_column('extras', existing_type=sqlite.JSON(), nullable=False, server_default='[]')
-        batch_op.alter_column('grocery_list', existing_type=sqlite.JSON(), nullable=False, server_default='[]')
-        batch_op.alter_column('pantry', existing_type=sqlite.JSON(), nullable=False, server_default='{}')
         batch_op.drop_column('password')
 
     with op.batch_alter_table('user__pub_rec', schema=None) as batch_op:
