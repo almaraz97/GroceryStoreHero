@@ -18,34 +18,25 @@ import json
 users = Blueprint('users', __name__)
 
 
-@users.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user = User()
-        user.username = form.username.data
-        user.email = form.email.data
-        user.password = hashed_password
-        user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-                                    'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-                                    'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-        # todo finish default recipes
-        # recipes = [Recipes(title='Burgers', quantity=None, notes=None, link=None, in_menu=True),
-        #            Recipes(title='Tacos', quantity=None, notes=None, link=None, in_menu=True),
-        #            Recipes(title='Chicken Soup', quantity=None, notes=None, link=None, in_menu=True),
-        #            Recipes(title='Turkey Panini', quantity=None, notes=None, link=None, in_menu=False),
-        #            Recipes(title='Potato Salad', quantity=None, notes=None, link=None, in_menu=False)]
-        db.session.add(user)
-        db.session.commit()
-        # for recipe in starter_recipes():
-        #     db.session.add(recipe)
-        # db.session.commit()
-        flash(f'Your account has been created. You can now log in!', 'success')
-        return redirect(url_for("users.login"))
-    return render_template('register.html', title='Register', form=form)
+# @users.route('/register', methods=['GET', 'POST'])
+# def register():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+#         user = User()
+#         user.username = form.username.data
+#         user.email = form.email.data
+#         user.password = hashed_password
+#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+#         db.session.add(user)
+#         db.session.commit()
+#         flash(f'Your account has been created. You can now log in!', 'success')
+#         return redirect(url_for("users.login"))
+#     return render_template('register.html', title='Register', form=form)
 
 
 @users.route('/login', methods=['GET', 'POST'])
@@ -65,10 +56,10 @@ def login():
     return render_template('login.html', title='Login', form=form)
 
 
-@users.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('main.home'))
+# @users.route('/logout')
+# def logout():
+#     logout_user()
+#     return redirect(url_for('main.home'))
 
 
 @users.route('/account', methods=['GET', 'POST'])
@@ -269,8 +260,9 @@ def auth_login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     if session.get('jwt_payload', None) is not None:  # User has been authenticated by auth0 and payload is in session
-        if session['jwt_payload'].get('email', None) is not None:  # User email has been provided
-            email = session['jwt_payload']['email']
+        email = session['jwt_payload'].get('email', None)
+        verified = session['jwt_payload'].get('email_verified', False)
+        if email is not None and verified:  # User email has been provided
             user = User.query.filter_by(email=email).first()
             if user is not None:  # User is in database
                 login_user(user)
@@ -279,14 +271,14 @@ def auth_login():
                 ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
                 return redirect(next_page) if next_page else redirect(url_for('main.home'))
             else:  # User is not in database
-                # user = User()
-                # user.username = session['jwt_payload']['name']
-                # user.email = email
-                # user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-                #                             'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-                #                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-                # db.session.add(user)
-                # db.session.commit()
+                user = User()
+                user.username = session['jwt_payload']['name']
+                user.email = email
+                user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
+                                            'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
+                                            'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
+                db.session.add(user)
+                db.session.commit()
                 flash(f"Login Unsuccessful. Please check email or password", 'danger')
                 return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
         else:

@@ -6,14 +6,11 @@ from flask import current_app
 
 
 # Only allow users to have 25 recipes as their own and 25 as borrowed from others
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# Add ogusernmane, creadit columns to PubRec, Add User_Act and User_PubRec tables. Add times_eaten column to recipes
 class User(db.Model, UserMixin):
     """
     Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}
@@ -22,7 +19,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
-    password = db.Column(db.String(60), nullable=False)  # todo Delete this for auth0 handling
+    # password = db.Column(db.String(60), nullable=False)  # todo Delete this for auth0 handling
     recipes = db.relationship('Recipes', backref='author', lazy=True)
     aisles = db.relationship('Aisles', backref='author', lazy=True)
     harmony_preferences = db.Column(db.JSON, nullable=True,
@@ -31,14 +28,14 @@ class User(db.Model, UserMixin):
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)  # Harmony Tool
-    grocery_list = db.Column(db.JSON, nullable=True)  # todo False
-    extras = db.Column(db.JSON, nullable=True, default=[])  # todo False
+    grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False
+    extras = db.Column(db.JSON, nullable=False, default=[])  # todo False
 
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    messages = db.Column(db.JSON, nullable=False, default=[])  # {}
-    history = db.Column(db.JSON, nullable=False, default=[])  # {datetime:[{title:[ingredients]},...]}
+    messages = db.Column(db.JSON, nullable=False, default={})  # {}
+    history = db.Column(db.JSON, nullable=False, default={})  # {datetime:[{title:[ingredients]},...]}
     # #{Shelf: {Ingredient: [quantity, unit],...},...}
-    pantry = db.Column(db.JSON, nullable=True, default={}) # todo False
+    pantry = db.Column(db.JSON, nullable=False, default={})  # todo False
     # todo be able to backref here
     # user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
     # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
@@ -53,21 +50,21 @@ class User(db.Model, UserMixin):
     grocery_bills = db.Column(db.JSON, nullable=False, default={})  # Track bill amount  ({datetime:float})
     ingredients = db.Column(db.JSON, nullable=False, default={})   # {Ingredient: [quantity, unit, price]}
     subscription = db.Column(db.JSON, nullable=False, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
-    # reports = db.Column(db.JSON, nullable=False, default={})   # {'Reports':[], 'Reported'[]}
-    # timezone = db.Column(db.String(60), nullable=True)
-
-    def get_reset_token(self, expires_sec=1800):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
-        return s.dumps({'user_id': self.id}).decode('utf-8')
-
-    @staticmethod
-    def verify_reset_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            user_id = s.loads(token)['user_id']
-        except:
-            return None
-        return User.query.get(user_id)
+    reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
+    timezone = db.Column(db.String(60), nullable=True)
+    #
+    # def get_reset_token(self, expires_sec=1800):
+    #     s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
+    #     return s.dumps({'user_id': self.id}).decode('utf-8')
+    #
+    # @staticmethod
+    # def verify_reset_token(token):
+    #     s = Serializer(current_app.config['SECRET_KEY'])
+    #     try:
+    #         user_id = s.loads(token)['user_id']
+    #     except:
+    #         return None
+    #     return User.query.get(user_id)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
@@ -78,7 +75,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    quantity = db.Column(db.JSON, nullable=True)  # Format: {ingredient: [value, unit]}
+    quantity = db.Column(db.JSON, nullable=False, default={})  # Format: {ingredient: [value, unit]}
     notes = db.Column(db.Text, nullable=True)
     link = db.Column(db.String(512), nullable=True)
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
@@ -90,8 +87,8 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     servings = db.Column(db.Integer, nullable=True, default=0)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
-    # # price = db.Column(db.Integer, nullable=True, default=0)  # Price per ingredient to total price
-    # # optionals = db.Column(db.JSON, nullable=True, default={})
+    price = db.Column(db.JSON, nullable=True, default={})  # Price per ingredient to total price
+    options = db.Column(db.JSON, nullable=True, default={})
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
@@ -164,8 +161,8 @@ class Pub_Rec(db.Model):
     picture = db.Column(db.String(20), nullable=True)
     servings = db.Column(db.Integer, nullable=True, default=0)
     credit = db.Column(db.Boolean, nullable=False, default=False)
-    # # price = db.Column(db.Integer, nullable=True, default=0)  # Price per ingredient to total price
-    # # optionals = db.Column(db.JSON, nullable=True, default={})
+    price = db.Column(db.JSON, nullable=True, default={})  # Price per ingredient to total price
+    options = db.Column(db.JSON, nullable=True, default={})
 
     def __repr__(self):
         return f"Pub_Rec('{self.title}', '{list(self.quantity.keys())}')"
@@ -186,7 +183,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
-    # hidden = db.Column(db.Boolean, nullable=False, default=False)
+    hidden = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
@@ -202,7 +199,7 @@ class User_PubRec(db.Model):  # For borrowed recipes
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
-    # hidden = db.Column(db.Boolean, nullable=False, default=False)
+    hidden = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class User_Act(db.Model):  # For comments and likes on other's actions
@@ -210,21 +207,3 @@ class User_Act(db.Model):  # For comments and likes on other's actions
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     comment = db.Column(db.String(200), nullable=True)
     liked = db.Column(db.Boolean, nullable=False, default=False)
-
-# toy_user = User()
-# toy_user.recipes = [Recipes(title='Burgers', quantity=None, notes=None, link=None, in_menu=True),
-#                     Recipes(title='Tacos', quantity=None, notes=None, link=None, in_menu=True),
-#                     Recipes(title='Chicken Soup', quantity=None, notes=None, link=None, in_menu=True),
-#                     Recipes(title='Turkey Panini', quantity=None, notes=None, link=None, in_menu=False),
-#                     Recipes(title='Potato Salad', quantity=None, notes=None, link=None, in_menu=False)]
-# toy_user.aisles = [Aisles(title='Dairy', content=None, order=3, store='Trader Pub\'s Club'),
-#                    Aisles(title='Frozen', content=None, order=4, store='Trader Pub\'s Club'),
-#                    Aisles(title='Snacks', content=None, order=5, store='Trader Pub\'s Club'),
-#                    Aisles(title='Meat', content=None, order=2, store='Trader Pub\'s Club'),
-#                    Aisles(title='Produce', content=None, order=1, store='Trader Pub\'s Club')]
-# toy_user.username = "Your Name Here"
-# toy_user.email = "YourEmail@email.com"
-# toy_user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 2, 'possible': 0, 'recommended': {},
-#                                 'recommend_num': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                 'recipe_ids': {}, 'menu_weight': 1}
-# date_created=datetime.utcnow,

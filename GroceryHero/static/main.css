@@ -199,7 +199,7 @@ button {
 
 .cta-green {
     background: #28a745;
-    color: #192440;
+    color: #ffffff;
 }
 
 .cta-green:hover {
@@ -247,11 +247,11 @@ button {
 }
 
 #feature-first {
-    background: linear-gradient(168deg, #ffffff 55%, #00FFAD 0);
+    background: linear-gradient(168deg, #ffffff 55%, #28a745 0);
 }
 
 #feature-last {
-    background: #00FFAD;
+    background: #28a745;
 }
 
 /********** price table **********/
@@ -279,13 +279,13 @@ button {
 }
 
 #contact form {
-    color: #00FFAD;
+    color: #28a745;
 }
 
 #contact form input,
 #contact form textarea {
     background: transparent;
-    border: 1px solid #00FFAD;
+    border: 1px solid #28a745;
     color: #ffffff;
 }
 
