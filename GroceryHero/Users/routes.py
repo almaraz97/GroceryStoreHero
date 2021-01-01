@@ -279,8 +279,8 @@ def auth_login():
                                             'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
                 db.session.add(user)
                 db.session.commit()
-                flash(f"Login Unsuccessful. Please check email or password", 'danger')
-                return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
+                login_user(user)
+                redirect(url_for('main.home'))
         else:
             flash(f"Login unsuccessful- email address was not provided. "
                   f"Sign up here or sign in through another connection.", 'danger')
