@@ -275,7 +275,10 @@ def auth_login():
                 user = User(email=email, username=username)
                 picture_url = session['jwt_payload'].get('picture')
                 if picture_url is not None:
-                    filename = save_picture(picture_url, filepath='static/profile_pics', download=True)
+                    try:
+                        filename = save_picture(picture_url, filepath='static/profile_pics', download=True)
+                    except:  # Seems filename
+                        filename = None
                     if filename is not None:
                         user.picture = filename
                 db.session.add(user)
@@ -304,3 +307,17 @@ def auth_logout():
 @users.route('/privacy', methods=['GET', 'POST'])
 def privacy():
     return render_template('privacy.html', title='Privacy')
+
+
+#   File "/home/alexa/GroceryStoreHero/GroceryHero/Users/routes.py", line 278, in auth_login
+#     filename = save_picture(picture_url, filepath='static/profile_pics', download=True)
+#   File "/home/alexa/GroceryStoreHero/GroceryHero/Users/utils.py", line 48, in save_picture
+#     i.save(picture_path)
+#   File "/home/alexa/.local/lib/python3.8/site-packages/PIL/Image.py", line 2133, in save
+#     raise ValueError(f"unknown file extension: {ext}") from e
+# ValueError: unknown file extension:
+# [2021-01-02 21:08:43,708] ERROR in app: Exception on /auth_login [GET]
+# Traceback (most recent call last):
+#   File "/home/alexa/.local/lib/python3.8/site-packages/PIL/Image.py", line 2131, in save
+#     format = EXTENSION[ext]
+# KeyError: ''
