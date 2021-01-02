@@ -39,21 +39,21 @@ users = Blueprint('users', __name__)
 #     return render_template('register.html', title='Register', form=form)
 
 
-@users.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
-    form = LoginForm()  # Won't be necessary
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
-            ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-            return redirect(next_page) if next_page else redirect(url_for('main.home'))
-        else:
-            flash(f"Login Unsuccessful. Please check email or password", 'danger')
-    return render_template('login.html', title='Login', form=form)
+# @users.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     form = LoginForm()  # Won't be necessary
+#     if form.validate_on_submit():
+#         user = User.query.filter_by(email=form.email.data).first()
+#         if user and bcrypt.check_password_hash(user.password, form.password.data):
+#             login_user(user, remember=form.remember.data)
+#             next_page = request.args.get('next')
+#             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
+#             return redirect(next_page) if next_page else redirect(url_for('main.home'))
+#         else:
+#             flash(f"Login Unsuccessful. Please check email or password", 'danger')
+#     return render_template('login.html', title='Login', form=form)
 
 
 # @users.route('/logout')
@@ -277,7 +277,8 @@ def auth_login():
                 if picture_url is not None:
                     try:
                         filename = save_picture(picture_url, filepath='static/profile_pics', download=True)
-                    except:  # Seems filename
+                    except Exception as e:  # Seems filename
+                        print(e)
                         filename = None
                     if filename is not None:
                         user.picture = filename
