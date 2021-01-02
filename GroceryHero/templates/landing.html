@@ -65,7 +65,7 @@
                         <img src="static/icons/GH_WhiteLogo.png" alt="logo">
                     </div>
                     <div class="col-6 align-self-center text-right">
-                        <a href="#" class="text-white lead">Already have an account? Login</a>
+                        <a href="{{ url_for('users.auth_login') }}" class="text-white lead">Already have an account? Login</a>
                     </div>
                 </div>
             </header>
@@ -76,7 +76,7 @@
                 Want to eat cheaper and healthier without all the hassle? GroceryHero will handle things for you.
                 <br> Becoming a member pays for itself in both time and money!
             </p>
-            <a href="#middle" data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="btn my-4 font-weight-bold atlas-cta cta-green">Get Started</a>
+            <a href="#price-table" data-aos="fade" data-aos-easing="linear" data-aos-duration="1000" data-aos-once="true" class="btn my-4 font-weight-bold atlas-cta cta-green">Get Started</a>
         </div>
     </div>
     <!-- three-block -->
@@ -108,7 +108,7 @@
                     <h2 class="font-weight-bold">Organize & Plan</h2>
                     <p class="my-4">Import recipes from your favorite websites! <br>
                         You can easily modify ingredients & quantities, and categorize recipes by meal type.</p>
-                    <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-blue">Get Started</a>
+                    <a href="#price-table" class="btn my-4 font-weight-bold atlas-cta cta-blue">Get Started</a>
                 </div>
                 <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center">
                         <!--style="border-right:solid 20px #9C1A1C;"-->
@@ -179,7 +179,7 @@
                     <li>Browse Public Recipes</li>
                     <li>Borrow Up to 10 Recipes</li>
                 </ul>
-                <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-ghost">Get Free</a>
+                <a href="{{ url_for('users.auth_login') }}" class="btn my-4 font-weight-bold atlas-cta cta-ghost">Get Free</a>
             </div>
             <div data-aos="fade-up" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center py-4 mt-5 rounded" id="price-table__premium">
                 <h4 style="color: #ffffff;" class="my-4">RECIPE WARRIOR</h4>
@@ -243,9 +243,9 @@
                         Fill out the contact form and a representative will respond promptly.
                     </p>
                     <ul class="list-unstyled">
-                        <li>Email : company_email@com</li>
-                        <li>Phone : 361-688-5824</li>
-                        <li>Address : 4826 White Avenue, Corpus Christi, Texas</li>
+                        <li>Email : contact@grocerystore-hero.com</li>
+                        <li>Phone : 123-456-7890</li>
+                        <li>Address : 1600 Pennsylvania Avenue NW Washington, DC</li>
                     </ul>
                 </div>
                 <div class="col-md-6">

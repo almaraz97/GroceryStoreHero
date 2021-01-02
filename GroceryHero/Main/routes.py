@@ -38,17 +38,18 @@ use of session in new and update recipe route handoffs, cython working, load rec
 handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
-# todo is being able to download and upload recipes in json still necessary?
 # todo prevent update on feed abuse
-# todo do specific action checks that user specifies
+# todo do specific actions checks that user specifies
+# todo create only 15 recipes, borrow 20 recipes
 
 
-@main.route('/landing_page')
+@main.route('/', methods=['GET', 'POST'])
 def landing():
+    if request.method == 'POST': # send me an email
+        pass
     return render_template('landing.html')
 
 
-@main.route('/')
 @main.route('/home')
 def home():
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
