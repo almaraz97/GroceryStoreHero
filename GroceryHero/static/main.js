@@ -87,6 +87,16 @@ $(document).ready(function() {
     });
 });
 
+// Change menu button color
+$(document).ready(function() {
+    $('.menuButton').on('click', function() {
+        if (this.classList.contains("btn-success")) {
+            $(this).removeClass("btn-success").addClass("btn-light");
+        } else {
+            $(this).removeClass("btn-light").addClass("btn-success");
+        }
+    });
+});
 
 // Trying to add recommended recipe without reload
 //var li = document.getElementsByTagName("li");

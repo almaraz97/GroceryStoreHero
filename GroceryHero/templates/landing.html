@@ -2,26 +2,20 @@
 <html lang="en">
 <meta charset="UTF-8">
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-  <meta charset="UTF-8">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">-->
-<!--    <meta name="description" content="Free bootstrap template Atlas">-->
-<!--    <link rel="icon" href="img/favicon.png" sizes="32x32" type="image/png">-->
-<!--    &lt;!&ndash; custom.css &ndash;&gt;-->
-<!--    <link rel="stylesheet" href="css/custom.css">-->
-<!--    &lt;!&ndash; bootstrap.min.css &ndash;&gt;-->
-<!--    <link rel="stylesheet" href="css/bootstrap.min.css">-->
-<!--	&lt;!&ndash; font-awesome &ndash;&gt;-->
-<!--    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">-->
-
-<!--    &lt;!&ndash; AOS &ndash;&gt;-->
-<!--    <link rel="stylesheet" href="css/aos.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Free bootstrap template Atlas">
+    <link rel="icon" href="img/favicon.png" sizes="32x32" type="image/png">
+    <link rel="stylesheet" href="static/LandingPage/css/custom.css">
+    <link rel="stylesheet" href="static/LandingPage/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/LandingPage/css/aos.css">
+    <link rel="stylesheet" href="static/LandingPage/font-awesome-4.7.0/css/font-awesome.min.css">
 
   {% if title %}
   <title>Grocery Store Hero - {{ title }}</title>
@@ -118,9 +112,9 @@
                 </div>
                 <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center">
                         <!--style="border-right:solid 20px #9C1A1C;"-->
-    <article class="media content-section callout mt-0" style="border-right-color:#17a2b8; width: 480px; float: right; margin-right: 20px;">
+    <article class="media content-section callout mt-0" style="border-right-color:#17a2b8; width: 480px; float: right; margin-right: 20px; max-width: 100%;">
       <!--Add/remove to menu buttons-->
-          <button class="btn btn-success btn-sm mt-3 updateButton" r_id="#" value="#">Menu</button>
+          <button class="btn btn-success btn-sm mt-3 menuButton" value="#">Menu</button>
       <div class="media-body ml-4">
         <div class="article-metadata">  <!--article-metadata-->
           <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Cobb Salad</p>
@@ -129,20 +123,20 @@
       </div>
     </article>
 
-                    <article class="media content-section callout mt-0" style="border-right-color:#e83e8c; width: 480px; float: right; margin-right: 20px;">
-      <!--Add/remove to menu buttons-->
-          <button class="btn btn-success btn-sm mt-3 updateButton" r_id="#" value="#">Menu</button>
-      <div class="media-body ml-4">
-        <div class="article-metadata">  <!--article-metadata-->
-          <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0"> Crème Brûlée</p>
-        </div>
-        <p class="article-content mt-2 mb-2">Double Cream, Vanilla Bean, White Sugar, Egg Yolks, Salt </p>
-      </div>
+      <article class="media content-section callout mt-0" style="border-right-color:#e83e8c; width: 480px; float: right; margin-right: 20px; max-width: 100%;">
+          <!--Add/remove to menu buttons-->
+          <button class="btn btn-success btn-sm mt-3 menuButton" value="#">Menu</button>
+          <div class="media-body ml-4">
+            <div class="article-metadata">  <!--article-metadata-->
+              <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0"> Crème Brûlée</p>
+            </div>
+            <p class="article-content mt-2 mb-2">Double Cream, Vanilla Bean, White Sugar, Egg Yolks, Salt </p>
+          </div>
     </article>
 
-     <article class="media content-section callout mt-0" style="border-right-color:#6610f2; width: 480px; float: right; margin-right: 20px;">
+     <article class="media content-section callout mt-0" style="border-right-color:#6610f2; width: 480px; float: right; margin-right: 20px; max-width: 100%;">
       <!--Add/remove to menu buttons-->
-          <button class="btn btn-success btn-sm mt-3 updateButton" r_id="#" value="#">Menu</button>
+          <button class="btn btn-success btn-sm mt-3 menuButton" value="#">Menu</button>
       <div class="media-body ml-4">
         <div class="article-metadata">  <!--article-metadata-->
           <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Beef Lasagna</p>
@@ -301,11 +295,11 @@
         </div>
     </div>
 </body>
-    <!-- AOS -->
-    <script src="static/LandingPage/js/aos.js"></script>
-    <script>
-      AOS.init({
-      });
-    </script>
-</body>
+</main>
+<!-- AOS -->
+<script src="static/LandingPage/js/aos.js"></script>
+<script>AOS.init({}); </script>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 
+{# url_for('static', filename='/LandingPage/js/aos.js') #}

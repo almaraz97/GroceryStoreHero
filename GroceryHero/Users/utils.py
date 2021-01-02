@@ -15,6 +15,7 @@ from GroceryHero.models import Aisles, Recipes
 
 
 class Colors:
+    # {'yellow': '#ffc107', 'pink': '#e83e8c', 'secondary': '#6c757d'}
     rec_colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
                   'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
     act_colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997',

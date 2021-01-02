@@ -112,25 +112,6 @@ def friend_recipes():  # todo handle deleted account ids
                            friend_dict=friend_dict, all_friends=friend_dict, friends=True, switch=True)
 
 
-@recipes.route('/public_recipes', methods=['GET', 'POST'])
-@login_required
-def public_recipes():
-    colors = Colors.rec_colors
-    recipe_list = [x for x in Pub_Rec.query.all()]
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
-                           recommended=None,  colors=colors, search_recipes=recipe_list,
-                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
-
-
-@recipes.route('/publify', methods=['GET', 'POST'])
-@login_required
-def publify_recipe():
-    return None
-
-
 @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 @login_required
 def friend_recipes_choice(friend=None):
@@ -158,6 +139,26 @@ def friend_recipes_choice(friend=None):
                            friend_dict=friend_dict, all_friends=all_friends, friends=True)
 
 
+
+@recipes.route('/public_recipes', methods=['GET', 'POST'])
+@login_required
+def public_recipes():
+    colors = Colors.rec_colors
+    recipe_list = [x for x in Pub_Rec.query.all()]
+    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
+                           recommended=None,  colors=colors, search_recipes=recipe_list,
+                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
+
+
+@recipes.route('/publify', methods=['GET', 'POST'])
+@login_required
+def publify_recipe():
+    return None
+
+
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
 @login_required
 def friend_feed():  # todo pagination for posts
@@ -176,7 +177,6 @@ def friend_feed():  # todo pagination for posts
 def friend_feed_choice(friend_id=None):
     if friend_id is None:
         return redirect(url_for('recipes.friend_feed'))
-    # {'yellow': '#ffc107', 'pink': '#e83e8c', 'secondary': '#6c757d'}
     colors = Colors.act_colors
     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_id).first()
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
@@ -188,12 +188,12 @@ def friend_feed_choice(friend_id=None):
         # friend_dict = {friend.id: friend.username}
         friend_acts = Actions.query.filter_by(user_id=followee.follow_id).all()
         cards = generate_feed_contents(friend_acts)
-        recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
-        recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
-        rec_dict = {r.id: r for r in recs}
+        # recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
+        # recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
+        # rec_dict = {r.id: r for r in recs}
     else:
         return redirect(url_for('recipes.friend_recipes'))
-    return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True, rec_dict=rec_dict,
+    return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True,  #, rec_dict=rec_dict,
                            colors=colors, all_friends=all_friends, friend_dict=friend_dict, friends=True, feed=True)
 
 
