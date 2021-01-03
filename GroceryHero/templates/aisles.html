@@ -1,6 +1,9 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-4">Your Aisles</h1>
+<div class="mb-4">
+    <h1 style="display: inline" class="">Your Aisles</h1>
+    <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
+</div>
 {% if aisles[0] is not defined and aisles[0] != '' %}
     <div class="card">
         <div class="card-header p-0" id="headingMenu">

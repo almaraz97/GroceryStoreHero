@@ -7,7 +7,8 @@
   {% else %}
     <h1 class="mb-3">Dashboard</h1>
   {% endif %}
-    <div style="margin-bottom:20px;">
+  <div>
+    <div class="" style="margin-bottom:20px;">
       <h3 style="display:inline;">Menu Items</h3>
       {% if current_user.is_authenticated %}
         <button style="float:right;box-shadow: 0 11px 5px -8px rgba(150, 170, 180, 0.5)" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#deleteModal">Clear Menu</button>
@@ -71,6 +72,7 @@
             {% endfor %}
           {% endif %}
       </div>
+  </div>
     <div class="content-section mt-4 mb-3">
        <!--Grocery list section WEB-->
        <div class="mb-3 mt-2 border-bottom pb-3 d-none d-md-block d-lg-block d-xl-block">

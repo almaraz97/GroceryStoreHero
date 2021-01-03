@@ -24,22 +24,22 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarToggle">
-        <div class="navbar-nav mr-auto d-none d-md-flex d-lg-flex d-xl-flex">
+        <div class="navbar-nav mr-auto">
           <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_page') }}">Recipes</a>
           <a class="nav-item nav-link" href="{{ url_for('pantry.pantry_page') }}">Pantry</a>
           <a class="nav-item nav-link" href="{{ url_for('aisles.aisles_page') }}">Aisles</a>
-          <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
+{#          <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>#}
         </div>
         <!-- Navbar Right Side -->
         <div class="navbar-nav">
           {% if current_user.is_authenticated %}
-            {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->
-              <a class="nav-item nav-link" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
-            {% else %}
-              <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Upgrade</a>
-            {% endif %}
-            <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
-            <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
+{#            {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->#}
+{#              <a class="nav-item nav-link" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>#}
+{#            {% else %}#}
+{#              <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Upgrade</a>#}
+{#            {% endif %}#}
+{#            <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>#}
+{#            <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>#}
             <a class="nav-item nav-link d-none d-md-flex d-lg-flex d-xl-flex" href="{{ url_for('users.account') }}">Account</a>
             <a class="nav-item nav-link d-flex d-md-none d-lg-none d-xl-none" href="{{ url_for('main.about') }}">About</a>
             <a class="nav-item nav-link" href="{{ url_for('users.auth_logout') }}">Logout</a>
@@ -417,17 +417,17 @@
     {% endif %}
   </div>
   <!--Mobile Navbar Bottom-->
-  <nav class="navbar navbar-dark bg-steel fixed-bottom site-header d-sm-none navbar-expand row mx-auto">
-    <div class="navbar-nav col p-0"> <!--mr-auto-->
-      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('main.home') }}"><img src="{{ url_for('static', filename='icons/home.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('pantry.pantry_page') }}"><img src="{{ url_for('static', filename='icons/pantry.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('recipes.recipes_page') }}"><img src="{{ url_for('static', filename='icons/recipes.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('aisles.aisles_page') }}"><img src="{{ url_for('static', filename='icons/aisles.png')  }}" height="35px" width="35px"></a>
-      {% if current_user.is_authenticated %}
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}"><img src="{{ url_for('static', filename='icons/account.png')  }}" height="35px" width="35px"></a>
-      {% endif %}
-    </div>
-  </nav>
+{#  <nav class="navbar navbar-dark bg-steel fixed-bottom site-header d-sm-none navbar-expand row mx-auto">#}
+{#    <div class="navbar-nav col p-0"> <!--mr-auto-->#}
+{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('main.home') }}"><img src="{{ url_for('static', filename='icons/home.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('pantry.pantry_page') }}"><img src="{{ url_for('static', filename='icons/pantry.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('recipes.recipes_page') }}"><img src="{{ url_for('static', filename='icons/recipes.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('aisles.aisles_page') }}"><img src="{{ url_for('static', filename='icons/aisles.png')  }}" height="35px" width="35px"></a>#}
+{#      {% if current_user.is_authenticated %}#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}"><img src="{{ url_for('static', filename='icons/account.png')  }}" height="35px" width="35px"></a>#}
+{#      {% endif %}#}
+{#    </div>#}
+{#  </nav>#}
 </main>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

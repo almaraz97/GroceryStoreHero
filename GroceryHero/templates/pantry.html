@@ -1,6 +1,9 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-3">Your Pantry</h1>
+<div class="mb-4">
+    <h1 style="display: inline">Your {{ title }}</h1>
+    <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
+</div>
   <div class="content-section pl-3">
     <!-- <div class="mb-4 d-none d-md-block d-lg-block d-xl-block">-->
     <div class="mb-4">
@@ -12,19 +15,19 @@
         </form>
       </div>
     </div>
-      <!-- </div>-->
-      <!-- Shelves section MOBILE-->
-      <!-- <div class="mb-3 d-block d-sm-none row">-->
-      <!-- <h3 class="col-12 mt-2 mb-2 text-center">Pantry Shelves</h3>-->
-      <!-- <div class="border-bottom pb-1 col-12 justify-content-center d-flex">-->
-      <!-- <form class="mb-2" action="#">-->
-      <!--     <button class="btn btn-outline-success btn-sm">Add Shelf</button>-->
-      <!-- </form>-->
-      <!-- <form class="ml-2" action="#">-->
-      <!--     <button class="btn btn-outline-danger btn-sm">Clear Shelves</button>-->
-      <!-- </form>-->
-      <!--   </div>-->
-      <!--  </div>-->
+{#      <!-- </div>-->#}
+{#      <!-- Shelves section MOBILE-->#}
+{#      <!-- <div class="mb-3 d-block d-sm-none row">-->#}
+{#      <!-- <h3 class="col-12 mt-2 mb-2 text-center">Pantry Shelves</h3>-->#}
+{#      <!-- <div class="border-bottom pb-1 col-12 justify-content-center d-flex">-->#}
+{#      <!-- <form class="mb-2" action="#">-->#}
+{#      <!--     <button class="btn btn-outline-success btn-sm">Add Shelf</button>-->#}
+{#      <!-- </form>-->#}
+{#      <!-- <form class="ml-2" action="#">-->#}
+{#      <!--     <button class="btn btn-outline-danger btn-sm">Clear Shelves</button>-->#}
+{#      <!-- </form>-->#}
+{#      <!--   </div>-->#}
+{#      <!--  </div>-->#}
       {% if shelves|length < 1 %}
         <div class="card my-3">
           <div class="card-header p-0" id="headingMenu">

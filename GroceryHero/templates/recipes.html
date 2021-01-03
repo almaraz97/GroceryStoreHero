@@ -1,6 +1,15 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-3" style="">{{ title }}</h1> <!--<a class="btn btn-sm btn-success mt-2 ml-4" style="color: white; float: right">New Recipe</a>-->
+<div class="mb-4">
+    <h1 style="display: inline" class="">Your {{ title }}</h1>
+    {#<a style="display: inline; float:right" class="btn btn-sm btn-outline-info mt-2" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>#}
+    {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->
+      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
+    {% else %}
+      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('users.account') }}">Upgrade</a>
+    {% endif %}
+</div>
+
 {% if current_user.is_authenticated %}
 <!--&lt;!&ndash;Drop down menu search bar&ndash;&gt;-->
 <!--<form action="{# url_for('recipes.recipes_search') #}" method="POST">-->
@@ -20,7 +29,8 @@
   <div style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
       <div class="input-group flex-nowrap">
-        <input type="text" class="form-control" placeholder={% if friends is defined %}"Username"{% else %}"Recipe Name"{% endif %} name="search">
+          {% if friends is defined %}{% set search_str = "Username" %}{% else %}{% set search_str = "Recipe Name" %}{% endif %}
+          <input type="text" class="form-control" placeholder="{{ search_str }}" name="search">
         <div class="input-group-prepend">
           <button class="input-group-text" id="addon-wrapping">Search</button>
         </div>
