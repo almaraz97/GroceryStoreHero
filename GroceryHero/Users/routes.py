@@ -6,7 +6,7 @@ from flask import current_app
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
 from GroceryHero import db, bcrypt, Config
-from GroceryHero.models import User, Recipes, Aisles
+from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_PubRec, User_Rec, User_Act
 from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountForm, DeleteAccountForm,
                                      RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
 from GroceryHero.Main.forms import ImportForm
@@ -65,6 +65,8 @@ users = Blueprint('users', __name__)
 @users.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
+    if len(current_user.recipes) >= 80:
+        flash('You\'ve reached the maximum recipes without a membership. Borrow more or consider upgrading.', 'info')
     form = UpdateAccountForm()
     form2 = ImportForm()
     form3 = AdvancedHarmonyForm()
@@ -81,7 +83,7 @@ def account():
         db.session.commit()
         flash('Your account has been updated', 'success')
         return redirect(url_for('users.account'))
-    if form2.import_recipes_button.data or form2.import_aisles_button.data:
+    if form2.import_recipes_button.data or form2.import_aisles_button.data:  # Importing recipes
         import_type = 'recipes' if form2.import_recipes_button.data else 'aisles'
         import_files(form2.file_name.data, import_type)
         return redirect(url_for('users.account'))
@@ -91,8 +93,8 @@ def account():
         flash('Your settings have been updated', 'success')
         return redirect(url_for('users.account'))
     if form4.validate_on_submit():
-        token = []
-        return redirect(url_for('account.delete_account'), token=token)
+        token = 4040404
+        return redirect(url_for('users.delete_account', token=token))
     if request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
@@ -106,31 +108,40 @@ def account():
 @users.route('/delete_account/<int:token>', methods=['GET', 'POST'])
 @login_required
 def delete_account(token):
-    if token:  # todo why?
-        recipes = Recipes.query.filter_by(author=current_user).all()
-        for recipe in recipes:  # delete recipes
-            db.session.delete(recipe)
-        aisles = Aisles.query.filter_by(author=current_user).all()
-        for aisle in aisles:  # delete aisles
-            db.session.delete(aisle)
-        followers = []  # todo finish here
-        for follower in followers:  # delete followers
-            db.session.delete(follower)
-        actions = []
-        for action in actions:  # delete actions
-            db.session.delete(action)
-        User_rec = []
-        for rec in User_rec:  # delete user borrows
-            db.session.delete(rec)
-        User_pubrec = []
-        for rec in User_pubrec:  # delete user borrows
-            db.session.delete(rec)
-        User_act = []
-        for act in User_act:  # delete user comments
-            db.session.delete(act)
+    if token == 4040404:  # todo look up if this is in tutorial
+        # recipes = Recipes.query.filter_by(author=current_user).all()
+        # for recipe in recipes:  # delete recipes
+        #     db.session.delete(recipe)
+        # aisles = Aisles.query.filter_by(author=current_user).all()
+        # for aisle in aisles:  # delete aisles
+        #     db.session.delete(aisle)
+        # followers = Followers.query.filter_by(author=current_user).all()
+        # for follower in followers:  # delete followers
+        #     db.session.delete(follower)
+        # actions = Actions.query.filter_by(author=current_user).all()
+        # for action in actions:  # delete actions
+        #     db.session.delete(action)
+        # User_rec = User_Rec.query.filter_by(author=current_user).all()
+        # for rec in User_rec:  # delete user borrows
+        #     db.session.delete(rec)
+        # User_pubrec = User_PubRec.query.filter_by(author=current_user).all()
+        # for rec in User_pubrec:  # delete user borrows
+        #     db.session.delete(rec)
+        # User_act = User_Act.query.filter_by(author=current_user).all()
+        # for act in User_act:  # delete user comments
+        #     db.session.delete(act)
+        for x in [Recipes, Aisles, Followers, Actions, User_Rec, User_PubRec, User_Act]:
+            try:
+                z = x.query.filter_by(author=current_user).all()
+                for i in z:
+                    db.session.delete(i)
+            except:
+                z = x.query.filter_by(user_id=current_user.id).all()
+                for i in z:
+                    db.session.delete(i)
         db.session.delete(current_user)  # delete user
         db.session.commit()
-        flash('Your account and everything associated has been deleted!', 'success')
+        flash('Your account and everything associated has been deleted.', 'success')
         return redirect(url_for('main.home'))
 
 
@@ -259,10 +270,10 @@ def callback_handling():
 def auth_login():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    if session.get('jwt_payload') is not None:  # User has been authenticated by auth0 and payload is in session
-        email = session['jwt_payload'].get('email')
+    if session.get('jwt_payload', False):  # User has been authenticated by auth0 and payload is in session
+        email = session['jwt_payload'].get('email', False)
         verified = session['jwt_payload'].get('email_verified', False)
-        if email is not None and verified:  # User email has been provided
+        if email and verified:  # User email has been provided
             user = User.query.filter_by(email=email).first()
             if user is not None:  # User is in database
                 login_user(user)

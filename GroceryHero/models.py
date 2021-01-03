@@ -22,7 +22,7 @@ class User(db.Model, UserMixin):
     # password = db.Column(db.String(60), nullable=False)  # todo Delete this for auth0 handling
     recipes = db.relationship('Recipes', backref='author', lazy=True)
     aisles = db.relationship('Aisles', backref='author', lazy=True)
-    harmony_preferences = db.Column(db.JSON, nullable=True,
+    harmony_preferences = db.Column(db.JSON, nullable=True,  # todo make these columns
                                     default={'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0,
                                              'recommended': {}, 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {},
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
@@ -119,7 +119,7 @@ class Aisles(db.Model):
 
 
 class Actions(db.Model):  # Where friend feed stuff will be held
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)  # todo works here but not pub_rec
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     type_ = db.Column(db.String(20), nullable=False)  # Update, Add, Delete, Clear, Borrow, Download, Follow
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -133,8 +133,8 @@ class Actions(db.Model):  # Where friend feed stuff will be held
 
 
 class Followers(db.Model):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
+    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
     user = db.relationship('User', foreign_keys=[user_id])
     follow = db.relationship('User', foreign_keys=[follow_id])
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -148,7 +148,7 @@ class Followers(db.Model):
 
 
 class Pub_Rec(db.Model):
-    p_id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, primary_key=True)  # todo why is this not regular id?
     origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ogusername = db.Column(db.String(64), nullable=False)  # Username at time of creation

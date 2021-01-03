@@ -15,17 +15,16 @@
   {% endif %}
 </head>
 <body>
-<header class="site-header d-none d-md-block d-lg-block d-xl-block">
+<header class="site-header d-md-block d-lg-block d-xl-block">
   <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
     <div class="container">
-      <a href="{{ url_for('main.home') }}"><img class="mb-2" src="{{ url_for('static', filename='icons/GH_WhiteLogo.png')  }}" width="30" height="30"></a>
+      <a href="{{ url_for('main.home') }}"><img class="mb-2" src="{{ url_for('static', filename='icons/GH_WhiteLogo.png')  }}" width="30" height="30"> <img src="{{ url_for('static', filename='icons/GH_WhiteWordmark.png')  }}" width="120"></a>
       <!-- The hamburger menu? -->
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarToggle">
-        <div class="navbar-nav mr-auto">
-          <a class="nav-item nav-link" href="{{ url_for('main.home') }}"><img src="{{ url_for('static', filename='icons/GH_WhiteWordmark.png')  }}" width="120"></a>
+        <div class="navbar-nav mr-auto d-none d-md-flex d-lg-flex d-xl-flex">
           <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_page') }}">Recipes</a>
           <a class="nav-item nav-link" href="{{ url_for('pantry.pantry_page') }}">Pantry</a>
           <a class="nav-item nav-link" href="{{ url_for('aisles.aisles_page') }}">Aisles</a>
@@ -41,13 +40,11 @@
             {% endif %}
             <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>
             <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>
-            <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
+            <a class="nav-item nav-link d-none d-md-flex d-lg-flex d-xl-flex" href="{{ url_for('users.account') }}">Account</a>
+            <a class="nav-item nav-link d-flex d-md-none d-lg-none d-xl-none" href="{{ url_for('main.about') }}">About</a>
             <a class="nav-item nav-link" href="{{ url_for('users.auth_logout') }}">Logout</a>
-<!---          <a class="nav-item nav-link" href="{# url_for('users.auth_logout') #}">Auth Logout</a>-->
           {% else %}
             <a class="nav-item nav-link" href="{{ url_for('users.auth_login') }}">Login/Register</a>
-<!----            <a class="nav-item nav-link" href="{# url_for('users.auth_login') #}">Auth Login</a>---->
-{#            <a class="nav-item nav-link" href="{{ url_for('users.register') }}">Register</a>#}
           {% endif %}
         </div>
       </div>
@@ -55,24 +52,24 @@
   </nav>
 </header>
 <!--Mobile Navbar Top-->
-<nav class="navbar navbar-dark bg-steel fixed-top site-header d-sm-none row mx-auto navbar-expand">
-  <div class="navbar-nav col p-0">
-    {% if current_user.is_authenticated %}
-      {% if current_user.recipes|length <=80 %}
-        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe', link=0) }}"><img src="{{ url_for('static', filename='icons/add_recipe.png')  }}" height="35px" width="35px"></a>
-      {% else %}
-        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>
-      {% endif %}
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisle.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.auth_logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>
-    {% else %}
-      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.auth_login') }}">Login/Register</a>
+{#<nav class="navbar navbar-dark bg-steel fixed-top site-header d-sm-none row mx-auto navbar-expand">#}
+{#  <div class="navbar-nav col p-0">#}
+{#    {% if current_user.is_authenticated %}#}
+{#      {% if current_user.recipes|length <=80 %}#}
+{#        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('recipes.new_recipe', link=0) }}"><img src="{{ url_for('static', filename='icons/add_recipe.png')  }}" height="35px" width="35px"></a>#}
+{#      {% else %}#}
+{#        <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}">Upgrade</a>#}
+{#      {% endif %}#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('aisles.new_aisle') }}"><img src="{{ url_for('static', filename='icons/add_aisle.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('pantry.new_shelf') }}"><img src="{{ url_for('static', filename='icons/add_pantry.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('main.about') }}"><img src="{{ url_for('static', filename='icons/about.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.auth_logout') }}"><img src="{{ url_for('static', filename='icons/logout.png')  }}" height="35px" width="35px"></a>#}
+{#    {% else %}#}
+{#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.auth_login') }}">Login/Register</a>#}
 {#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.authregister') }}">Register</a>#}
-    {% endif %}
-  </div>
-</nav>
+{#    {% endif %}#}
+{#  </div>#}
+{#</nav>#}
 <main role="main" class="container" id="top">
   <div class="row">
     <div class="col-md-8">
