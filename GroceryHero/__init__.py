@@ -6,7 +6,6 @@ from flask_mail import Mail
 from GroceryHero.config import Config
 from flask_migrate import Migrate
 from authlib.integrations.flask_client import OAuth
-from auth_config import secret, id_
 
 db = SQLAlchemy()
 migrate = Migrate()
