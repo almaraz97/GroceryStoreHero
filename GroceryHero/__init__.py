@@ -6,6 +6,7 @@ from flask_mail import Mail
 from GroceryHero.config import Config
 from flask_migrate import Migrate
 from authlib.integrations.flask_client import OAuth
+from auth_config import secret, id_
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -22,7 +23,7 @@ def create_app(config_class=Config):
     oauth = OAuth(app)
     auth0 = oauth.register(
         'auth0',
-        client_id='mKcsol3URUljy1p7wEqgAwxOVRW4KFnd',  #'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7',
+        client_id='mKcsol3URUljy1p7wEqgAwxOVRW4KFnd',
         client_secret='SsV4jWNmXTm-icN8LO4ScwlBKKXucwfHax7tLt3eGrnZI2eW4PovAIgyl57OJQ9_',
         api_base_url='https://dev-7z79kd24.us.auth0.com',
         access_token_url='https://dev-7z79kd24.us.auth0.com/oauth/token',
