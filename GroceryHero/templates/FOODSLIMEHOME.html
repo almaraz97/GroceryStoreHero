@@ -33,7 +33,7 @@
                   </button>
                 {% else %}
                   <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-                    <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">Login to add to your menu.</a>
+                    <a style="text-decoration:none; color: grey;" href="{{ url_for('users.auth_login') }}">Login to add to your menu.</a>
                   </button>
                 {% endif %}
               </h5>

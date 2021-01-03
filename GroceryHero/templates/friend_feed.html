@@ -24,7 +24,7 @@
     <div class="card-header p-0" id="headingMenu">
       <h5 class="mb-0">
         <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-            <a style="text-decoration:none; color: grey;" href="{% if current_user.is_authenticated %}{{ url_for('recipes.recipes_page') }}{% else %}{{ url_for('users.login') }}{% endif %}">You have nothing on your feed yet.</a>
+            <a style="text-decoration:none; color: grey;" href="{% if current_user.is_authenticated %}{{ url_for('recipes.recipes_page') }}{% else %}{{ url_for('users.auth_login') }}{% endif %}">You have nothing on your feed yet.</a>
         </button>
       </h5>
     </div>

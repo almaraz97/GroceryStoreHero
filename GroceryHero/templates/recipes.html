@@ -46,7 +46,7 @@
           {% if public is defined%}{% set empty_message, from_empty = 'No recipes have been posted publicly yet.', url_for('recipes.new_recipe')%}{% else %}{% set empty_message, from_empty = 'You have no recipes yet. Click to add a recipe.', url_for('recipes.new_recipe')%}{% endif %}
            <a style="text-decoration:none; color: grey;" href="{{ from_empty }}">{{ empty_message }}</a>
          {% else %}
-           <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no recipes yet. Login to add a recipe.</a>
+           <a style="text-decoration:none; color: grey;" href="{{ url_for('users.auth_login') }}">You have no recipes yet. Login to add a recipe.</a>
          {% endif %}
         </button>
       </h5>

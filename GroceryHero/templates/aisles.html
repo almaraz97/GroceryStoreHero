@@ -9,7 +9,7 @@
                    {% if current_user.is_authenticated %}
                      <a style="text-decoration:none; color: grey;" href="{{ url_for('aisles.new_aisle') }}">You have no aisles yet. Click to add an aisle.</a>
                    {% else %}
-                     <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no aisles yet. Login to add an aisle.</a>
+                     <a style="text-decoration:none; color: grey;" href="{{ url_for('users.auth_login') }}">You have no aisles yet. Login to add an aisle.</a>
                    {% endif %}
                 </button>
             </h5>
