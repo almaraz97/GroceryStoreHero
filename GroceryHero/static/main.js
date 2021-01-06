@@ -61,29 +61,29 @@ $(document).ready(function() {
 // Strike-through on grocery-list items
 $(document).ready(function() {
     $('.groceries').on("click", function(){
-    let strike = $(this).attr('strike')
+    // let strike = $(this).attr('strike')
     let item_id = $(this).attr('itemid')
+    $(this).css("text-decoration-color","text-muted");  // Not sure what this is doing
 
-        $(this).css("text-decoration-color","text-muted");
-        if($(this).closest("s").length) {
-          $(this).removeClass('text-muted')
-          Content = $(this).parent("s").html();
-          $curParent = $(this).closest("s");
-          $(Content).insertAfter($curParent);
-          $(this).closest("s").remove();
-          strike = 0
-        }
-        else {
-          $(this).addClass('text-muted')
-          $(this).wrapAll("<s />");
-          strike = 1
-        }
+    if($(this).closest("s").length) {  // If there is an s =>1 else s=>0 ///Not sure what .closest does
+        $(this).removeClass('text-muted')
+        Content = $(this).parent("s").html();  // Why user .parent?
+        $curParent = $(this).closest("s");
+        $(Content).insertAfter($curParent);
+        $(this).closest("s").remove();
+        strike = 0
+    }
+    else {
+        $(this).addClass('text-muted')
+        $(this).wrapAll("<s />");
+        strike = 1
+    }
 
-        req = $.ajax({
-            url : '/home/change_grocerylist',
-            type: 'POST',
-            data: {strike: strike, item_id:item_id}
-            });
+    req = $.ajax({
+        url : '/home/change_grocerylist',
+        type: 'POST',
+        data: {strike: strike, item_id:item_id}
+        });
     });
 });
 
@@ -92,9 +92,53 @@ $(document).ready(function() {
     $('.menuButton').on('click', function() {
         if (this.classList.contains("btn-success")) {
             $(this).removeClass("btn-success").addClass("btn-light");
+            this.value = "false";
         } else {
             $(this).removeClass("btn-light").addClass("btn-success");
+            this.value = "true";
         }
+        let menuItems = document.getElementsByClassName('card');
+        // let menuItem = $(menuItems).find(x => Number(x.id) == this.id);
+        for(let i = 0; menuItems.length; i++){
+            // console.log(this.id, menuItems[i].id, this.id === menuItems[i].id);
+            if(menuItems[i].id === "0"){
+                emptyItem = menuItems[i];
+            }
+            if(menuItems[i].id === this.id){
+                menuItem = menuItems[i];
+                break;
+            }
+        }
+
+
+        if(this.value === 'true'){
+            $(menuItem).fadeIn(0);
+        } else {
+            // if(hidden === 4) {
+                $(menuItem).fadeOut(0);
+            // } else{
+            //     $(menuItem).fadeOut(200);
+            // }
+        }
+
+        console.log(menuItems)
+        let hidden = 0
+        for(x of menuItems){
+            // console.log(x.style.display)
+            if(x.style.display === "none"){
+                hidden++;
+            }
+        }
+
+        // console.log(hidden)
+        if(hidden === 4){
+            // $(emptyItem).fadeOut(200);
+            $(emptyItem).fadeIn(0);
+        } else{
+            $(emptyItem).fadeOut(0);
+        }
+        // console.log("Faded: ", menuItem)
+        // console.log("")
     });
 });
 

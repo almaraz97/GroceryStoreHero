@@ -39,7 +39,7 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 """
 
 # todo prevent update on feed abuse
-# todo do specific actions checks that user specifies
+# todo see/show specific actions checks that user specifies
 # todo create only 15 recipes, borrow 20 recipes
 
 
@@ -50,6 +50,7 @@ def landing():
     return render_template('landing.html')
 
 
+@login_required
 @main.route('/home')
 def home():
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
@@ -73,15 +74,15 @@ def home():
             harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
         username = current_user.username.capitalize()
         statistics = get_history_stats(current_user)
-        if current_user.id == 9 and current_user.username == 'Andrea':
-            return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
-                                   sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-                                   overlap=overlap, statistics=statistics, borrowed=borrowed)
+        # if current_user.id == 9 and current_user.username == 'Andrea':
+        #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
+        #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
+        #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics, borrowed=borrowed)
 
-
+@login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
     menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
@@ -115,6 +116,7 @@ def about():
     return render_template('about.html', title='Settings', sidebar=True, about=True)
 
 
+@login_required
 @main.route('/harmony_tool', methods=['GET', 'POST'])
 def harmony_tool():
     recommended = None
@@ -223,6 +225,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                            clears=clears, graph=graph)
 
 
+@login_required
 @main.route('/extras', methods=['GET', 'POST'])
 def add_to_extras():
     aisles = Aisles.query.filter_by(user_id=current_user.id).all()
@@ -246,6 +249,7 @@ def add_to_extras():
     return render_template('add_extras.html', legend='Add Extras', form=form, ingredients=True)
 
 
+@login_required
 @main.route('/extras_add/<ingredients>', methods=['GET', 'POST'])
 def add_extras(ingredients):
     ingredients = json.loads(ingredients)
@@ -281,6 +285,7 @@ def add_extras(ingredients):
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
 
 
+@login_required
 @main.route('/home/change_grocerylist', methods=['POST'])
 def change_to_grocerylist():
     item_id = request.form['item_id'].split(', ')
@@ -297,6 +302,7 @@ def change_to_grocerylist():
     return json.dumps({'result': 'success'})
 
 
+@login_required
 @main.route('/home/change_eaten', methods=['POST'])  # todo might affect friends list menu stuff
 def change_to_eaten():
     recipe_id = request.form['recipe_id']
@@ -308,6 +314,7 @@ def change_to_eaten():
     return json.dumps({'result': 'success'})
 
 
+@login_required
 @main.route('/extras_clear', methods=['GET', 'POST'])
 def clear_extras():
     current_user.extras = []

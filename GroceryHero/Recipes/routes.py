@@ -250,6 +250,7 @@ def new_recipe_quantity():
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn)
         db.session.add(recipe)
+        db.session.commit()
         action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id], date_created=datetime.utcnow(),
                          titles=[recipe.title])
         db.session.add(action)
@@ -498,7 +499,7 @@ def change_to_menu():  # JavaScript way of adding to menu without reload
 @recipes.route('/recipes/change_borrow', methods=['POST'])
 @login_required
 def change_to_borrow():  # JavaScript way of adding to menu without reload
-    recipe_id = request.form['recipe_id']
+    recipe_id = int(request.form['recipe_id'])
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
         title = recipe.title

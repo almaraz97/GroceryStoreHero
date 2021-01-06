@@ -65,6 +65,18 @@ button {
     background: #121a2e;
 }
 
+/*My button*/
+.cta-grey {
+    border: 2px solid #eceeef !important;
+    color: #eceeef;
+}
+
+.cta-grey:hover {
+    color: #121a2e;
+    background: #fff;
+}
+
+
 #banner {
     background-size: cover;
 }

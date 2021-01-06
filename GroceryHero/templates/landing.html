@@ -18,27 +18,27 @@
   <title>Grocery Store Hero- Landing</title>
 </head>
 <body>
-<header class="site-header d-none d-md-block d-lg-block d-xl-block">
-  <nav style="height: 80px; margin-top: -80px;" class="navbar navbar-expand-md navbar-dark bg-steel">
-    <div class="container">
-      <!-- The hamburger menu? -->
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarToggle">
-        </div>
-        <!-- Navbar Right Side -->
-        <div class="navbar-nav">
-        </div>
-      </div>
-    </div>
-  </nav>
-</header>
-<!--Mobile Navbar Top-->
-<nav class="navbar navbar-dark bg-steel fixed-top site-header d-sm-none row mx-auto navbar-expand">
-  <div class="navbar-nav col p-0">
-  </div>
-</nav>
+{#<header class="site-header d-none d-md-block d-lg-block d-xl-block">#}
+{#  <nav style="height: 80px; margin-top: -80px;" class="navbar navbar-expand-md navbar-dark bg-steel">#}
+{#    <div class="container">#}
+{#      <!-- The hamburger menu? -->#}
+{#      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">#}
+{#        <span class="navbar-toggler-icon"></span>#}
+{#      </button>#}
+{#      <div class="collapse navbar-collapse" id="navbarToggle">#}
+{#        </div>#}
+{#        <!-- Navbar Right Side -->#}
+{#        <div class="navbar-nav">#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+{#  </nav>#}
+{#</header>#}
+{#<!--Mobile Navbar Top-->#}
+{#<nav class="navbar navbar-dark bg-steel fixed-top site-header d-sm-none row mx-auto navbar-expand">#}
+{#  <div class="navbar-nav col p-0">#}
+{#  </div>#}
+{#</nav>#}
 <main role="main" class="" id="top">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -94,54 +94,136 @@
             </div>
         </div>
     </div>
-    <!-- feature (skew background) -->
-    <div class="jumbotron jumbotron-fluid feature" id="feature-first">
-        <div class="container my-5">
-            <div class="row justify-content-between text-center text-md-left">
-                <div data-aos="fade-right" data-aos-duration="1000" data-aos-once="true" class="col-md-6">
-                    <h2 class="font-weight-bold">Organize & Plan</h2>
-                    <p class="my-4">Import recipes from your favorite websites! <br>
-                        You can easily modify ingredients & quantities, and categorize recipes by meal type.</p>
-                    <a href="#price-table" class="btn my-4 font-weight-bold atlas-cta cta-blue">Get Started</a>
-                </div>
-                <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center">
-                        <!--style="border-right:solid 20px #9C1A1C;"-->
-    <article class="media content-section callout mt-0" style="border-right-color:#17a2b8; width: 480px; float: right; max-width: 100%;">
-      <!--Add/remove to menu buttons-->
-          <button class="btn btn-success btn-sm mt-3 menuButton" value="#">Menu</button>
-      <div class="media-body ml-4">
-        <div class="article-metadata">  <!--article-metadata-->
-          <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Cobb Salad</p>
-        </div>
-        <p class="article-content mt-2 mb-2">Romaine Lettuce, Eggs, Chicken Breast, Bacon, Avocado, Blue Cheese, Cherry Tomatoes, Red Wine Vinegar, Dijon Mustard, Olive Oil, Salt, Black Pepper</p>
-      </div>
-    </article>
+  <!-- Recipe Information -->
+  <div class="jumbotron jumbotron-fluid feature" id="feature-first">
 
-      <article class="media content-section callout mt-0" style="border-right-color:#e83e8c; width: 480px; float: right; max-width: 100%;">
-          <!--Add/remove to menu buttons-->
-          <button class="btn btn-success btn-sm mt-3 menuButton" value="#">Menu</button>
-          <div class="media-body ml-4">
-            <div class="article-metadata">  <!--article-metadata-->
-              <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0"> Crème Brûlée</p>
+    <div class="container my-5">
+
+        <div class="row justify-content-between text-md-left">
+          <div data-aos="fade-right" data-aos-duration="1000" data-aos-once="true" class="text-center col-md-6">
+              <h2 class="font-weight-bold">Organize & Plan</h2>
+              <p class="my-4">Import recipes from your favorite websites! <br>
+                  You can easily modify ingredients & quantities, and categorize recipes by meal type.</p>
+              <a href="#price-table" class="btn my-4 font-weight-bold atlas-cta cta-blue">Get Started</a>
+
+    <!-- Menu Items -->
+    <div class="content-section mt-5" data-aos="fade-right" data-aos-duration="1000" data-aos-once="true"  style="width: 500px; min-height: 200px;">
+    <h4>Your Menu</h4>
+    <div id="accordion" class="my-3" style="box-shadow: 0 11px 30px -8px rgba(150, 170, 180, 0.5)">
+          <div class="card" style="display: none;" id="0">
+            <div class="card-header p-0" id="headingMenu">
+              <h5 class="mb-0">
+              <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
+                <a style="text-decoration:none; color: grey;">There is nothing on your menu yet. Click to add a recipe.</a>
+              </button>
+              </h5>
             </div>
-            <p class="article-content mt-2 mb-2">Double Cream, Vanilla Bean, White Sugar, Egg Yolks, Salt</p>
           </div>
-    </article>
-
-     <article class="media content-section callout mt-0" style="border-right-color:#6610f2; width: 480px; float: right; max-width: 100%;">
-      <!--Add/remove to menu buttons-->
-          <button class="btn btn-light btn-sm mt-3 menuButton" value="#">Menu</button>
-      <div class="media-body ml-4">
-        <div class="article-metadata">  <!--article-metadata-->
-          <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Beef Lasagna</p>
-        </div>
-        <p class="article-content mt-2 mb-2">Ground Beef, Yellow Onion, Red Bell Pepper, Garlic, Tomato Sauce, Tomato Paste, Crushed Tomatoes, Dried Oregano, Fresh Parsley, Garlic Salt, White Wine Vinegar, White Sugar, Salt, Olive Oil</p>
-      </div>
-    </article>
-                </div>
+        <div class="card" id="1">
+          <!--Button-->
+          <div class="card-body bg-success p-0">
+            <h5 class="mb-0">
+              <button style=".collapse" class="btn btn-success btn-block pl-0;" data-toggle="collapse1" data-target="#collapse1"  aria-controls="collapse1">
+                Cobb Salad
+              </button>
+            </h5>
+          </div>
+          <!--Recipe Info section-->
+          <div id="collapse1" class="collapse" aria-labelledby="heading1" data-parent="#accordion">
+            <div class="card-body ml-4">
+              <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
+                <a>Ingredients:</a>
+                <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;" >Eaten</button> <!--e_id="1"-->
+              </div>
+              <p class="mb-2" style="font-size: 14px;">Romaine Lettuce, Eggs, Chicken Breast, Bacon, Avocado, Blue Cheese, Cherry Tomatoes, Red Wine Vinegar, Dijon Mustard, Olive Oil, Salt, Black Pepper</p>
             </div>
+          </div>
         </div>
+
+        <div class="card" id="2">
+          <!--Button-->
+          <div class="card-body bg-success p-0">
+            <h5 class="mb-0">
+              <button style=".collapse" class="btn btn-success btn-block pl-0;" data-toggle="collapse2" data-target="#collapse2"  aria-controls="collapse2">
+                Crème Brûlée
+              </button>
+            </h5>
+          </div>
+          <!--Recipe Info section-->
+          <div id="collapse2" class="collapse" aria-labelledby="heading2" data-parent="#accordion">
+            <div class="card-body ml-4">
+              <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
+                <a>Ingredients:</a>
+                <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;" >Eaten</button> <!----e_id="2"---->
+              </div>
+              <p class="mb-2" style="font-size: 14px;">Double Cream, Vanilla Bean, White Sugar, Egg Yolks, Salt</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="3" style="display: none">
+          <!--Button-->
+          <div class="card-body bg-success p-0">
+            <h5 class="mb-0">
+              <button style=".collapse" class="btn btn-success btn-block pl-0;" data-toggle="collapse3" data-target="#collapse3"  aria-controls="collapse3">
+                Beef Lasagna
+              </button>
+            </h5>
+          </div>
+          <!--Recipe Info section-->
+          <div id="collapse3" class="collapse" aria-labelledby="heading3" data-parent="#accordion">
+            <div class="card-body ml-4">
+              <div class="border-bottom mr-3 mb-1 pb-1 pt-0">
+                <a>Ingredients:</a>
+                <button class="btn btn-sm btn-outline-secondary pb-0 pt-0 pl-3 pr-3 eatenButton" style="float:right;">Eaten</button> <!--e_id="3"-->
+              </div>
+              <p class="mb-2" style="font-size: 14px;">Ground Beef, Yellow Onion, Red Bell Pepper, Garlic, Tomato Sauce, Tomato Paste, Crushed Tomatoes, Dried Oregano, Fresh Parsley, White Wine Vinegar, White Sugar, Salt, Olive Oil</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+        </div>
+        <div data-aos="fade-left" data-aos-duration="1000" data-aos-once="true" class="col-md-6 align-self-center">
+          <article class="media content-section callout mt-0" style="border-right-color:#17a2b8; width: 480px; float: right; max-width: 100%;">
+            <!--Add/remove to menu buttons-->
+            <button class="btn btn-success btn-sm mt-3 menuButton" value="true" id="1">Menu</button>
+            <div class="media-body ml-4">
+              <div class="article-metadata">  <!--article-metadata-->
+                <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Cobb Salad</p>
+              </div>
+              <p class="article-content mt-2 mb-2">Romaine Lettuce, Eggs, Chicken Breast, Bacon, Avocado, Blue Cheese, Cherry Tomatoes, Red Wine Vinegar, Dijon Mustard, Olive Oil, Salt, Black Pepper</p>
+            </div>
+          </article>
+
+          <article class="media content-section callout mt-0" style="border-right-color:#e83e8c; width: 480px; float: right; max-width: 100%;">
+              <!--Add/remove to menu buttons-->
+              <button class="btn btn-success btn-sm mt-3 menuButton" value="true" id="2">Menu</button>
+              <div class="media-body ml-4">
+                <div class="article-metadata">  <!--article-metadata-->
+                  <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Crème Brûlée</p>
+                </div>
+                <p class="article-content mt-2 mb-2">Double Cream, Vanilla Bean, White Sugar, Egg Yolks, Salt</p>
+              </div>
+          </article>
+          <article class="media content-section callout mt-0" style="border-right-color:#6610f2; width: 480px; float: right; max-width: 100%;">
+            <!--Add/remove to menu buttons-->
+            <button class="btn btn-light btn-sm mt-3 menuButton" value="true" id="3">Menu</button>
+            <div class="media-body ml-4">
+              <div class="article-metadata">  <!--article-metadata-->
+                <p style="font-size: 18px; color: #007bff;" class="mr-2 mb-0">Beef Lasagna</p>
+              </div>
+              <p class="article-content mt-2 mb-2">Ground Beef, Yellow Onion, Red Bell Pepper, Garlic, Tomato Sauce, Tomato Paste, Crushed Tomatoes, Dried Oregano, Fresh Parsley, White Wine Vinegar, White Sugar, Salt, Olive Oil</p>
+            </div>
+          </article>
+        </div>
+      </div>
+
     </div>
+
+    </div>
+    </div>
+
     <!-- feature (green background) -->
     <div class="jumbotron jumbotron-fluid feature" id="feature-last">
         <div class="container">
@@ -173,7 +255,7 @@
                     <li>Browse Public Recipes</li>
                     <li>Borrow Up to 10 Recipes</li>
                 </ul>
-                <a href="{{ url_for('users.auth_login') }}" class="btn my-4 font-weight-bold atlas-cta cta-ghost">Get Free</a>
+                <a href="{{ url_for('users.auth_login') }}" class="btn my-4 font-weight-bold atlas-cta cta-green">Get Free</a>
             </div>
             <div data-aos="fade-up" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center py-4 mt-5 rounded" id="price-table__premium">
                 <h4 style="color: #ffffff;" class="my-4">RECIPE WARRIOR</h4>
@@ -184,7 +266,7 @@
                     <li>Personalized Sorting of Public Recipes</li>
                     <li>Borrow Up to 50 Recipes</li>
                 </ul>
-                <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-green">Coming Soon</a>
+                <a href="" style="cursor: default;" onclick="return false;" class="btn my-4 font-weight-bold atlas-cta cta-grey">Coming Soon</a>
             </div>
             <div data-aos="fade-left" data-aos-delay="200" data-aos-duration="1000" data-aos-once="true" class="col-md-4 text-center py-4 mt-5">
                 <h4 class="my-4">GROCERY HERO!</h4>
@@ -196,51 +278,55 @@
                     <li>Advanced Money Saving Tools</li>
                     <li>And More!</li>
                 </ul>
-                <a href="#" class="btn my-4 font-weight-bold atlas-cta cta-ghost">Coming Soon</a>
+                <a href="" style="cursor: default;" onclick="return false;" class="btn my-4 font-weight-bold atlas-cta cta-ghost">Coming Soon</a>
             </div>
         </div>
     </div>
     <!-- client -->
     <div class="jumbotron jumbotron-fluid">
         <div class="container">
-            <div class="row">
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-1.png" class="mx-auto d-block">
-                </div>
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-2.png" class="mx-auto d-block">
-                </div>
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-3.png" class="mx-auto d-block">
-                </div>
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-4.png" class="mx-auto d-block">
-                </div>
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-5.png" class="mx-auto d-block">
-                </div>
-                <div class="col-sm-4 col-md-2 py-2 align-self-center">
-                    <img src="static/LandingPage/img/client-6.png" class="mx-auto d-block">
-                </div>
-            </div>
+            <blockquote class="blockquote text-center">
+              <p class="mb-0">Grocery Hero showed me my cooking patterns and has become a valuable time saving tool for me.</p>
+              <footer class="blockquote-footer">Arlene in <cite title="Source Title">Satisfied Times</cite></footer>
+            </blockquote>
+{#            <div class="row">#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-1.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-2.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-3.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-4.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-5.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#                <div class="col-sm-4 col-md-2 py-2 align-self-center">#}
+{#                    <img src="static/LandingPage/img/client-6.png" class="mx-auto d-block">#}
+{#                </div>#}
+{#            </div>#}
         </div>
     </div>
     <!-- contact -->
     <div class="jumbotron jumbotron-fluid" id="contact" style="background-image: url(static/LandingPage/img/contact-bk.jpg);">
         <div class="container my-5">
             <div class="row justify-content-between">
-{#                <div class="col-md-6 text-white">#}
-{#                    <h2 style="color: #ffffff;" class="font-weight-bold">Contact</h2>#}
-{#                    <p class="my-4">#}
-{#                        Have a question about GroceryHero?#}
-{#                        <br> Our team is here to help! <br>#}
-{#                        Fill out the contact form and a representative will respond promptly.#}
-{#                    </p>#}
+                <div class="col-md-6 text-white">
+                    <h2 style="color: #ffffff;" class="font-weight-bold">Contact</h2>
+                    <p class="my-4">
+                        Have a question about GroceryHero?
+                        <br> Our team is here to help! <br>
+                        Fill out the contact form and a representative will respond promptly.
+                    </p>
 {#                    <ul class="list-unstyled">#}
 {#                        <li>Email : contact@grocerystore-hero.com</li>#}
 {#                        <li>Phone : 123-456-7890</li>#}
 {#                    </ul>#}
-{#                </div>#}
+                </div>
                 <div class="col-md-6">
                     <form>
                     	<div class="row">
@@ -290,9 +376,9 @@
 </body>
 </main>
 <!-- AOS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+{#<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>#}
 <script src="static/LandingPage/js/aos.js"></script>
 <script>AOS.init({}); </script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
-
 {# url_for('static', filename='/LandingPage/js/aos.js') #}

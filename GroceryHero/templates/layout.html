@@ -19,11 +19,13 @@
 <header class="site-header d-md-block d-lg-block d-xl-block">
   <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
     <div class="container">
-      <a href="{{ url_for('main.home') }}"><img class="mb-2" src="{{ url_for('static', filename='icons/GH_WhiteLogo.png')  }}" width="30" height="30"> <img src="{{ url_for('static', filename='icons/GH_WhiteWordmark.png')  }}" width="120"></a>
-      <!-- The hamburger menu? -->
+      <!-- GroceryHero Icon -->
+      <a class="mr-1" href="{{ url_for('main.home') }}"><img class="mb-2" src="{{ url_for('static', filename='icons/GH_WhiteLogo.png')  }}" width="30" height="30"> <img class="mr-1" src="{{ url_for('static', filename='icons/GH_WhiteWordmark.png')  }}" width="120"></a>
+      <!-- The hamburger menu toggle -->
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+      <!-- Navbar Left Side -->
       <div class="collapse navbar-collapse" id="navbarToggle">
         <div class="navbar-nav mr-auto">
         {% if current_user.is_authenticated %}
@@ -218,6 +220,51 @@
             <li>Downloaded by others: _ times</li>
           </ul>
 
+        {% elif suggestion is defined %}
+            <h3>Recipe Suggestion Tool</h3>
+            <p class='text-muted border-bottom pb-2'>This tool will learn your eating patterns and suggest things to add to your menu.
+            </p>
+            <div id="accordion">
+            {% set index = namespace(value=1) %}
+            {% for group in recommended %}
+            <p>Recipes based on your eating habits</p>
+                <div class="card mb-2">
+                  <div class="card-header p-0" id="heading{{ index.value }}">
+                    <h5 class="mb-0">
+                      <button class="btn btn-light btn-block btn-lrg" data-toggle="collapse" data-target="#collapse{{ index.value }}"  aria-controls="collapse{{ index.value }}">
+                        Recommendation {{ index.value }} | Score: {{ recommended[group] }}%
+                      </button>
+                    </h5>
+                  </div>
+                </div>
+                </div>
+            {% endfor %}
+            <p>Recipes to save you money</p>
+            {% for group in recommended %}
+            <div class="card mb-2">
+              <div class="card-header p-0" id="heading{{ index.value }}">
+                <h5 class="mb-0">
+                  <button class="btn btn-light btn-block btn-lrg" data-toggle="collapse" data-target="#collapse{{ index.value }}"  aria-controls="collapse{{ index.value }}">
+                    Recommendation {{ index.value }} | Score: {{ recommended[group] }}%
+                  </button>
+                </h5>
+              </div>
+            </div>
+            </div>
+            {% endfor %}
+            {% for group in recommended %}
+            <p>Recipes to try something new</p>
+            <div class="card mb-2">
+                  <div class="card-header p-0" id="heading{{ index.value }}">
+                    <h5 class="mb-0">
+                      <button class="btn btn-light btn-block btn-lrg" data-toggle="collapse" data-target="#collapse{{ index.value }}"  aria-controls="collapse{{ index.value }}">
+                        Recommendation {{ index.value }} | Score: {{ recommended[group] }}%
+                      </button>
+                    </h5>
+                  </div>
+                </div>
+            </div>
+            {% endfor %}
         {% elif pantry is defined %}
           <h3>Add Items to Pantry</h3>
           <p class='text-muted border-bottom pb-2'>Clearing your menu updates your pantry. Add items that will get many uses here.</p>
@@ -437,7 +484,7 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" crossorigin="anonymous"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

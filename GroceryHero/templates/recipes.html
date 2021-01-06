@@ -4,9 +4,9 @@
     <h1 style="display: inline" class="">Your {{ title }}</h1>
     {#<a style="display: inline; float:right" class="btn btn-sm btn-outline-info mt-2" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>#}
     {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->
-      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
+      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-3" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
     {% else %}
-      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-2" href="{{ url_for('users.account') }}">Upgrade</a>
+      <a style="display: inline; float:right" class="btn btn-sm btn-info mt-3" href="{{ url_for('users.account') }}">Upgrade</a>
     {% endif %}
 </div>
 

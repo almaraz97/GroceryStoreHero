@@ -1,6 +1,8 @@
 import itertools
 from functools import wraps
 from urllib.parse import urlencode
+
+from authlib.integrations.base_client import OAuthError
 from flask import current_app
 # from authlib.integrations.flask_client import OAuth
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
@@ -206,8 +208,13 @@ def requires_auth(f): # Here we're using the /callback route.
 
 @users.route('/auth_login/callback')
 def callback_handling():
-    # Handles response from token endpoint
-    current_app.auth0.authorize_access_token()
+    try:
+        # Handles response from token endpoint
+        current_app.auth0.authorize_access_token()
+    except OAuthError:
+        # flash(f"Login unsuccessful- email address was not provided and/or verified."
+        #       f"Sign up here or sign in through another connection.", 'danger')
+        return redirect(url_for('main.landing'))
     resp = current_app.auth0.get('userinfo')
     userinfo = resp.json()
 
@@ -218,6 +225,7 @@ def callback_handling():
         'name': userinfo['name'],
         'picture': userinfo['picture']
     }
+
     return redirect(url_for('users.auth_login'))
 
 
@@ -244,27 +252,6 @@ def callback_handling():
 }>
 """
 
-# @users.route('/auth_register', methods=['GET', 'POST'])
-# def auth_register():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('main.home'))
-#     form = RegistrationForm()
-#     if form.validate_on_submit():
-#         email = session['auth0']['email']
-#         # hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-#         user = User()
-#         user.username = form.username.data
-#         user.email = form.email.data
-#         # user.password = hashed_password
-#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-#         db.session.add(user)
-#         db.session.commit()
-#         flash(f'Your account has been created. You can now log in!', 'success')
-#         return redirect(url_for("users.login"))
-#     return render_template('auth_register.html', title='Register', form=form)
-
 
 @users.route('/auth_login', methods=['GET', 'POST'])
 def auth_login():
@@ -280,7 +267,7 @@ def auth_login():
                 next_page = request.args.get('next')
                 ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
                 return redirect(next_page) if next_page else redirect(url_for('main.home'))
-            else:  # User is not in database
+            else:  # User is not in database, register them
                 name = session['jwt_payload'].get('name')
                 username = name if name is not None else email
                 user = User(email=email, username=username)
@@ -301,8 +288,8 @@ def auth_login():
         else:
             flash(f"Login unsuccessful- email address was not provided and/or verified."
                   f"Sign up here or sign in through another connection.", 'danger')
-            return redirect(url_for('users.auth_logout'))  # url_for('users.callback_handling')
-    return current_app.auth0.authorize_redirect(redirect_uri='https://www.grocerystore-hero.com/auth_login/callback')
+            return redirect(url_for('users.auth_logout'))
+    return current_app.auth0.authorize_redirect(redirect_uri=current_app.auth0_urls['callback'])
 
 
 @users.route('/auth_logout')
@@ -310,9 +297,8 @@ def auth_logout():
     logout_user()
     # Clear session stored data
     session.clear()
-    # Redirect user to logout endpoint  # 'HKepYEQYB1ur0u3KVj7fAnM4MMS0Iws7'  # test_app
-    # todo redirect to landing page once finished
-    params = {'returnTo': url_for('main.home', _external=True), 'client_id': 'mKcsol3URUljy1p7wEqgAwxOVRW4KFnd'}
+    # Redirect user to logout endpoint
+    params = {'returnTo': url_for('main.landing', _external=True), 'client_id': current_app.client_id}
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
 
 

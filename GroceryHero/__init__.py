@@ -18,12 +18,13 @@ mail = Mail()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(Config)  # Only takes config vars that overwrite app vars
     oauth = OAuth(app)
+    app.client_id = Config.client_id
     auth0 = oauth.register(
         'auth0',
-        client_id='mKcsol3URUljy1p7wEqgAwxOVRW4KFnd',
-        client_secret='SsV4jWNmXTm-icN8LO4ScwlBKKXucwfHax7tLt3eGrnZI2eW4PovAIgyl57OJQ9_',
+        client_id=app.client_id,
+        client_secret=Config.client_secret,
         api_base_url='https://dev-7z79kd24.us.auth0.com',
         access_token_url='https://dev-7z79kd24.us.auth0.com/oauth/token',
         authorize_url='https://dev-7z79kd24.us.auth0.com/authorize',
@@ -32,6 +33,7 @@ def create_app(config_class=Config):
         },
     )
     app.auth0 = auth0
+    app.auth0_urls = Config.auth0_urls
 
     db.init_app(app)
     bcrypt.init_app(app)

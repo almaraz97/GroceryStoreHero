@@ -13,6 +13,14 @@ def load_user(user_id):
 class User(db.Model, UserMixin):
     """
     Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}
+
+    Formats:
+    Grocery list: [{Aisle: [Ingredients],...}, Overlapping_ings]
+    Pantry: {Shelf: {Ingredient: [quantity, unit],...},...}
+    History: Current: [{title:[ingredients]},...];  Future: {datetime:[{title:[ingredients]},...]}
+    Ingredients: {Ingredient: [quantity, unit, price]}
+    Subscription: {datetime:level(hero, super-saver, eco-warrior)}
+    Messages = {}
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=False, nullable=False)
@@ -28,19 +36,16 @@ class User(db.Model, UserMixin):
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)  # Harmony Tool
-    # Format: [{Aisle: [Ingredients],...}, Overlapping_ings]
     grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False
     # overlap = db.Column(db.Integer, nullable=False, default=0)  # todo
     extras = db.Column(db.JSON, nullable=False, default=[])  # todo False
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    messages = db.Column(db.JSON, nullable=False, default={})  # {}
-    history = db.Column(db.JSON, nullable=False, default={})  # {datetime:[{title:[ingredients]},...]}
-    # #{Shelf: {Ingredient: [quantity, unit],...},...}
+    messages = db.Column(db.JSON, nullable=False, default={})
+    history = db.Column(db.JSON, nullable=False, default={})
     pantry = db.Column(db.JSON, nullable=False, default={})  # todo False
-    # todo be able to backref here
     # user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
     # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
-    # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)
+    # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)  # todo be able to backref these
     actions = db.relationship('Actions', backref='author', lazy=True)
     pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
     pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
@@ -49,8 +54,8 @@ class User(db.Model, UserMixin):
     feed_see = db.Column(db.JSON, nullable=False, default=[])  # Updates, Adds, Deletes, Clears
     feed_show = db.Column(db.JSON, nullable=False, default=[])  # Updates, Adds, Deletes, Clears
     grocery_bills = db.Column(db.JSON, nullable=False, default={})  # Track bill amount  ({datetime:float})
-    ingredients = db.Column(db.JSON, nullable=False, default={})   # {Ingredient: [quantity, unit, price]}
-    subscription = db.Column(db.JSON, nullable=False, default={})  # {datetime:level(hero, super-saver, eco-warrior)}
+    ingredients = db.Column(db.JSON, nullable=False, default={})
+    subscription = db.Column(db.JSON, nullable=False, default={})
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
 
@@ -208,4 +213,11 @@ class User_Act(db.Model):  # For comments and likes on other's actions
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     comment = db.Column(db.String(200), nullable=True)
     liked = db.Column(db.Boolean, nullable=False, default=False)
+
+
+# class User_User(db.Model):  # Messages, follow requests, etc between others
+#     act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+#     comment = db.Column(db.String(200), nullable=True)
+#     liked = db.Column(db.Boolean, nullable=False, default=False)
 
