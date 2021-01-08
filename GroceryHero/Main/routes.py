@@ -84,6 +84,7 @@ def home():
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics, borrowed=borrowed)
 
+
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
