@@ -2,15 +2,14 @@ import itertools
 import json
 import string
 from datetime import datetime
-from difflib import SequenceMatcher
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint, Response, session)
 from flask_login import current_user, login_required
 from GroceryHero import db
-from GroceryHero.HarmonyTool import recipe_stack
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
-from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, Measurements
-from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents
+from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm
+from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, get_recipes, \
+    remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture, Colors
 from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
@@ -19,87 +18,35 @@ from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFound
 recipes = Blueprint('recipes', __name__)
 
 
+@login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
-    if current_user.is_authenticated:
-        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-        friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
-        borrows = {x.recipe_id: x.in_menu for x in
-                   User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
-        in_menu = [recipe for recipe in recipe_list if recipe.in_menu]  # Recipe objects that are in menu
-        in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()
-        borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
-        recipe_list = sorted(recipe_list + borrowed, key=lambda x: x.title)
-        for i, recipe in enumerate(in_menu):  # Puts menu items first in recipe_list
-            recipe_list.remove(recipe)
-            recipe_list.insert(i, recipe)
-        in_menu = [recipe.title for recipe in in_menu]  # List of recipe titles in menu
-        recipe_history = [item for sublist in current_user.history[:current_user.harmony_preferences['history']]
-                          for item in sublist]
-        recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
-        # Recipe Harmony Tool Form
-        form = HarmonyForm()
-        form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
-        modifier = current_user.harmony_preferences['modifier']
-        form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
-            [x for x in range(50, 105, 5)] + ['No Limit']
-        form.similarity.default = 50
-        excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
-        form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
-        recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
-        colors = Colors.rec_colors
-        # about, harmony = (None, True) if current_user.pro else (True, None)
-        about = None if current_user.pro else True
-        if request.method == 'GET':
-            # check_preferences(current_user)
-            preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
-            form.similarity.data = preferences['similarity']
-            form.groups.data = preferences['groups']
-            possible = preferences['possible']
-            if preferences['recommended'] and preferences['recommended'] != '':  # If saved recommended is not empty
-                recommended = {tuple(group.split(', ')): preferences['recommended'][group] for
-                               group in preferences['recommended'] if tuple(group.split(', '))}
-                # todo might be redundant, (prevent deleted recipes from being linked in a recommended)
-                recommended = {key: value for key, value in recommended.items() if
-                               all(x in [r.title for r in recipe_list] for x in key)}
-        elif request.method == 'POST':  # Harmony or search button was pressed  # todo only on form submit
-            preferences = get_harmony_settings(current_user.harmony_preferences)
-            recipes = {r.title: r.quantity.keys() for r in recipe_list}
-            count = int(form.groups.data)  # + len(in_menu) if form.groups.data else len(in_menu)
-            recommended, possible = recipe_stack(recipes, count, max_sim=form.similarity.data,
-                                                 excludes=form.excludes.data + recipe_history, includes=in_menu,
-                                                 limit=1_000_000, **preferences)
-            in_menu = None if len(in_menu) < 1 else in_menu  # Don't show menu items in recommendation groups
-            if in_menu is not None:
-                for group in list(recommended.keys()):
-                    recommended[tuple([x for x in group if x not in in_menu])] = recommended[group]
-                    del recommended[group]
-            # Update user preferences
-            preference = {key: current_user.harmony_preferences[key] for key in current_user.harmony_preferences}
-            preference['similarity'] = form.similarity.data
-            preference['groups'] = form.groups.data
-            preference['recommended'] = {', '.join(list(group)): recommended[group] for group in recommended}
-            preference['possible'] = possible
-            current_user.harmony_preferences = preference
-            db.session.commit()
-        return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
-                               search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
-                               recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
-    return render_template('recipes.html', recipes=None, all_recipes=None, title='Recipes', sidebar=False, combos=0,
-                           recommended=None)
+    colors = Colors.rec_colors
+    followees, friend_dict = get_friends(current_user)
+    recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
+    form = HarmonyForm()
+    if current_user.pro:
+        form, recommended, recipe_history = load_harmonyform(current_user, form, in_menu, recipe_list)
+    if current_user.pro and form.validate_on_submit():  # Harmony or search button was pressed
+        preferences = get_harmony_settings(current_user.harmony_preferences)
+        recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history)
+        recommended = remove_menu_items(in_menu, recommended)
+        update_user_preferences(current_user, form, recommended, possible)
+    about = None if current_user.pro else True
+    return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
+                           search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
+                           recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
 
 
-@recipes.route('/friend_recipes', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/friend_recipes', methods=['GET', 'POST'])
 def friend_recipes():  # todo handle deleted account ids
     colors = Colors.rec_colors
     recipe_list = []
     borrows = {x.recipe_id: x.borrowed for x in
                User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
     user_recipes = Recipes.query.filter_by(author=current_user).all()
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    followees, friend_dict = get_friends(current_user)
     borrowed_list = []
     for friend in followees:  # Add their recipes to recipe_list
         for recipe in Recipes.query.filter_by(user_id=friend).all():
@@ -112,8 +59,8 @@ def friend_recipes():  # todo handle deleted account ids
                            friend_dict=friend_dict, all_friends=friend_dict, friends=True, switch=True)
 
 
-@recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 def friend_recipes_choice(friend=None):
     if friend is None or friend == current_user.id:
         return redirect(url_for('recipes.friend_recipes'))
@@ -139,12 +86,12 @@ def friend_recipes_choice(friend=None):
                            friend_dict=friend_dict, all_friends=all_friends, friends=True)
 
 
-
-@recipes.route('/public_recipes', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/public_recipes', methods=['GET', 'POST'])
 def public_recipes():
     colors = Colors.rec_colors
-    recipe_list = [x for x in Pub_Rec.query.all()]
+    user_id = current_user.id
+    recipe_list = [x for x in Pub_Rec.query.all() if x.user_id != user_id]
     recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
@@ -153,14 +100,22 @@ def public_recipes():
                            friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
 
 
-@recipes.route('/publify', methods=['GET', 'POST'])
+@recipes.route('/publify/<int:recipe_id>', methods=['GET', 'POST'])
 @login_required
-def publify_recipe():
-    return None
+def publify_recipe(recipe_id):
+    recipe = Recipes.query.filter_by(id=recipe_id).first()
+    # credit = current_user.credit
+    public = Pub_Rec(origin_id=recipe_id, user_id=current_user.id, ogusername=current_user.username,
+                     title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, link=recipe.link,
+                     recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre, picture=recipe.picture,
+                     servings=recipe.servings, credit=False)
+    db.session.add(public)
+    db.session.commit()
+    return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
+@login_required
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
-@login_required
 def friend_feed():  # todo pagination for posts
     colors = Colors.act_colors
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
@@ -172,8 +127,8 @@ def friend_feed():  # todo pagination for posts
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True)
 
 
-@recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
 def friend_feed_choice(friend_id=None):
     if friend_id is None:
         return redirect(url_for('recipes.friend_feed'))
@@ -182,7 +137,7 @@ def friend_feed_choice(friend_id=None):
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     if followee is not None and followee.status == 1:
-        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+        # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
         all_friends = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
         # friend = User.query.filter_by(id=followee.follow_id).all()
         # friend_dict = {friend.id: friend.username}
@@ -216,8 +171,8 @@ def friend_feed_choice(friend_id=None):
     #                        all_friend_recs=all_friend_recs, title_dict=title_dict)
 
 
-@recipes.route('/post/new', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/new', methods=['GET', 'POST'])
 def new_recipe():
     if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
         return redirect(url_for('main.account'))
@@ -231,15 +186,11 @@ def new_recipe():
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe', link=True)
 
 
-@recipes.route('/post/new/quantity', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/new/quantity', methods=['GET', 'POST'])
 def new_recipe_quantity():
-    recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
-    data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
-                                  'ingredient_type': recipe['quantity'][ingredient][1]}
-                                 for ingredient in recipe['quantity'].keys()]}
-    form = FullQuantityForm(data=data)
-    form.ingredients = [x for x in recipe['quantity'].keys()]
+    recipe = session['recipe']  # {RecipeName: string, Quantity: {ingredient: [value,type]}}
+    form = load_quantityform(recipe)
     if form.validate_on_submit():
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
@@ -261,8 +212,8 @@ def new_recipe_quantity():
                            recipe=recipe)
 
 
-@recipes.route('/recipes/link', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/recipes/link', methods=['GET', 'POST'])
 def recipe_from_link():
     form = RecipeLinkForm()
     if form.validate_on_submit():
@@ -284,8 +235,8 @@ def recipe_from_link():
     return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
 
 
-@recipes.route('/post/new_link', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/new_link', methods=['GET', 'POST'])
 def new_recipe_link():  # filling out the form data from link page
     form = RecipeForm()
     if request.method == 'GET':
@@ -308,8 +259,8 @@ def new_recipe_link():  # filling out the form data from link page
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
 
-@recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
 def update_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only update your own recipes
@@ -331,16 +282,11 @@ def update_recipe(recipe_id):
     return render_template('create_recipe.html', title='Update Recipe', form=form, legend='Update Recipe')  # todo
 
 
-@recipes.route('/post/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
 def update_recipe_quantity(recipe_id):
     recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
-    data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
-                                  'ingredient_type': recipe['quantity'][ingredient][1]}
-                                 for ingredient in recipe['quantity'].keys()]}
-    form = FullQuantityForm(data=data)  # List of dictionaries
-    form.ingredients = [x for x in recipe['quantity'].keys()]
-
+    form = load_quantityform(recipe)
     if form.validate_on_submit():
         formatted = {ingredient: [F['ingredient_quantity'], F['ingredient_type']] for ingredient, F in
                      zip(form.ingredients, form.ingredient_forms.data)}
@@ -361,8 +307,8 @@ def update_recipe_quantity(recipe_id):
                            recipe=recipe)
 
 
-@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
@@ -382,15 +328,15 @@ def recipe_single(recipe_id):
                            url=url)
 
 
-@recipes.route('/borrow/<int:recipe_id>', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/borrow/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
     recipe_post = Recipes.query.get_or_404(recipe_id)
     if recipe_post.user_id == current_user.id:
         return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
     else:
         borrowed = User_Rec.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
-        if borrowed is not None:  # If user currently has history with recipe
+        if borrowed is not None:  # If user currently has history with recipe  # todo move logic to utils
             if borrowed.borrowed:
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = False, False, False
                 borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
@@ -419,8 +365,8 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
-@recipes.route('/post/search', methods=['GET', 'POST'])
 @login_required
+@recipes.route('/post/search', methods=['GET', 'POST'])
 def recipes_search(recommended=None, possible=0):
     if current_user.is_authenticated:
         search = request.form['search']
@@ -428,9 +374,9 @@ def recipes_search(recommended=None, possible=0):
             return redirect(url_for('recipes.recipes_page'))
         colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
                   'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]  # todo replace
         friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes
+        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes  # TODO replace
         borrows = {x.recipe_id: x.in_menu for x in
                   User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
         borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
@@ -455,8 +401,8 @@ def recipes_search(recommended=None, possible=0):
         # form=form, sidebar=True, combos=possible, recommended=recommended,
 
 
-@recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
 @login_required
+@recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
 def delete_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only change your own recipes
@@ -484,14 +430,18 @@ def delete_recipe(recipe_id):
 @login_required
 def change_to_menu():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
-    recipe = Recipes.query.get_or_404(recipe_id)
-    if recipe.author != current_user:
-        recipe = User_Rec.query.get([current_user.id, recipe_id])
-        if recipe is None:
-            json.dumps({'result': 'success'})
-    recipe.in_menu = not recipe.in_menu
-    recipe.eaten = False
-    update_grocery_list(current_user)
+    public = request.form.get(['public'], False)
+    if not public:
+        recipe = Recipes.query.get_or_404(recipe_id)
+        if recipe.author != current_user:
+            recipe = User_Rec.query.get([current_user.id, recipe_id])
+            if recipe is None:
+                json.dumps({'result': 'success'})
+        recipe.in_menu = not recipe.in_menu
+        recipe.eaten = False
+        update_grocery_list(current_user)
+    else:
+        pass
     db.session.commit()
     return json.dumps({'result': 'success'})
 
@@ -501,25 +451,28 @@ def change_to_menu():  # JavaScript way of adding to menu without reload
 def change_to_borrow():  # JavaScript way of adding to menu without reload
     recipe_id = int(request.form['recipe_id'])
     recipe = Recipes.query.get_or_404(recipe_id)
-    if recipe.author != current_user:
-        title = recipe.title
-        recipe = User_Rec.query.get([current_user.id, recipe_id])
-        if recipe is None:  # If user hasn't borrowed this recipe before make new entry
-            user_id = current_user.id
-            borrow = User_Rec(user_id=user_id, recipe_id=recipe_id, borrowed=True,
-                              borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
-            action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow(),
-                             titles=[title])
-            db.session.add(action)
-            db.session.add(borrow)
-            db.session.commit()
-            return json.dumps({'result': 'success'})
-        # Person has borrowed this recipe before (entry exists)
-        recipe.borrowed = not recipe.borrowed
-        date = datetime.utcnow().strftime('%Y-%m-%d-%H-%M')
-        recipe.borrowed_dates['Borrowed'].append(date) if recipe.borrowed else recipe.borrowed_dates['Unborrowed'].append(date)
-        recipe.in_menu = False
-        recipe.eaten = False
+    public = request.form.get(['public'], False)
+    if not public:
+        if recipe.author != current_user:
+            title = recipe.title
+            recipe = User_Rec.query.get([current_user.id, recipe_id])
+            if recipe is None:  # If user hasn't borrowed this recipe before make new entry
+                user_id = current_user.id
+                borrow = User_Rec(user_id=user_id, recipe_id=recipe_id, borrowed=True,
+                                  borrowed_dates={'Borrowed': [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')], 'Unborrowed': []})
+                action = Actions(user_id=user_id, type_='Borrow', recipe_ids=[recipe_id], date_created=datetime.utcnow(),
+                                 titles=[title])
+                db.session.add(action)
+                db.session.add(borrow)
+                db.session.commit()
+                return json.dumps({'result': 'success'})
+            # Person has borrowed this recipe before (entry exists)
+            recipe.borrowed = not recipe.borrowed
+            date = datetime.utcnow().strftime('%Y-%m-%d-%H-%M')
+            recipe.borrowed_dates['Borrowed'].append(date) if recipe.borrowed else recipe.borrowed_dates['Unborrowed'].append(date)
+            recipe.in_menu = False
+            recipe.eaten = False
+    else:
         db.session.commit()
     return json.dumps({'result': 'success'})
 
@@ -577,7 +530,7 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
     ids = json.loads(ids)
     recipe_names = [Recipes.query.filter_by(id=ID).first().title for ID in ids]
     recipe_names = [x for x in recipe_names if x is not None]
-    dictionary = current_user.harmony_preferences.copy()
+    dictionary = current_user.harmony_preferences.copy()  # todo move to utils
     if isinstance(dictionary['tastes'], str):  # If the entries are JSON for some reason?
         dictionary['tastes'] = json.loads(dictionary['tastes'])
     for combo in itertools.combinations(recipe_names, 2):

@@ -1,10 +1,9 @@
 from difflib import SequenceMatcher
-
 from flask import url_for
-
 from GroceryHero import db
-from GroceryHero.Recipes.forms import Measurements
-from GroceryHero.models import Recipes, Followers, User
+from GroceryHero.HarmonyTool import recipe_stack
+from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
+from GroceryHero.models import Recipes, Followers, User, User_Rec
 
 
 def parse_ingredients(ingredients):
@@ -180,6 +179,93 @@ def generate_feed_contents(friend_acts):
         card = {'user_id': act.user_id, 'content': content, 'date_created': act.date_created, 'type_': act.type_}
         actions.append(card)
     return actions
+
+
+def get_friends(user):
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=user.id).all() if x.status == 1]
+    followee_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    return followees, followee_dict
+
+
+def get_recipes(user):
+    recipe_list = Recipes.query.filter_by(author=user).order_by(Recipes.title).all()  # Get all recipes
+    borrows = {x.recipe_id: x.in_menu for x in
+               User_Rec.query.filter_by(user_id=user.id).all() if x.borrowed}
+    in_menu = [recipe for recipe in recipe_list if recipe.in_menu]  # Recipe objects that are in menu
+    in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()
+    borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
+    recipe_list = sorted(recipe_list + borrowed, key=lambda x: x.title)
+    for i, recipe in enumerate(in_menu):  # Puts menu items first in recipe_list
+        recipe_list.remove(recipe)
+        recipe_list.insert(i, recipe)
+    recipe_ids = {recipe.title: recipe.id for recipe in recipe_list}
+    return recipe_list, borrows, in_menu, recipe_ids
+
+
+def update_user_preferences(user, form, recommended, possible):
+    preference = {key: user.harmony_preferences[key] for key in user.harmony_preferences}
+    preference['similarity'] = form.similarity.data
+    preference['groups'] = form.groups.data
+    preference['recommended'] = {', '.join(list(group)): recommended[group] for group in recommended}
+    preference['possible'] = possible
+    user.harmony_preferences = preference
+    db.session.commit()
+
+
+def remove_menu_items(in_menu, recommended):
+    in_menu = None if len(in_menu) < 1 else in_menu  # Don't show menu items in recommendation groups
+    if in_menu is not None:
+        for group in list(recommended.keys()):
+            recommended[tuple([x for x in group if x not in in_menu])] = recommended[group]
+            del recommended[group]
+    return recommended
+
+
+def recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history):
+    recipes = {r.title: r.quantity.keys() for r in recipe_list}
+    count = int(form.groups.data)  # + len(in_menu) if form.groups.data else len(in_menu)
+    recommended, possible = recipe_stack(recipes, count, max_sim=form.similarity.data,
+                                         excludes=form.excludes.data + recipe_history, includes=in_menu,
+                                         limit=1_000_000, **preferences)
+    return recommended, possible
+
+
+def load_harmonyform(current_user, form, in_menu, recipe_list):
+    in_menu = [recipe.title for recipe in in_menu]  # List of recipe titles in menu
+    recipe_history = [item for sublist in current_user.history[:current_user.harmony_preferences['history']]
+                      for item in sublist]
+    recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
+
+    form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
+    modifier = current_user.harmony_preferences['modifier']
+    form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
+        [x for x in range(50, 105, 5)] + ['No Limit']
+    form.similarity.default = 50
+    excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
+    form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
+
+    # check_preferences(current_user)
+    preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
+    form.similarity.data = preferences['similarity']
+    form.groups.data = preferences['groups']
+    possible = preferences['possible']
+    if preferences['recommended'] and preferences['recommended'] != '':  # If saved recommended is not empty
+        recommended = {tuple(group.split(', ')): preferences['recommended'][group] for
+                       group in preferences['recommended'] if tuple(group.split(', '))}
+        # todo might be redundant, (prevent deleted recipes from being linked in a recommended)
+        recommended = {key: value for key, value in recommended.items() if
+                       all(x in [r.title for r in recipe_list] for x in key)}
+    return form, recommended, recipe_history
+
+
+def load_quantityform(recipe):
+    data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
+                                  'ingredient_type': recipe['quantity'][ingredient][1]}
+                                 for ingredient in recipe['quantity'].keys()]}
+    form = FullQuantityForm(data=data)
+    form.ingredients = [x for x in recipe['quantity'].keys()]
+    return form
+
 
 # @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
 # @login_required

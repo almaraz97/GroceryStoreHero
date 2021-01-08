@@ -2,13 +2,11 @@
 $(document).ready(function() {
     $('.updateButton').on('click', function(){
         let recipe_id = $(this).attr('r_id')
-
         req = $.ajax({
             url : '/recipes/change_menu',
             type: 'POST',
             data: {recipe_id: recipe_id}
             });
-
         if (this.classList.contains("btn-success")){
             $(this).removeClass("btn-success").addClass("btn-light");
         } else{
@@ -21,13 +19,11 @@ $(document).ready(function() {
 $(document).ready(function() {
     $('.borrowButton').on('click', function(){
         let recipe_id = $(this).attr('r_id')
-
         req = $.ajax({
             url : '/recipes/change_borrow',
             type: 'POST',
             data: {recipe_id: recipe_id}
             });
-
         if (this.classList.contains("btn-info")){
             $(this).removeClass("btn-info").addClass("btn-light");
         } else{
@@ -42,23 +38,32 @@ $(document).ready(function() {
         let recipe_id = $(this).attr('e_id')
         let div = document.getElementById(recipe_id)
         let button = div.getElementsByTagName('BUTTON')[0]
-        console.log(button)
-
         req = $.ajax({
             url : '/home/change_eaten',
             type: 'POST',
             data: {recipe_id: recipe_id}
             });
-
         if (button.classList.contains("btn-success")){
         $(button).removeClass("btn-success").addClass("btn-secondary");
         } else{
         $(button).removeClass("btn-secondary").addClass("btn-success");
         }
+        // part that checks if all menu items are eaten, allows clear
+        // let buttons = document.getElementsByClassName('menuItems');
+        // let counter = 0
+        // for (var buttonKey in button) {
+        //     if (buttonKey.eaten){
+        //         counter++
+        //     }
+        // }
+        // if (counter==buttons.length){
+        //     let clear = document.getElementsByClassName('clearButton')
+        //     clear.value = 'true'
+        // }
     });
 });
 
-// Strike-through on grocery-list items
+// Strike-through on grocery-list items // todo not working
 $(document).ready(function() {
     $('.groceries').on("click", function(){
     // let strike = $(this).attr('strike')
@@ -78,7 +83,6 @@ $(document).ready(function() {
         $(this).wrapAll("<s />");
         strike = 1
     }
-
     req = $.ajax({
         url : '/home/change_grocerylist',
         type: 'POST',
@@ -87,7 +91,7 @@ $(document).ready(function() {
     });
 });
 
-// Change menu button color
+// Change menu button color and remove from menu in landing page
 $(document).ready(function() {
     $('.menuButton').on('click', function() {
         if (this.classList.contains("btn-success")) {
@@ -98,9 +102,7 @@ $(document).ready(function() {
             this.value = "true";
         }
         let menuItems = document.getElementsByClassName('card');
-        // let menuItem = $(menuItems).find(x => Number(x.id) == this.id);
         for(let i = 0; menuItems.length; i++){
-            // console.log(this.id, menuItems[i].id, this.id === menuItems[i].id);
             if(menuItems[i].id === "0"){
                 emptyItem = menuItems[i];
             }
@@ -109,36 +111,22 @@ $(document).ready(function() {
                 break;
             }
         }
-
-
         if(this.value === 'true'){
             $(menuItem).fadeIn(0);
         } else {
-            // if(hidden === 4) {
-                $(menuItem).fadeOut(0);
-            // } else{
-            //     $(menuItem).fadeOut(200);
-            // }
+            $(menuItem).fadeOut(0);
         }
-
-        console.log(menuItems)
         let hidden = 0
         for(x of menuItems){
-            // console.log(x.style.display)
             if(x.style.display === "none"){
                 hidden++;
             }
         }
-
-        // console.log(hidden)
         if(hidden === 4){
-            // $(emptyItem).fadeOut(200);
             $(emptyItem).fadeIn(0);
         } else{
             $(emptyItem).fadeOut(0);
         }
-        // console.log("Faded: ", menuItem)
-        // console.log("")
     });
 });
 
@@ -174,7 +162,6 @@ $(document).ready(function() {
 //            type: 'POST',
 //            data: {recipe_id: recipe_id}
 //            });
-
 //        if (this.classList.contains("btn-success")){
 //        $(this).removeClass("btn-success").addClass("btn-light");
 //        } else{
@@ -182,3 +169,6 @@ $(document).ready(function() {
 //        }
 //    });
 //});
+
+// todo add clear button ability when all recipes are eaten
+

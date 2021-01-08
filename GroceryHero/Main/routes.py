@@ -53,31 +53,33 @@ def landing():
 @login_required
 @main.route('/home')
 def home():
+    authenticated = current_user.is_authenticated
+    if not authenticated:
+        return redirect(url_for('main.landing'))
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
         [], [], [], 0, 0, None, None, None, None, None  # []*3, 0, 0, None*4
-    if current_user.is_authenticated:
-        menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
-                     if recipe.in_menu]
-        borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
-        menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
-        aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
-        groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
-        for aisle in groceries:  # Turns ingredients into Measurement objects
-            groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
-                                for item in groceries[aisle]]
-        aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
-        menu_list = sorted(menu_list, key=lambda x: x.eaten)
-        if len(menu_list) > 1:
-            preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
-            recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
-            modifier = 1 / (len(recipes) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
-            harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
-        username = current_user.username.capitalize()
-        statistics = get_history_stats(current_user)
-        # if current_user.id == 9 and current_user.username == 'Andrea':
-        #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
-        #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-        #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
+    menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
+                 if recipe.in_menu]
+    borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
+    menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
+    aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
+    groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
+    for aisle in groceries:  # Turns ingredients into Measurement objects
+        groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
+                            for item in groceries[aisle]]
+    aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
+    menu_list = sorted(menu_list, key=lambda x: x.eaten)
+    if len(menu_list) > 1:
+        preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
+        recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
+        modifier = 1 / (len(recipes) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
+        harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
+    username = current_user.username.capitalize()
+    statistics = get_history_stats(current_user)
+    # if current_user.id == 9 and current_user.username == 'Andrea':
+    #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
+    #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
+    #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics, borrowed=borrowed)

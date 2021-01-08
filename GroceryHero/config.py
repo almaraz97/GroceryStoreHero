@@ -13,7 +13,4 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = config.get('EMAIL_USER')
     MAIL_PASSWORD = config.get('EMAIL_PASS')
-    client_id = config.get('client_id')
-    client_secret = config.get('client_secret')
-    auth0_urls = config.get('auth0_urls')
 
