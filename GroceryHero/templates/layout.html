@@ -230,7 +230,32 @@
             <li>Borrowed by others: {{ others_borrowed }} times</li>
             <li>Downloaded by others: {{ other_downloaded }} times</li>
           </ul>
-
+        <!-- Modal -->
+        <div class="modal fade" id="pictureModal" tabindex="-1" role="dialog" aria-labelledby="pictureModalLabel" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="pictureModalLabel">Upload Recipe Picture</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-footer">
+                <form method="POST" action="" enctype="multipart/form-data" id="picture">
+                  {{ form.hidden_tag() }}
+                  {{ form.picture(class="form-control-file") }}
+                  {% if form.picture.errors %}
+                    {% for error in form.picture.errors %}
+                      <span class="text-danger">{{ error }}</span><br>
+                    {% endfor %}
+                  {% endif %}
+                </form>
+                {{ form.submit(class="btn btn-info", form="picture") }}
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
         {% elif suggestion is defined %}
             <h3>Recipe Suggestion Tool</h3>
             <p class='text-muted border-bottom pb-2'>This tool will learn your eating patterns and suggest things to add to your menu.
@@ -489,32 +514,6 @@
 {#      {% endif %}#}
 {#    </div>#}
 {#  </nav>#}
-<!-- Modal -->
-<div class="modal fade" id="pictureModal" tabindex="-1" role="dialog" aria-labelledby="pictureModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="pictureModalLabel">Upload Recipe Picture</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-footer">
-              <form method="POST" action="" enctype="multipart/form-data" id="picture">
-                {{ form.hidden_tag() }}
-                {{ form.picture(class="form-control-file") }}
-                {% if form.picture.errors %}
-                  {% for error in form.picture.errors %}
-                    <span class="text-danger">{{ error }}</span><br>
-                  {% endfor %}
-                {% endif %}
-              </form>
-              {{ form.submit(class="btn btn-info", form="picture") }}
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 </main>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
