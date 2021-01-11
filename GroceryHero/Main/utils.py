@@ -8,7 +8,7 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from GroceryHero import db
 from GroceryHero.Recipes.forms import Measurements
-from GroceryHero.models import Recipes, Aisles, User_Rec
+from GroceryHero.models import Recipes, Aisles, User_Rec, User_PubRec, Pub_Rec
 
 
 def aisle_grocery_sort(menu_list, aisles):
@@ -199,6 +199,15 @@ def get_harmony_settings(user_preferences, holds=None):
         preferences['modifier'] = user_preferences['modifier']
 
     return preferences
+
+
+def get_all_menu_recs(user):
+    menu_recipes = Recipes.query.filter_by(author=user).filter_by(in_menu=True).all()  # Get all recipes
+    borrowed_recipes = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]
+    menu_recipes = menu_recipes + Recipes.query.filter(Recipes.id.in_(borrowed_recipes)).all()
+    # borrowed_pubs = [x.recipe_id for x in User_PubRec.query.filter_by(user_id=user.id, in_menu=True).all()]
+    # menu_recipes = menu_recipes + Pub_Rec.query.filter(Pub_Rec.recipe_id.in_(borrowed_pubs)).all()
+    return menu_recipes
 
 
 def get_history_stats(user):  # For dashboard basic stats

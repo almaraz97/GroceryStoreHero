@@ -1,4 +1,6 @@
 from difflib import SequenceMatcher
+
+import pytz
 from flask import url_for
 from GroceryHero import db
 from GroceryHero.HarmonyTool import recipe_stack
@@ -176,6 +178,7 @@ def generate_feed_contents(friend_acts):
             url = url_for('recipes.recipe_single', recipe_id=id_) if id_ is not None else '#'
             content += act.type_.lower() + 'd '
             content += f'<a href="{url}">{title} </a>'
+        act.date_created.astimezone(pytz.timezone('US/Eastern'))
         card = {'user_id': act.user_id, 'content': content, 'date_created': act.date_created, 'type_': act.type_}
         actions.append(card)
     return actions
@@ -249,6 +252,7 @@ def load_harmonyform(current_user, form, in_menu, recipe_list):
     form.similarity.data = preferences['similarity']
     form.groups.data = preferences['groups']
     possible = preferences['possible']
+    recommended = {}
     if preferences['recommended'] and preferences['recommended'] != '':  # If saved recommended is not empty
         recommended = {tuple(group.split(', ')): preferences['recommended'][group] for
                        group in preferences['recommended'] if tuple(group.split(', '))}

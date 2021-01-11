@@ -7,10 +7,10 @@ from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
 from GroceryHero.Users.forms import FullHarmonyForm
-from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
+from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User_PubRec, Pub_Rec
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, apriori_test, convert_frac, stats_graph)
+                                    show_harmony_weights, apriori_test, convert_frac, stats_graph, get_all_menu_recs)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 from sklearn.decomposition import PCA
@@ -40,7 +40,6 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 
 # todo prevent update on feed abuse
 # todo see/show specific actions checks that user specifies
-# todo create only 15 recipes, borrow 20 recipes
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -55,13 +54,14 @@ def landing():
 def home():
     authenticated = current_user.is_authenticated
     if not authenticated:
-        return redirect(url_for('main.landing'))
+        return redirect(url_for('users.auth_login'))
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
         [], [], [], 0, 0, None, None, None, None, None  # []*3, 0, 0, None*4
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()
                  if recipe.in_menu]
     borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
+
     aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
     for aisle in groceries:  # Turns ingredients into Measurement objects
@@ -88,19 +88,18 @@ def home():
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
-    menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
-    borrowed_recipes = [x.recipe_id for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()]
-    menu_recipes = menu_recipes + Recipes.query.filter(Recipes.id.in_(borrowed_recipes)).all()
+    menu_recipes = get_all_menu_recs(current_user)
     if len(menu_recipes) > 0:
         histories = current_user.history.copy()
         history = []
         for recipe in menu_recipes:
             if isinstance(recipe, Recipes):
                 history.append(recipe.id)
-            else:
+            else:  # Public recipe
                 history.append(recipe.recipe_id)
             recipe.in_menu = False
             recipe.eaten = False
+            recipe.times_eaten = recipe.times_eaten + 1
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
         histories.append(history)

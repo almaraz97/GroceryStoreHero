@@ -20,50 +20,6 @@ import json
 users = Blueprint('users', __name__)
 
 
-# @users.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('main.home'))
-#     form = RegistrationForm()
-#     if form.validate_on_submit():
-#         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-#         user = User()
-#         user.username = form.username.data
-#         user.email = form.email.data
-#         user.password = hashed_password
-#         user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                     'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                     'recipe_ids': {}, 'menu_weight': 1, 'algorithm': 'Balanced'}
-#         db.session.add(user)
-#         db.session.commit()
-#         flash(f'Your account has been created. You can now log in!', 'success')
-#         return redirect(url_for("users.login"))
-#     return render_template('register.html', title='Register', form=form)
-
-
-# @users.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('main.home'))
-#     form = LoginForm()  # Won't be necessary
-#     if form.validate_on_submit():
-#         user = User.query.filter_by(email=form.email.data).first()
-#         if user and bcrypt.check_password_hash(user.password, form.password.data):
-#             login_user(user, remember=form.remember.data)
-#             next_page = request.args.get('next')
-#             ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
-#             return redirect(next_page) if next_page else redirect(url_for('main.home'))
-#         else:
-#             flash(f"Login Unsuccessful. Please check email or password", 'danger')
-#     return render_template('login.html', title='Login', form=form)
-
-
-# @users.route('/logout')
-# def logout():
-#     logout_user()
-#     return redirect(url_for('main.home'))
-
-
 @users.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
@@ -95,7 +51,7 @@ def account():
         flash('Your settings have been updated', 'success')
         return redirect(url_for('users.account'))
     if form4.validate_on_submit():
-        token = 4040404
+        token = 4040404  # todo put in session
         return redirect(url_for('users.delete_account', token=token))
     if request.method == 'GET':
         form.username.data = current_user.username
@@ -111,27 +67,6 @@ def account():
 @login_required
 def delete_account(token):
     if token == 4040404:  # todo look up if this is in tutorial
-        # recipes = Recipes.query.filter_by(author=current_user).all()
-        # for recipe in recipes:  # delete recipes
-        #     db.session.delete(recipe)
-        # aisles = Aisles.query.filter_by(author=current_user).all()
-        # for aisle in aisles:  # delete aisles
-        #     db.session.delete(aisle)
-        # followers = Followers.query.filter_by(author=current_user).all()
-        # for follower in followers:  # delete followers
-        #     db.session.delete(follower)
-        # actions = Actions.query.filter_by(author=current_user).all()
-        # for action in actions:  # delete actions
-        #     db.session.delete(action)
-        # User_rec = User_Rec.query.filter_by(author=current_user).all()
-        # for rec in User_rec:  # delete user borrows
-        #     db.session.delete(rec)
-        # User_pubrec = User_PubRec.query.filter_by(author=current_user).all()
-        # for rec in User_pubrec:  # delete user borrows
-        #     db.session.delete(rec)
-        # User_act = User_Act.query.filter_by(author=current_user).all()
-        # for act in User_act:  # delete user comments
-        #     db.session.delete(act)
         for x in [Recipes, Aisles, Followers, Actions, User_Rec, User_PubRec, User_Act]:
             try:
                 z = x.query.filter_by(author=current_user).all()
@@ -229,30 +164,6 @@ def callback_handling():
     return redirect(url_for('users.auth_login'))
 
 
-"""
-"<SecureCookieSession 
-{
-'_auth0_authlib_nonce_': 'QiB81IV6QaVkBjDtUaOf', 
-'_fresh': False, 
-'csrf_token': '72cff6566f5bda048a2adc4c24953da720a5a955', 
-'jwt_payload': {
-    'sub': 'auth0|5fe4035dbbc4f9006f1f9f55', 
-    'nickname': 'nintendoboy7', 
-    'name': 'nintendoboy7@msn.com', 
-    'picture': 'https://s.gravatar.com/avatar/d893c1fdc5d09d9244566259ea2cf744?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fni.png', 
-    'updated_at': '2020-12-24T03:20:16.007Z', 
-    'email': 'nintendoboy7@msn.com', 
-    'email_verified': True
-                }, 
-'profile': {
-    'user_id': 'auth0|5fe4035dbbc4f9006f1f9f55', 
-    'name': 'nintendoboy7@msn.com', 
-    'picture': 'https://s.gravatar.com/avatar/d893c1fdc5d09d9244566259ea2cf744?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fni.png'
-    }
-}>
-"""
-
-
 @users.route('/auth_login', methods=['GET', 'POST'])
 def auth_login():
     if current_user.is_authenticated:
@@ -268,7 +179,7 @@ def auth_login():
                 ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
                 return redirect(next_page) if next_page else redirect(url_for('main.home'))
             else:  # User is not in database, register them
-                name = session['jwt_payload'].get('name')
+                name = session['jwt_payload'].get('nickname')
                 username = name if name is not None else email
                 user = User(email=email, username=username)
                 picture_url = session['jwt_payload'].get('picture')

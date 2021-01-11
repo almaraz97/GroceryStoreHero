@@ -21,10 +21,10 @@ recipes = Blueprint('recipes', __name__)
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
+    recipe_history, form = [], HarmonyForm()
     colors = Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
-    form = HarmonyForm()
     if current_user.pro:
         form, recommended, recipe_history = load_harmonyform(current_user, form, in_menu, recipe_list)
     if current_user.pro and form.validate_on_submit():  # Harmony or search button was pressed
@@ -119,7 +119,7 @@ def publify_recipe(recipe_id):
 def friend_feed():  # todo pagination for posts
     colors = Colors.act_colors
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-    # followees = followees + [current_user.id]
+    # followees = followees + [current_user.id]  ## For testing
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees)).all()
     cards = generate_feed_contents(friend_acts)
@@ -155,8 +155,6 @@ def friend_feed_choice(friend_id=None):
 # @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
 # @login_required
 # def linked_user():  # todo pagination for posts or limit by date?
-#     colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997', 'Clear': '#6610f2', 'Borrow': '#17a2b8',
-#               'Unborrow': '#6c757d'}
     # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     # cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)
@@ -326,6 +324,29 @@ def recipe_single(recipe_id):
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
                            url=url)
+
+
+@login_required
+@recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+def recipe_download(recipe_id):
+    all_recipes = Recipes.query.filter_by(author=current_user).all()
+    recipe = Recipes.query.filter_by(id=recipe_id).first()
+    for r in all_recipes:
+        if recipe == r:
+            flash(f'Recipe {recipe.title} already in recipe library', 'danger')
+            return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
+    new_recipe = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, author=current_user,
+                         link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
+                         picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
+                         price=recipe.price, options=recipe.options)
+    db.session.add(recipe)
+    db.session.commit()
+    action = Actions(user_id=current_user.id, type_='Download', recipe_ids=[new_recipe.id], date_created=datetime.utcnow(),
+                     titles=[new_recipe.title])
+    db.session.add(action)
+    db.session.commit()
+    flash(f'{recipe.title} added to your library!', 'success')
+    return redirect(url_for('recipes.recipe_single', recipe_id=new_recipe.id))
 
 
 @login_required
