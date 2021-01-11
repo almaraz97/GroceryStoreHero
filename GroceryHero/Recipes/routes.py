@@ -315,13 +315,17 @@ def recipe_single(recipe_id):
     recipe_post.quantity = quantity
     url = recipe_post.picture
     url = url if url is not None else False  # todo might not be neccesary
+    # eaten and borrowed by others
+    others_eaten = sum(x.times_eaten for x in User_Rec.query.filter_by(recipe_id=recipe_id).all())
+    others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
+    other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
     if request.method == 'POST':  # Download recipe
         if form.validate_on_submit():
             if form.picture.data:
                 picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
                 recipe_post.picture = picture_file
                 db.session.commit()
-                flash('Your recipe has been updated', 'success')
+                flash('Your image has been uploaded!', 'success')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
         if recipe_post.user_id == current_user.id:
             title = recipe_post.title
@@ -331,7 +335,8 @@ def recipe_single(recipe_id):
         else:  # POST on recipe single borrows if not same user
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
-                           url=url, form=form)
+                           url=url, form=form, others_eaten=others_eaten, others_borrowed=others_borrowed,
+                           other_downloaded=other_downloaded)
 
 
 @login_required
@@ -343,6 +348,7 @@ def recipe_download(recipe_id):
         if recipe == r:
             flash(f'Recipe {recipe.title} already in recipe library', 'danger')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
+
     new_recipe = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, author=current_user,
                          link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
                          picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
@@ -428,6 +434,9 @@ def recipes_search(recommended=None, possible=0):
         return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
                                colors=colors, borrows=borrows, friend_dict=friend_dict)
         # form=form, sidebar=True, combos=possible, recommended=recommended,
+
+
+# ######################################### functions, not views #################################################
 
 
 @login_required

@@ -152,6 +152,29 @@ class Followers(db.Model):
         return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
 
 
+class User_Rec(db.Model):  # For borrowed recipes
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
+    borrowed = db.Column(db.Boolean, nullable=False, default=False)
+    borrowed_dates = db.Column(db.JSON, nullable=False, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
+    downloaded = db.Column(db.Boolean, nullable=False, default=False)
+    downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
+    in_menu = db.Column(db.Boolean, nullable=False, default=False)
+    eaten = db.Column(db.Boolean, nullable=False, default=False)
+    times_eaten = db.Column(db.Integer, nullable=True, default=0)
+    hidden = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
+
+
+class User_Act(db.Model):  # For comments and likes on other's actions
+    act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    comment = db.Column(db.String(200), nullable=True)
+    liked = db.Column(db.Boolean, nullable=False, default=False)
+
+
 class Pub_Rec(db.Model):
     p_id = db.Column(db.Integer, primary_key=True)  # todo why is this not regular id?
     origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
@@ -179,22 +202,6 @@ class Pub_Rec(db.Model):
         return False
 
 
-class User_Rec(db.Model):  # For borrowed recipes
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
-    borrowed = db.Column(db.Boolean, nullable=False, default=False)
-    borrowed_dates = db.Column(db.JSON, nullable=False, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
-    downloaded = db.Column(db.Boolean, nullable=False, default=False)
-    downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
-    in_menu = db.Column(db.Boolean, nullable=False, default=False)
-    eaten = db.Column(db.Boolean, nullable=False, default=False)
-    times_eaten = db.Column(db.Integer, nullable=True, default=0)
-    hidden = db.Column(db.Boolean, nullable=False, default=False)
-
-    def __repr__(self):
-        return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
-
-
 class User_PubRec(db.Model):  # For borrowed recipes
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
     recipe_id = db.Column(db.Integer, db.ForeignKey('pub__rec.p_id'), primary_key=True, nullable=False)
@@ -206,13 +213,6 @@ class User_PubRec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
-
-
-class User_Act(db.Model):  # For comments and likes on other's actions
-    act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    comment = db.Column(db.String(200), nullable=True)
-    liked = db.Column(db.Boolean, nullable=False, default=False)
 
 
 # class User_User(db.Model):  # Messages, follow requests, etc between others
