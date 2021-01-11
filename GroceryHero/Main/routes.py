@@ -41,6 +41,8 @@ handle '2 1/2' in recipe scraper, show recipe type in recipe single
 
 @main.route('/', methods=['GET', 'POST'])
 def landing():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
     if request.method == 'POST':  # send me an email
         pass
     return render_template('landing.html')

@@ -7,7 +7,7 @@ from flask import current_app
 # from authlib.integrations.flask_client import OAuth
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
-from GroceryHero import db, bcrypt, Config
+from GroceryHero import db  # , bcrypt, Config
 from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_PubRec, User_Rec, User_Act
 from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountForm, DeleteAccountForm,
                                      RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
@@ -98,35 +98,35 @@ def export():
     return redirect(url_for('users.account'))
 
 
-@users.route('/reset_password', methods=['GET', 'POST'])
-def reset_request():  # Sends user email to reset password
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
-    form = RequestResetForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        send_reset_email(user)
-        flash('An email has been sent with instructions to reset your password', 'info')
-        return redirect(url_for('users.login'))
-    return render_template('reset_request.html', title='Reset Password', form=form)
+# @users.route('/reset_password', methods=['GET', 'POST'])
+# def reset_request():  # Sends user email to reset password
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     form = RequestResetForm()
+#     if form.validate_on_submit():
+#         user = User.query.filter_by(email=form.email.data).first()
+#         send_reset_email(user)
+#         flash('An email has been sent with instructions to reset your password', 'info')
+#         return redirect(url_for('users.login'))
+#     return render_template('reset_request.html', title='Reset Password', form=form)
 
 
-@users.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_token(token):  # Where they reset password with active token
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
-    user = User.verify_reset_token(token)
-    if user is None:
-        flash('That is an invalid or expired token', 'warning')
-        return redirect(url_for('users.reset_request'))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user.password = hashed_password
-        db.session.commit()
-        flash(f'Your password has been updated! You are now able to log in', 'success')
-        return redirect(url_for("users.login"))
-    return render_template('reset_token.html', title='Reset Password', form=form)
+# @users.route('/reset_password/<token>', methods=['GET', 'POST'])
+# def reset_token(token):  # Where they reset password with active token
+#     if current_user.is_authenticated:
+#         return redirect(url_for('main.home'))
+#     user = User.verify_reset_token(token)
+#     if user is None:
+#         flash('That is an invalid or expired token', 'warning')
+#         return redirect(url_for('users.reset_request'))
+#     form = ResetPasswordForm()
+#     if form.validate_on_submit():
+#         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+#         user.password = hashed_password
+#         db.session.commit()
+#         flash(f'Your password has been updated! You are now able to log in', 'success')
+#         return redirect(url_for("users.login"))
+#     return render_template('reset_token.html', title='Reset Password', form=form)
 
 
 # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero # Auth Zero

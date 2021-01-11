@@ -586,3 +586,23 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
     current_user.harmony_preferences = dictionary
     db.session.commit()
     return redirect(url_for('recipes.recipes_page'))
+
+
+def add_eatens():
+    all_users = User.query.all()
+    for user in all_users:
+        user_history = [item for sublist in user.history for item in sublist]
+        if user_history:
+            counts = dict()
+            for i in user_history:
+                counts[i] = counts.get(i, 0) + 1
+            for key in counts:
+                recipe = Recipes.query.filter_by(id=key).first()
+                if recipe is not None:
+                    if recipe in user.recipes:
+                        recipe.times_eaten = counts[key]
+                    else:
+                        recipe = User_Rec.query.filter_by(recipe_id=key, user_id=user.id).first()
+                        if recipe is not None:
+                            recipe.times_eaten = counts[key]
+            # db.session.commit()
