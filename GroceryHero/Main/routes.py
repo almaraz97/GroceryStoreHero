@@ -5,7 +5,8 @@ import string
 from flask import render_template, url_for, redirect, Blueprint, request, session, current_app
 from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm
-from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
+from GroceryHero.Recipes.forms import FullQuantityForm
+from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User_PubRec, Pub_Rec
 from flask_login import current_user, login_required
@@ -13,11 +14,7 @@ from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, g
                                     show_harmony_weights, apriori_test, convert_frac, stats_graph, get_all_menu_recs)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-import numpy as np
-# import umap.umap_ as umap
+
 
 main = Blueprint('main', __name__)
 

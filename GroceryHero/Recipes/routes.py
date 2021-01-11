@@ -7,7 +7,7 @@ from flask import (render_template, url_for, flash,
 from flask_login import current_user, login_required
 from GroceryHero import db
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
-from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm
+from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, get_recipes, \
     remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform
 from GroceryHero.Users.forms import HarmonyForm
@@ -309,12 +309,20 @@ def update_recipe_quantity(recipe_id):
 @recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
+    form = UploadRecipeImage()
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
                 for ingredient in recipe_post.quantity}  # todo is this still necessary?
     recipe_post.quantity = quantity
     url = recipe_post.picture
     url = url if url is not None else False  # todo might not be neccesary
     if request.method == 'POST':  # Download recipe
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
+                recipe_post.picture = picture_file
+                db.session.commit()
+                flash('Your recipe has been updated', 'success')
+            return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
         if recipe_post.user_id == current_user.id:
             title = recipe_post.title
             recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
@@ -323,7 +331,7 @@ def recipe_single(recipe_id):
         else:  # POST on recipe single borrows if not same user
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
-                           url=url)
+                           url=url, form=form)
 
 
 @login_required

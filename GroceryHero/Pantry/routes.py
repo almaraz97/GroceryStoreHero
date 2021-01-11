@@ -6,7 +6,7 @@ from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Main.utils import convert_frac
 from GroceryHero.Pantry.utils import add_pantry
 from GroceryHero.Pantry.forms import PantryBarForm, FullQuantityForm, ShelfForm, DeleteShelfForm, AddToShelfForm
-from GroceryHero.Recipes.forms import Measurements
+from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes
 from GroceryHero import db
 import string

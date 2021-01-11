@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, SelectField, FloatField, FieldList, FormField, SelectMultipleField, StringField, \
     TextAreaField
 from wtforms.validators import InputRequired
-from GroceryHero.Recipes.forms import Measurements as M
+from GroceryHero.Recipes.utils import Measurements as M
 
 
 class PantryBarForm(FlaskForm):

@@ -1,11 +1,143 @@
 from difflib import SequenceMatcher
-
 import pytz
 from flask import url_for
 from GroceryHero import db
 from GroceryHero.HarmonyTool import recipe_stack
-from GroceryHero.Recipes.forms import Measurements, FullQuantityForm
 from GroceryHero.models import Recipes, Followers, User, User_Rec
+
+
+class Measurements:
+    Measures = ['Unit', 'Package', 'Can', 'Bottle', 'Jar', 'US Cup', 'US Tablespoon', 'US Teaspoon', 'US Fluid Ounce',
+                'Ounce', 'Pound', 'Milligram', 'Gram', 'Kilogram', 'Milliliter', 'Liter']
+    # 'US Pint', 'US Quart', 'US Gallon',
+
+    Volumes = ['US Cup', 'US Fluid Ounce', 'US Tablespoon', 'US Teaspoon']  # 'US Gallon', 'US Quart', 'US Pint',
+    Weights = ['Pound', 'Ounce']
+    Generic = ['Unit', 'Package', 'Can', 'Bottle', 'Jar']
+
+    Metric_Volumes = ['Liter', 'Milliliter']
+    Metric_Weights = ['Kilogram', 'Gram', 'Milligram']
+
+    Convert = {'US Gallon': 768, 'US Quart': 192, 'US Pint': 96, 'US Cup': 48.6922, 'US Fluid Ounce': 6,
+               'US Tablespoon': 3, 'US Teaspoon': 1, 'Liter': 1000, 'Milliliter': 1, 'Pound': 16, 'Ounce': 1,
+               'Kilogram': 1e+6, 'Gram': 1000, 'Milligram': 1}  # To lowest [teaspoon, ounce, milligram]
+    Dict_func = (lambda V=Volumes, W=Weights, G=Generic, MV=Metric_Volumes, M=Measures:  # Given str return its type
+                 {x: ('Volume' if x in V else
+                      ('Weight' if x in W else
+                       ('Generic' if x in G else
+                        ('Metric_Volumes' if x in MV else 'Metric_Weights')))) for x in M})
+    Measure_dict = Dict_func()
+
+    def __init__(self, value, unit, name=None):
+        if unit not in self.Measures:
+            raise AssertionError("Must be in Measurement types: Volumes, Weights, Generic.")
+        self.unit = unit
+        self.metric = True if unit in self.Metric_Volumes+self.Metric_Weights else False
+        self.value = value
+        self.name = name
+        if self.unit in self.Generic:
+            self.type = 'Generic'
+        else:
+            if self.metric:  # Should I do both volumes/weight & metric or Volume_metric/Weight_metric
+                self.type = 'Volume' if self.unit in self.Metric_Volumes else 'Weight'
+            else:
+                self.type = 'Volume' if self.unit in self.Volumes else 'Weight'
+
+    def compatibility(self, other, error=False):
+        if error:
+            if not isinstance(other, Measurements):
+                raise AssertionError('Must be of class Measurements')
+            if not self.metric == other.metric:
+                raise AssertionError('Must agree in measurement system')
+            if self.type != other.type:
+                AssertionError('Cannot merge objects of different measure type')
+            if (self.type == 'Generic') and (self.unit != other.unit):
+                raise AssertionError('Must agree in Generic unit')
+        else:
+            if not isinstance(other, Measurements):
+                return False  # raise AssertionError('Must be of class Measurements')
+            if self.metric != other.metric:
+                return False
+            if self.type != other.type:
+                return False
+            if (self.type == 'Generic') and (self.unit != other.unit):
+                return False
+            return True
+
+    @staticmethod
+    def str_compatibility(str1, str2):
+        if str1 in Measurements.Measure_dict:
+            str1 = Measurements.Measure_dict[str1]
+        else:
+            raise AssertionError('Not a valid unit Measurement unit')
+        if str2 in Measurements.Measure_dict:
+            str2 = Measurements.Measure_dict[str2]
+        else:
+            raise AssertionError('Not a valid unit Measurement unit')
+        return str1 == str2
+
+    # @staticmethod
+    # def convert_to_lowest_total(self, other):  # todo add this to __add__ and __sub__
+    #     self.value = self.Convert[self.unit] * self.value  # convert to lowest
+    #     other.value = other.Convert[other.unit] * other.value  # convert to lowest
+    #     total = self.value + other.value
+    #     return total
+
+    # todo combine adding and subtracting
+    def __add__(self, other, rounding=2, sub=False):  # todo this changes the unit since it is changing the self. stuff
+        self.compatibility(other, error=True)
+        if self.type == 'Generic':
+            total = self.value + other.value
+            return Measurements(round(total, rounding), unit=self.unit)
+        value1 = self.Convert[self.unit] * self.value  # convert to lowest
+        value2 = other.Convert[other.unit] * other.value  # convert to lowest
+        total = value1 + value2
+        if self.type == 'Volume':
+            volumes = self.Metric_Volumes if self.metric else self.Volumes
+            for volume in volumes:  # Go up through conversion until whole number
+                if int(total / self.Convert[volume]) >= 1:
+                    total = total / self.Convert[volume]
+                    self.unit = volume
+                    return Measurements(round(total, 2), unit=volume)
+        elif self.type == 'Weight':
+            weights = self.Metric_Weights if self.metric else self.Weights
+            for weight in weights:
+                if int(total / self.Convert[weight]) >= 1:
+                    total = total / self.Convert[weight]
+                    self.unit = weight
+                    return Measurements(round(total, 2), unit=weight)
+        return Measurements(round(total, 2), unit=self.unit)  # todo does this unit always work?
+
+    def __sub__(self, other, rounding=2):
+        self.compatibility(other, error=True)
+        if self.type == 'Generic':
+            total = self.value + other.value
+            return Measurements(round(total, rounding), unit=self.unit)
+        value1 = self.Convert[self.unit] * self.value  # convert to lowest
+        value2 = other.Convert[other.unit] * other.value  # convert to lowest
+        total = value1 - value2
+        if self.type == 'Volume':
+            volumes = self.Metric_Volumes if self.metric else self.Volumes
+            for volume in volumes:  # Go up through conversion until whole number
+                if int(total / self.Convert[volume]) >= 1:
+                    total = total / self.Convert[volume]
+                    self.unit = volume
+                    return Measurements(round(total, 2), unit=volume)
+        elif self.type == 'Weight':
+            weights = self.Metric_Weights if self.metric else self.Weights
+            for weight in weights:
+                if int(total / self.Convert[weight]) >= 1:
+                    total = total / self.Convert[weight]
+                    self.unit = weight
+                    return Measurements(round(total, 2), unit=weight)
+        return Measurements(round(total, 2), unit=self.unit)
+
+    def __repr__(self):
+        unit = self.unit + 's' if self.value != 1 else self.unit
+        return f'Measure({self.name}: {self.value} {unit})'
+
+
+from GroceryHero.Recipes.forms import FullQuantityForm
 
 
 def parse_ingredients(ingredients):

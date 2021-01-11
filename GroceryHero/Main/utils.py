@@ -7,7 +7,7 @@ from flask import current_app
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from GroceryHero import db
-from GroceryHero.Recipes.forms import Measurements
+from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec, User_PubRec, Pub_Rec
 
 

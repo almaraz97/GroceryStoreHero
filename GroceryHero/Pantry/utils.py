@@ -1,6 +1,6 @@
 from GroceryHero import db
 from GroceryHero.Main.utils import convert_frac
-from GroceryHero.Recipes.forms import Measurements
+from GroceryHero.Recipes.utils import Measurements
 
 
 def update_pantry(user, recipes):  # From the clear menu using recipes

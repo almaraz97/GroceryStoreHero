@@ -10,7 +10,7 @@ from flask_login import current_user
 from flask_mail import Message
 from werkzeug.utils import redirect
 from GroceryHero import mail, db
-from GroceryHero.Recipes.forms import Measurements
+from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Aisles, Recipes
 
 
