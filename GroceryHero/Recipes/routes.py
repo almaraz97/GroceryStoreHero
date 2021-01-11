@@ -320,12 +320,11 @@ def recipe_single(recipe_id):
     others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
     if request.method == 'POST':  # Download recipe
-        if form.validate_on_submit():
-            if form.picture.data:
-                picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
-                recipe_post.picture = picture_file
-                db.session.commit()
-                flash('Your image has been uploaded!', 'success')
+        if form.validate_on_submit() and (recipe_post.author == current_user) and form.picture.data:
+            picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
+            recipe_post.picture = picture_file
+            db.session.commit()
+            flash('Your image has been uploaded!', 'success')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
         if recipe_post.user_id == current_user.id:
             title = recipe_post.title
