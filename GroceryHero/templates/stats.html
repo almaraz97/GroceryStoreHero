@@ -14,7 +14,7 @@
     {% endif %}
     <h4 class="mt-2 mb-2 pb-1">Total Recipe Consumption Frequency Chart </h4>
     <div style="max-height:200px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
-    <table class="table table-border table-hover table-striped table-sm ml-2">
+    <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
        <tr class="bg-success">
           <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Recipe</th>
           <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Total</th>
@@ -40,7 +40,7 @@
 
     <h4 class="mt-4 pb-1">Ingredient Frequency Chart</h4>
     <div style="max-height:200px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
-    <table class="table table-border table-hover table-striped table-sm ml-2">
+    <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
        <tr class="bg-success">
           <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Ingredient</th>
           <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Total</th>
@@ -66,7 +66,7 @@
 
     <h4 class="mx-1 pb-1">Recipe Pair Frequency</h4>
     <div style="max-height:200px; overflow-y: auto; overflow-x:hidden;" class="mb-3">
-    <table class="table table-border table-hover table-striped table-sm ml-2">
+    <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
       <tr class="bg-success">
         <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Recipe Combination</th>
         <th style="color:white; position:sticky; top:-1px;background:#5cb85c; width:20%;">Frequency</th>
@@ -92,7 +92,7 @@
     </table>
     </div>
     <h4 class="mx-1 mb-2">Recipe Clustering (TSNE)</h4>
-      <img src="{{ graph }}" />
+      <img src="{{ graph }}" style="max-width: 100%"/>
   </div>
 </article>
 {% endblock content %}

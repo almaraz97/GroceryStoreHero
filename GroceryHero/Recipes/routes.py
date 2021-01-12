@@ -467,18 +467,14 @@ def delete_recipe(recipe_id):
 @login_required
 def change_to_menu():  # JavaScript way of adding to menu without reload
     recipe_id = request.form['recipe_id']
-    public = request.form.get(['public'], False)
-    if not public:
-        recipe = Recipes.query.get_or_404(recipe_id)
-        if recipe.author != current_user:
-            recipe = User_Rec.query.get([current_user.id, recipe_id])
-            if recipe is None:
-                json.dumps({'result': 'success'})
-        recipe.in_menu = not recipe.in_menu
-        recipe.eaten = False
-        update_grocery_list(current_user)
-    else:
-        pass
+    recipe = Recipes.query.get_or_404(recipe_id)
+    if recipe.author != current_user:
+        recipe = User_Rec.query.get([current_user.id, recipe_id])
+        if recipe is None:
+            json.dumps({'result': 'success'})
+    recipe.in_menu = not recipe.in_menu
+    recipe.eaten = False
+    update_grocery_list(current_user)
     db.session.commit()
     return json.dumps({'result': 'success'})
 
