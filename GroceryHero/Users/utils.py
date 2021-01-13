@@ -52,6 +52,7 @@ def save_picture(form_picture, filepath='static/profile_pics', download=False):
         i.save(picture_path)
     except Exception as e:
         print(e)
+        flash('Picture format not found/supported', 'info')
         return None
     return picture_fn
 

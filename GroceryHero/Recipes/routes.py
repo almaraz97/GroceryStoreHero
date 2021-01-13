@@ -88,6 +88,10 @@ def recipe_single(recipe_id):
     others_eaten = sum(x.times_eaten for x in User_Rec.query.filter_by(recipe_id=recipe_id).all())
     others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
+    borrowed = True
+    if recipe_post.author != current_user:
+        borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
+        borrowed = borrow.borrowed
     if request.method == 'POST':  # Download recipe
         if form.validate_on_submit() and (recipe_post.author == current_user) and form.picture.data:
             picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
@@ -104,7 +108,7 @@ def recipe_single(recipe_id):
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
                            url=url, form=form, others_eaten=others_eaten, others_borrowed=others_borrowed,
-                           other_downloaded=other_downloaded)
+                           other_downloaded=other_downloaded, borrowed=borrowed)
 
 
 @login_required
@@ -236,7 +240,7 @@ def new_recipe_quantity():
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
-        pic_fn = pic_fn if pic_fn is not None else 'default.png'
+        pic_fn = pic_fn if pic_fn is not None else ''
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn)
