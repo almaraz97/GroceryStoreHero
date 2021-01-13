@@ -48,18 +48,22 @@ def save_picture(form_picture, filepath='static/profile_pics', download=False):
     output_size = (500, 500)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
-    i.save(picture_path)
+    try:
+        i.save(picture_path)
+    except Exception as e:
+        print(e)
+        return None
     return picture_fn
 
 
-def send_reset_email(user):
-    token = user.get_reset_token()
-    msg = Message('Password Reset Request', sender='noreply@GroceryHero.com', recipients=[user.email])
-    msg.body = f"""To reset your password visit the following link:
-{url_for('users.reset_token', token=token, _external=True)}
-If you did not make this request then simply ignore this email and no change will be made.
-"""
-    mail.send(msg)
+# def send_reset_email(user):
+#     token = user.get_reset_token()
+#     msg = Message('Password Reset Request', sender='noreply@GroceryHero.com', recipients=[user.email])
+#     msg.body = f"""To reset your password visit the following link:
+# {url_for('users.reset_token', token=token, _external=True)}
+# If you did not make this request then simply ignore this email and no change will be made.
+# """
+#     mail.send(msg)
 
 
 def import_files(file, import_type):

@@ -391,7 +391,7 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = False, False, False
                 borrowed.borrowed_dates['Unborrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
                 flash(f"You have returned {recipe.title}", 'info')
-                if len(borrowed.borrowed_dates['Unborrowed'].values()) == 1:  # First time unborrowing
+                if len(borrowed.borrowed_dates['Unborrowed']) == 1:  # First time unborrowing
                     action = Actions(user_id=current_user.id, type_='Unborrow', recipe_ids=[recipe_id],
                                      date_created=datetime.utcnow(), titles=[recipe.title])
                     db.session.add(action)
@@ -399,7 +399,7 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
                 borrowed.borrowed, borrowed.in_menu, borrowed.eaten = True, False, False
                 borrowed.borrowed_dates['Borrowed'].append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
                 flash(f"{recipe.title} borrowed!", 'success')
-                if len(borrowed.borrowed_dates['Borrowed'].values()) == 1:  # First time borrowing
+                if len(borrowed.borrowed_dates['Borrowed']) == 1:  # First time borrowing
                     action = Actions(user_id=current_user.id, type_='Borrow', recipe_ids=[recipe_id],
                                      date_created=datetime.utcnow(), titles=[recipe])
                     db.session.add(action)
