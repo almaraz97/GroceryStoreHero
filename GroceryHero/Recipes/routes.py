@@ -175,7 +175,7 @@ def friend_feed():  # todo pagination for posts
     colors = Colors.act_colors
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # if current_app.server:
-    followees = followees + [current_user.id]  # todo # For testing
+    #   followees = followees + [current_user.id]  # todo # For testing
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     page = request.args.get('page', 1, type=int)
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees))\
