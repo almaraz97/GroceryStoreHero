@@ -171,7 +171,7 @@ def public_recipes():
 
 @login_required
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
-def friend_feed():  # todo pagination for posts
+def friend_feed():
     colors = Colors.act_colors
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # if current_app.server:

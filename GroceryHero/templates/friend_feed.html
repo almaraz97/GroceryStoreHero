@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class="mb-3">Your Feed</h1>
+<h1 class="mb-4">Your Feed</h1>
 {% if current_user.is_authenticated %}
   <!--Search bar with button-->
   <div style="margin-bottom: 15px;">
@@ -20,7 +20,7 @@
 </div>
 {% endif %}
 {% if cards is not defined or cards|length < 1 %}  <!-- User has no friend actions -->
-  <div class="card">
+  <div class="card mt-4 mb-2">
     <div class="card-header p-0" id="headingMenu">
       <h5 class="mb-0">
         <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">

@@ -15,10 +15,10 @@
           <a href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}" style="float:right" class="btn btn-outline-info btn-sm mt-2">Update</a>
         </div>
       {% else %}
+        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-sm mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
         <form method="POST" action="" enctype="multipart/form-data" style="float:right">
-          <button class="btn btn-success btn-sm mt-2 ml-1">Borrow Recipe</button>
+          <button class="btn btn-info btn-sm mt-2 ml-1">Borrow Recipe</button>
         </form>
-        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-sm mt-2 ml-1" style="float:right">Download Recipe</a>
       {% endif %}
         <div class="row">
             <small class="text-muted pl-3 col-12">{{ recipe.date_created.strftime('%Y-%m-%d') }}</small>
