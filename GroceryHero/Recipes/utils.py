@@ -275,8 +275,8 @@ def add_follow(users):
     db.session.commit()
 
 
-def generate_feed_contents(friend_acts):
-    cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
+def generate_feed_contents(cards):
+    # cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
     actions = []
     for act in cards:
         titles = act.titles  # Get titles of recipe in action from when that action was recorded
@@ -369,6 +369,9 @@ def load_harmonyform(current_user, form, in_menu, recipe_list):
     in_menu = [recipe.title for recipe in in_menu]  # List of recipe titles in menu
     recipe_history = [item for sublist in current_user.history[:current_user.harmony_preferences['history']]
                       for item in sublist]
+    # recipe_history = [item for sublist in
+    #                   list(current_user.history.values())[:current_user.harmony_preferences['history']]
+    #                       for item in sublist]
     recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
 
     form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]

@@ -18,26 +18,6 @@ from GroceryHero import db
 
 main = Blueprint('main', __name__)
 
-"""
-1. Added history, eaten, date joined, messages columns. Add history functionalities, add eaten functionalities, stats
-visualisations, most eaten recipes, menu stats, better on mobile
-2. fixed double reload of clear extras button, Allowed unsorted extras, Centered 'grocerylist' and buttons for mobile
-views, added navbars for mobile, stopped saving redundant recipe weights
-make mobile icons for advanced harmony form, fixed menu harmony display, fix recipe group weights,
-Fix search bar in recipe page, Make cursor over cross off text, added harmony page better, validate numbers on quantity
-Made ingredients alphabetical in menu list, but only from here on and when updating a recipe
-add pantry functionality, add/remove shelf buttons like grocery-list buttons, download recipe single, fixed history,
-bug when deleted, add "add all" for a recipe recommendation (ul ids instead of li), pantry column;add;remove;clear,
-add similarity rating button for recipe recommendation, fixed pantry on anonymous user, added extras form validation,
-add Measurement equivalence as part of object adding logic, Javascript adding from RHT recs, 
-allowed fraction in form w validation, added fraction handling for various site utilities for recipe quantities, 
-use of session in new and update recipe route handoffs, cython working, load recipe type in the update form
-handle '2 1/2' in recipe scraper, show recipe type in recipe single
-"""
-
-# todo prevent update on feed abuse
-# todo see/show specific actions checks that user specifies
-
 
 @main.route('/', methods=['GET', 'POST'])
 def landing():
@@ -75,10 +55,6 @@ def home():
         harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
     username = current_user.username.capitalize()
     statistics = get_history_stats(current_user)
-    # if current_user.id == 9 and current_user.username == 'Andrea':
-    #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
-    #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-    #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
                            overlap=overlap, statistics=statistics, borrowed=borrowed)
@@ -87,22 +63,25 @@ def home():
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
-    menu_recipes = get_all_menu_recs(current_user)
-    if len(menu_recipes) > 0:
+    menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
+    borrowed_recipes = User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()
+    if len(menu_recipes + borrowed_recipes) > 0:
         histories = current_user.history.copy()
         history = []
         for recipe in menu_recipes:
             if isinstance(recipe, Recipes):
                 history.append(recipe.id)
-            else:  # Public recipe
+            elif isinstance(recipe, User_Rec):
                 history.append(recipe.recipe_id)
             recipe.in_menu = False
             recipe.eaten = False
             recipe.times_eaten = recipe.times_eaten + 1
+
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
         histories.append(history)
-        current_user.history = histories
+        current_user.history = histories  # todo conversion to dict
+        # current_user.history[datetime.utcnow()] = histories
         recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
         ids = [rec.id for rec in recipes]
         action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow(),
@@ -178,15 +157,19 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         #     print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         # print(listRules)
-        average_menu_len = sum([len(x) for x in history]) / len(history)
-        all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]  # todo remove old ids?
+        average_menu_len = sum(len(x) for x in history) / len(history)  # todo dictionary conversion
+        # average_menu_len = sum([len(x) for x in history.values()]) / len(history)  # todo dictionary conversion
+        all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]
         # Recipe History/Frequency
         history = [item for sublist in history for item in sublist if item in all_ids]  # Flatten ID list of lists
+        # history = [item for sublist in history.values() for item in sublist if item in all_ids]  # todo dictionary conversion
         history2 = current_user.history
         history_set = set(history)
+        # history_set = set(history.values())
         history_count = {}
         for item in history_set:
             history_count[item] = history.count(item)
+            # history_count[item] = history.values().count(item) # todo dictionary conversion
         history_count = sorted(history_count.items(), key=lambda x: x[1], reverse=True)
         history_count_names = [list(x) for x in
                                {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}.items()]
@@ -207,6 +190,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         harmony = round((norm_stack({r.title: r.quantity.keys() for r in all_recipes}) * 100), 5)
         avg_harmony = []
         for batch in history2:
+        # for batch in history2.values():
             if len(batch) > 1:
                 recs = {recipe.title: recipe.quantity for recipe in Recipes.query.filter(Recipes.id.in_(batch)).all()}
                 modifier = 1 / (len(recs) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
@@ -346,3 +330,8 @@ def clear_extras():
     #     print()
     # print(form.data)
     # print(form.aisle_forms.data)
+
+# if current_user.id == 9 and current_user.username == 'Andrea':
+#     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
+#                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
+#                            overlap=overlap, statistics=statistics, borrowed=borrowed)

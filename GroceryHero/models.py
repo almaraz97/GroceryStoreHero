@@ -1,8 +1,6 @@
 from datetime import datetime
 from GroceryHero import db, login_manager
 from flask_login import UserMixin
-# from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-# from flask import current_app
 
 
 @login_manager.user_loader
@@ -59,18 +57,6 @@ class User(db.Model, UserMixin):
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
 
-    # def get_reset_token(self, expires_sec=1800):
-    #     s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
-    #     return s.dumps({'user_id': self.id}).decode('utf-8')
-    #
-    # @staticmethod
-    # def verify_reset_token(token):
-    #     s = Serializer(current_app.config['SECRET_KEY'])
-    #     try:
-    #         user_id = s.loads(token)['user_id']
-    #     except:
-    #         return None
-    #     return User.query.get(user_id)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
@@ -82,16 +68,20 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     title = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     quantity = db.Column(db.JSON, nullable=False, default={})  # Format: {ingredient: [value, unit]}
-    notes = db.Column(db.Text, nullable=True)
-    link = db.Column(db.String(512), nullable=True)
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
+
+    notes = db.Column(db.Text, nullable=True)
+    link = db.Column(db.String(512), nullable=True)
     recipe_type = db.Column(db.String(16), nullable=True)
-    recipe_genre = db.Column(db.String(32), nullable=True) # Asian, Hispanic, Southern
     picture = db.Column(db.String(20), nullable=True)
-    public = db.Column(db.Boolean, nullable=False, default=False)  # Public to friends
-    servings = db.Column(db.Integer, nullable=True, default=0)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
+
+    recipe_genre = db.Column(db.String(32), nullable=True)  # Asian, Hispanic, Southern
+    public = db.Column(db.Boolean, nullable=False, default=False)  # Public recipe
+    # private = db.Column(db.Boolean, nullable=False, default=False)  # Only friends can see
+    # credit = db.Column(db.Boolean, nullable=False, default=False)
+    servings = db.Column(db.Integer, nullable=True, default=0)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
     options = db.Column(db.JSON, nullable=False, default={})
@@ -175,6 +165,13 @@ class User_Act(db.Model):  # For comments and likes on other's actions
     liked = db.Column(db.Boolean, nullable=False, default=False)
 
 
+# class User_User(db.Model):  # Messages, follow requests, etc between others
+#     act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+#     comment = db.Column(db.String(200), nullable=True)
+#     liked = db.Column(db.Boolean, nullable=False, default=False)
+
+
 class Pub_Rec(db.Model):
     p_id = db.Column(db.Integer, primary_key=True)  # todo why is this not regular id?
     origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
@@ -213,11 +210,4 @@ class User_PubRec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
-
-
-# class User_User(db.Model):  # Messages, follow requests, etc between others
-#     act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-#     comment = db.Column(db.String(200), nullable=True)
-#     liked = db.Column(db.Boolean, nullable=False, default=False)
 

@@ -96,6 +96,7 @@ def confidence(associations, d, min_confidence):
 
 def main(min_support, min_confidence, file_loc):
     trans = current_user.history  # read_data()
+    # trans = current_user.history.values()  # todo dictionary conversion
     number_of_trans = [len(i) for i in trans.values()]  # List of transaction lengths
     items_lst = set()
 

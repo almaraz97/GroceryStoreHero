@@ -4,7 +4,7 @@
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
+            <h3 class="border-bottom">{{ legend }}</h3>
             {% set index = namespace(value=0) %}
             {% for input_form in form.ingredient_forms %}
                 <div class="form-inline form-row mb-3">

@@ -205,23 +205,22 @@ def get_all_menu_recs(user):
     menu_recipes = Recipes.query.filter_by(author=user).filter_by(in_menu=True).all()  # Get all recipes
     borrowed_recipes = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]
     menu_recipes = menu_recipes + Recipes.query.filter(Recipes.id.in_(borrowed_recipes)).all()
-    # borrowed_pubs = [x.recipe_id for x in User_PubRec.query.filter_by(user_id=user.id, in_menu=True).all()]
-    # menu_recipes = menu_recipes + Pub_Rec.query.filter(Pub_Rec.recipe_id.in_(borrowed_pubs)).all()
     return menu_recipes
 
 
-def get_history_stats(user):  # For dashboard basic stats
+def get_history_stats(user):  # For dashboard stats
     history = user.history  # Change user history
     if len(history) > 0:
-        # Make sure deleted recipes are not included in history  # todo remove deleted ids from history?
+        # Make sure deleted recipes are not included in history
         all_recipes_ids = [r.id for r in Recipes.query.filter_by(author=user).all()]
         history = [item for sublist in history for item in sublist if item in all_recipes_ids]  # Flatten history
+        # history = [item for sublist in history.values() for item in sublist if item in all_recipes_ids]  # todo dictionary conversion
         history_set = set(history)
         history_count = {recipe: history.count(recipe) for recipe in history_set}
         sorted_history_count = sorted(history_count, key=lambda x: history_count[x], reverse=True)  # By frequency
         keys = list(sorted_history_count)
 
-        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
+        recipes = Recipes.query.filter(Recipes.id.in_(history)).all()  # todo need to remove deleted ids from history?
         most_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[0]][0], history_count[keys[0]]]
         least_eaten = [[recipe.title for recipe in recipes if recipe.id == keys[-1]][0], history_count[keys[-1]]]
 
@@ -256,8 +255,9 @@ def show_harmony_weights(user, preferences):
 def apriori_test(user, min_support=None):
     recipes = []
     for week in user.history:
+    # for week in user.history.values():
         # temp = [recipe.title for recipe in
-        # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history]]
+        # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history.values()]]
         temp = []
         for item in week:
             recipe = Recipes.query.filter_by(id=item).first()
@@ -328,7 +328,7 @@ def stats_graph(user, all_recipes):
     # else:
     #     pass
     # plt.show()
-    # history = User.query.filter_by(id=1).first().history
+    # history = User.query.filter_by(id=1).first().history.values()
     # if len(history) > 0:
     #     # Recipe History/Frequency
     #     history = [item for sublist in history for item in sublist]
