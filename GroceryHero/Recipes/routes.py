@@ -21,25 +21,27 @@ recipes = Blueprint('recipes', __name__)
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
-    recipe_history, form = [], HarmonyForm()
-    colors = Colors.rec_colors
+    recipe_history, form, about, colors = [], HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
-    if current_user.pro:
-        form, recommended, recipe_history = load_harmonyform(current_user, form, in_menu, recipe_list)
-    if current_user.pro and form.validate_on_submit():  # Harmony or search button was pressed
-        preferences = get_harmony_settings(current_user.harmony_preferences)
-        recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history)
-        recommended = remove_menu_items(in_menu, recommended)
-        update_user_preferences(current_user, form, recommended, possible)
+    in_menu = [r.title for r in in_menu]
     about = None if current_user.pro else True
+    preferences = get_harmony_settings(current_user.harmony_preferences)
+    if request.method == "GET":
+        form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu, recipe_list)
+    if request.method == "POST":
+        if form.validate_on_submit():  # Harmony or search button was pressed
+            recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history)
+            recommended = remove_menu_items(in_menu, recommended)
+            update_user_preferences(current_user, form, recommended, possible)
+            form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu, recipe_list)
     return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
                            search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
                            recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
 
 
 @login_required
-@recipes.route('/post/search', methods=['GET', 'POST'])
+@recipes.route('/recipes/search', methods=['GET', 'POST'])
 def recipes_search(possible=0, recommended=None):
     if current_user.is_authenticated:
         search = request.form['search']
@@ -75,7 +77,7 @@ def recipes_search(possible=0, recommended=None):
 
 
 @login_required
-@recipes.route('/post/<int:recipe_id>', methods=['GET', 'POST'])
+@recipes.route('/recipes/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_single(recipe_id):
     recipe_post = Recipes.query.get_or_404(recipe_id)
     form = UploadRecipeImage()
@@ -216,7 +218,7 @@ def friend_feed_choice(friend_id=None):
 
 
 @login_required
-@recipes.route('/post/new', methods=['GET', 'POST'])
+@recipes.route('/recipes/new', methods=['GET', 'POST'])
 def new_recipe():
     if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
         return redirect(url_for('main.account'))
@@ -231,7 +233,7 @@ def new_recipe():
 
 
 @login_required
-@recipes.route('/post/new/quantity', methods=['GET', 'POST'])
+@recipes.route('/recipes/new/quantity', methods=['GET', 'POST'])
 def new_recipe_quantity():
     recipe = session['recipe']  # {RecipeName: string, Quantity: {ingredient: [value,type]}}
     form = load_quantityform(recipe)
@@ -280,7 +282,7 @@ def recipe_from_link():
 
 
 @login_required
-@recipes.route('/post/new_link', methods=['GET', 'POST'])
+@recipes.route('/recipes/new_link', methods=['GET', 'POST'])
 def new_recipe_link():  # filling out the form data from link page
     form = RecipeForm()
     if request.method == 'GET':
@@ -304,7 +306,7 @@ def new_recipe_link():  # filling out the form data from link page
 
 
 @login_required
-@recipes.route('/post/<int:recipe_id>/update', methods=['GET', 'POST'])
+@recipes.route('/recipes/<int:recipe_id>/update', methods=['GET', 'POST'])
 def update_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user or recipe.public:  # You can only update your own recipes
@@ -327,7 +329,7 @@ def update_recipe(recipe_id):
 
 
 @login_required
-@recipes.route('/post/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
+@recipes.route('/recipes/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
 def update_recipe_quantity(recipe_id):
     rec = Recipes.query.get_or_404(recipe_id)
     if rec.author != current_user or rec.public:  # You can only update your own recipes
@@ -354,7 +356,7 @@ def update_recipe_quantity(recipe_id):
 
 
 @login_required
-@recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+@recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
 def recipe_download(recipe_id):
     all_recipes = Recipes.query.filter_by(author=current_user).all()
     recipe = Recipes.query.filter_by(id=recipe_id).first()
@@ -436,7 +438,7 @@ def publify_recipe(recipe_id):
 
 
 @login_required
-@recipes.route('/post/<int:recipe_id>/delete', methods=['POST'])
+@recipes.route('/recipes/<int:recipe_id>/delete', methods=['POST'])
 def delete_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only change your own recipes

@@ -148,7 +148,10 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
         dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
                                    sticky_weights=sticky, ingredient_excludes=ing_ex) ** modifier  # (1 / (count * 2 - 3))
-        if harmony_score < max_sim:
+        if max_sim is not None:
+            if harmony_score < max_sim:
+                scores[group] = harmony_score
+        else:
             scores[group] = harmony_score
     sorted_scored_combos = sorted(scores, key=lambda key: scores[key])
     return sorted_scored_combos
@@ -183,7 +186,7 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
                  limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None,
                  sticky_weights=None, home=False):
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
-    max_sim = 100_000 if max_sim == 'No Limit' else int(max_sim)/100
+    max_sim = None if max_sim == float('inf') else int(max_sim)/100
     excludes = [] if excludes is None else excludes  # Comes in as 0 or not
     includes = [] if includes is None else includes
     modifier = 1 / (count + len(includes) + 1) if modifier == 'Graded' else 1.0
@@ -191,7 +194,6 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
     tastes = {} if tastes is None else tastes
     ingredient_excludes = [] if ingredient_excludes is None else ingredient_excludes
     sticky_weights = {} if sticky_weights is None else sticky_weights
-
     combos, possible = create_combos(recipes, count, excludes, includes, limit)
     scored_combos = score_combos(recipes, combos, max_sim, algorithm, ingredient_weights, tastes, ingredient_excludes,
                                  sticky_weights, modifier)

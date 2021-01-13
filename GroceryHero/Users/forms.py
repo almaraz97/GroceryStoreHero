@@ -74,9 +74,10 @@ class DeleteAccountForm(FlaskForm):
 
 
 class HarmonyForm(FlaskForm):
-    groups = SelectField("Number of Recipes per Recommendation", choices=[1, 2, 3, 4])
+    groups = SelectField("Number of Recipes per Recommendation", choices=[[x, x] for x in range(1, 5)], coerce=int)
     excludes = SelectMultipleField("Exclude Recipes", choices=[])
-    similarity = SelectField("Maximum Harmony", choices=[x for x in range(10, 90, 10)]+['No limit'])
+    similarity = SelectField("Maximum Harmony", choices=[(x, x) for x in range(10, 90, 10)] +
+                                                        [(float('inf'), 'No limit')], coerce=float)
     submit = SubmitField('Harmonize')
 
 

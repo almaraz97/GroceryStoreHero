@@ -32,7 +32,7 @@ class Measurements:
         if unit not in self.Measures:
             raise AssertionError("Must be in Measurement types: Volumes, Weights, Generic.")
         self.unit = unit
-        self.metric = True if unit in self.Metric_Volumes+self.Metric_Weights else False
+        self.metric = True if unit in self.Metric_Volumes + self.Metric_Weights else False
         self.value = value
         self.name = name
         if self.unit in self.Generic:
@@ -185,7 +185,7 @@ def parse_ingredients(ingredients):
                         nums = nums + char
                         flag = True
                     else:
-                        flag = False if (cons+1) == j else flag  # If there was a separator and last char is digit
+                        flag = False if (cons + 1) == j else flag  # If there was a separator and last char is digit
                         if flag:
                             quantity.append([nums[:-1]])
                         else:  # Quantity string is done
@@ -200,7 +200,7 @@ def parse_ingredients(ingredients):
         if quantity[i]:  # The list is not empty
             if ('/' in quantity[i][0]) and (' ' in quantity[i][0]):  # Convert mixed fraction to fraction
                 temp1 = quantity[i][0]
-                quantity[i][0] = str((int(temp1[0])*int(temp1[4]))+int(temp1[2]))+'/'+temp1[4]
+                quantity[i][0] = str((int(temp1[0]) * int(temp1[4])) + int(temp1[2])) + '/' + temp1[4]
             elif '.' in quantity[i][0]:
                 quantity[i][0] = quantity[i][0].strip()
             elif ' ' in quantity[i][0]:  # Convert number of a certain sized quantity ('1 15 ounce can")
@@ -351,7 +351,8 @@ def remove_menu_items(in_menu, recommended):
     in_menu = None if len(in_menu) < 1 else in_menu  # Don't show menu items in recommendation groups
     if in_menu is not None:
         for group in list(recommended.keys()):
-            recommended[tuple([x for x in group if x not in in_menu])] = recommended[group]
+            shortened = tuple(x for x in group if x not in in_menu)
+            recommended[shortened] = recommended[group]
             del recommended[group]
     return recommended
 
@@ -376,13 +377,12 @@ def load_harmonyform(current_user, form, in_menu, recipe_list):
 
     form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
     modifier = current_user.harmony_preferences['modifier']
-    form.similarity.choices = [x for x in range(0, 60, 10)] + ['No Limit'] if modifier == 'True' else \
-        [x for x in range(50, 105, 5)] + ['No Limit']
-    form.similarity.default = 50
+    form.similarity.choices = [(x, x) for x in range(0, 60, 10)] + [(float('inf'), 'No Limit')] if modifier == 'True' \
+        else [(x, x) for x in range(50, 105, 5)] + [(float('inf'), 'No Limit')]
+    form.similarity.default = [50, 50]
     excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
     form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
 
-    # check_preferences(current_user)
     preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
     form.similarity.data = preferences['similarity']
     form.groups.data = preferences['groups']
@@ -394,7 +394,7 @@ def load_harmonyform(current_user, form, in_menu, recipe_list):
         # todo might be redundant, (prevent deleted recipes from being linked in a recommended)
         recommended = {key: value for key, value in recommended.items() if
                        all(x in [r.title for r in recipe_list] for x in key)}
-    return form, recommended, recipe_history
+    return form, recommended, recipe_history, possible
 
 
 def load_quantityform(recipe):
@@ -405,8 +405,7 @@ def load_quantityform(recipe):
     form.ingredients = [x for x in recipe['quantity'].keys()]
     return form
 
-
-# @recipes.route('/post/<int:recipe_id>/download', methods=['GET', 'POST'])
+# @recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
 # @login_required
 # def export(recipe_id):
 #     recipe_post = Recipes.query.get_or_404(recipe_id)
