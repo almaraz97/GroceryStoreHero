@@ -116,7 +116,7 @@ def recipe_single(recipe_id):
 @login_required
 @recipes.route('/friend_recipes', methods=['GET', 'POST'])
 def friend_recipes():  # todo handle deleted account ids
-    if not current_user.is_authenticated():
+    if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     colors = Colors.rec_colors
     recipe_list = []
