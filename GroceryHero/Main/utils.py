@@ -1,7 +1,8 @@
 import json
 import os
-
 import numpy as np
+import sklearn
+from numpy.linalg import svd
 from apyori import apriori
 from flask import current_app
 from sklearn.manifold import TSNE
@@ -359,23 +360,38 @@ def stats_graph(user, all_recipes):
     all_recipes = all_recipes if all_recipes is not None else Recipes.query.filter_by(author=user).all()
     all_recipes = {k.title: k.quantity for k in all_recipes}
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
-    recipe_ingredients = {item for sublist in all_recipes.values() for item in sublist}
+    recipe_vec = {item for sublist in all_recipes.values() for item in sublist}
     # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
-    recipe_vec = {recipe: [1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_ingredients]
-                  for recipe in all_recipes}
+    recipe_vec = np.array(
+        [np.array([1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_vec])
+         for recipe in all_recipes])
+    # TSNE
+    tsne = TSNE(n_components=2, perplexity=.5, metric='l2')
+    model = tsne.fit_transform(recipe_vec)
 
-    values = np.array(list(recipe_vec.values()))
-    perp = .5
-    met = 'l2'
-    tsne = TSNE(n_components=2, perplexity=perp, metric=met)
-    tsne = tsne.fit_transform(values)
-    x, y = [x[0] for x in tsne], [x[1] for x in tsne]
+    # TODO SVD #########
+    # u, s, v = np.linalg.svd(recipe_vec)
+    # s = np.concatenate([np.diag(s), np.zeros((162 - 41, 41))], axis=0).T
+    # dim = 2
+    # u = u[:, :dim]
+    # s = s[:dim]
+    # v = v[:, :dim]
+    # model = u@s@v
+
+    # TODO PCA #########
+    # PCA = sklearn.decomposition.PCA(n_components=2)
+    # model = PCA.fit_transform(recipe_vec)
+
+    x, y = [x[0] for x in model], [x[1] for x in model]
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(x, y)
     for i, txt in enumerate(all_recipes.keys()):
         ax.annotate(txt, (x[i], y[i]), fontsize=8)
     # plt.title(f'TSNE w/ perplexity: {perp}, metric: {met}')
-    # plt.show()
+    plt.title(f'TSNE')
+    plt.show()
     filepath = str(user.id) + '.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
     plt.savefig(picture_path)
+
+

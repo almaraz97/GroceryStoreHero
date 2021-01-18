@@ -100,6 +100,5 @@ Werkzeug==1.0.1
 wrapt==1.12.1
 WTForms==2.3.1
 zipp==3.1.0
-
 setuptools~=51.1.0
 Authlib~=0.15.2

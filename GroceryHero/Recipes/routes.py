@@ -93,7 +93,7 @@ def recipe_single(recipe_id):
     borrowed = True
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
-        borrowed = borrow.borrowed
+        borrowed = False if borrow is None else borrow.borrowed
     if request.method == 'POST':  # Download recipe
         if form.validate_on_submit() and (recipe_post.author == current_user) and form.picture.data:
             picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
@@ -116,6 +116,8 @@ def recipe_single(recipe_id):
 @login_required
 @recipes.route('/friend_recipes', methods=['GET', 'POST'])
 def friend_recipes():  # todo handle deleted account ids
+    if not current_user.is_authenticated():
+        return redirect(url_for('main.landing'))
     colors = Colors.rec_colors
     recipe_list = []
     borrows = {x.recipe_id: x.borrowed for x in
@@ -185,7 +187,7 @@ def friend_feed():
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     page = request.args.get('page', 1, type=int)
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees))\
-        .order_by(Actions.date_created.desc()).paginate(page=page)
+        .order_by(Actions.date_created.desc()).paginate(page=page, per_page=15)
     cards = generate_feed_contents(friend_acts.items)
     return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  # search=None
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict,
@@ -286,7 +288,7 @@ def recipe_from_link():
 def new_recipe_link():  # filling out the form data from link page
     form = RecipeForm()
     if request.method == 'GET':
-        if len(Recipes.query.filter_by(author=current_user).all()) > 75:  # User recipe limit
+        if len(current_user.recipes) > 75:  # User recipe limit
             return redirect(url_for('main.account'))
         recipe = session['recipe_raw']
         form.title.data = recipe['title']
@@ -364,7 +366,7 @@ def recipe_download(recipe_id):
         if recipe == r:
             flash(f'Recipe {recipe.title} already in recipe library', 'danger')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
-    new_recipe = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, author=current_user,
+    new_recipe = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
                          link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
                          picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
                          price=recipe.price, options=recipe.options)

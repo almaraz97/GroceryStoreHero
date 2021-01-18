@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import json
 import string
+
+import numpy as np
 from flask import render_template, url_for, redirect, Blueprint, request, session, current_app
 from GroceryHero.HarmonyTool import norm_stack, recipe_stack
 from GroceryHero.Main.forms import ExtrasForm

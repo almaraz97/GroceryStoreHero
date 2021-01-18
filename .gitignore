@@ -202,3 +202,4 @@ GroceryHero/static/profile_pics/*
 /GroceryHero/static/visualizations/*
 /cert.pem
 /key.pem
+/venv2/

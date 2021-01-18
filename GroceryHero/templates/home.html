@@ -42,7 +42,7 @@
                   <div class="card-body bg-success p-0" id="{{ recipe.id }}">
                     <h5 class="mb-0">
                       {% set set_eaten = 'success' %}
-                      {% if borrowed[recipe.id] is defined %} <!-- Recipe is borrowed and is eaten -->
+                      {% if borrowed[recipe.id] is defined %} <!-- todo Recipe is borrowed and is eaten (better imp?) -->
                         {% if borrowed[recipe.id] %}
                           {% set set_eaten = 'secondary' %}
                           {% set all_eaten.value = all_eaten.value + 1 %}
@@ -53,7 +53,7 @@
                           {% set all_eaten.value = all_eaten.value + 1 %}
                         {% endif %}
                       {% endif %}
-                      <button style=".collapse" class="btn btn-{{ set_eaten }} btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
+                      <button style=".collapse; white-space: normal;" class="btn btn-{{ set_eaten }} btn-block pl-0;" data-toggle="collapse" data-target="#collapse{{ recipe.id }}"  aria-controls="collapse{{ recipe.id }}">
                         {{ recipe.title }}
                       </button>
                     </h5>
