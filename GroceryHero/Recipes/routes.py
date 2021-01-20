@@ -187,7 +187,7 @@ def friend_feed():
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     page = request.args.get('page', 1, type=int)
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees))\
-        .order_by(Actions.date_created.desc()).paginate(page=page, per_page=15)
+        .order_by(Actions.date_created.desc()).paginate(page=page, per_page=10)
     cards = generate_feed_contents(friend_acts.items)
     return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  # search=None
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict,
@@ -196,7 +196,7 @@ def friend_feed():
 
 @login_required
 @recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
-def friend_feed_choice(friend_id=None):
+def friend_feed_choice(friend_id=None):  # Use request.args like in friend_recipes
     if friend_id is None:
         return redirect(url_for('recipes.friend_feed'))
     colors = Colors.act_colors
@@ -215,8 +215,9 @@ def friend_feed_choice(friend_id=None):
         # rec_dict = {r.id: r for r in recs}
     else:
         return redirect(url_for('recipes.friend_recipes'))
-    return render_template('friend_feed.html', recipes=None, cards=cards, title='Friend Feed', sidebar=True,  #, rec_dict=rec_dict,
-                           colors=colors, all_friends=all_friends, friend_dict=friend_dict, friends=True, feed=True)
+    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  #, rec_dict=rec_dict,
+                           colors=colors, friend_dict=friend_dict, all_friends=all_friends,
+                           friend_acts=friend_acts, friends=True, feed=True, recipes=None)
 
 
 @login_required
