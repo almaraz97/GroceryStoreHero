@@ -2,18 +2,16 @@ import os
 from datetime import datetime
 import json
 import string
-
-import numpy as np
-from flask import render_template, url_for, redirect, Blueprint, request, session, current_app
-from GroceryHero.HarmonyTool import norm_stack, recipe_stack
+from flask import render_template, url_for, redirect, Blueprint, request, session
+from GroceryHero.HarmonyTool import norm_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import FullQuantityForm
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
-from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User_PubRec, Pub_Rec
+from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, apriori_test, convert_frac, stats_graph, get_all_menu_recs)
+                                    show_harmony_weights, apriori_test, convert_frac, stats_graph)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 
@@ -42,7 +40,6 @@ def home():
                  if recipe.in_menu]
     borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
-
     aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
     for aisle in groceries:  # Turns ingredients into Measurement objects
@@ -64,21 +61,21 @@ def home():
 
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
-def clear_menu():
-    menu_recipes = Recipes.query.filter_by(author=current_user).filter_by(in_menu=True).all()  # Get all recipes
-    borrowed_recipes = User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()
-    if len(menu_recipes + borrowed_recipes) > 0:
+def clear_menu():  # todo not clearing borrowed recipes
+    menu_recipes = Recipes.query.filter_by(author=current_user, in_menu=True, eaten=True).all()
+    borrowed_recipes = User_Rec.query.filter_by(user_id=current_user.id, in_menu=True, eaten=True).all()
+    menu_recipes = menu_recipes + borrowed_recipes
+    if len(menu_recipes) > 0:
         histories = current_user.history.copy()
         history = []
         for recipe in menu_recipes:
-            if isinstance(recipe, Recipes):
+            if isinstance(recipe, Recipes) and recipe.eaten:
                 history.append(recipe.id)
-            elif isinstance(recipe, User_Rec):
+            elif isinstance(recipe, User_Rec) and recipe.eaten:
                 history.append(recipe.recipe_id)
             recipe.in_menu = False
             recipe.eaten = False
             recipe.times_eaten = recipe.times_eaten + 1
-
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
         histories.append(history)
@@ -86,9 +83,11 @@ def clear_menu():
         # current_user.history[datetime.utcnow()] = histories
         recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
         ids = [rec.id for rec in recipes]
-        action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow(),
-                         titles=[x.title for x in recipes])
-        db.session.add(action)
+        titles = [x.title for x in recipes]
+        if titles:
+            action = Actions(user_id=current_user.id, type_='Clear', recipe_ids=ids, date_created=datetime.utcnow(),
+                             titles=titles)
+            db.session.add(action)
         db.session.commit()
     return redirect(url_for('main.home'))
 
@@ -148,7 +147,7 @@ def harmony_tool():
 
 
 @login_required
-@main.route('/stats', methods=['GET', 'POST'])
+@main.route('/stats', methods=['GET', 'POST'])  # todo include borrowed recipes
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
     all_recipes, graph = None, ''
     history = current_user.history
@@ -161,7 +160,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         # print(listRules)
         average_menu_len = sum(len(x) for x in history) / len(history)  # todo dictionary conversion
         # average_menu_len = sum([len(x) for x in history.values()]) / len(history)  # todo dictionary conversion
-        all_ids = [r.id for r in Recipes.query.filter_by(author=current_user).all()]
+        all_ids = [r.id for r in current_user.recipes]
         # Recipe History/Frequency
         history = [item for sublist in history for item in sublist if item in all_ids]  # Flatten ID list of lists
         # history = [item for sublist in history.values() for item in sublist if item in all_ids]  # todo dictionary conversion

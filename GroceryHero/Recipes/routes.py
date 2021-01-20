@@ -620,7 +620,7 @@ def convert_history():
 
 # @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
 # @login_required
-# def linked_user():  # todo pagination for posts or limit by date?
+# def linked_user():
     # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     # friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     # cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)

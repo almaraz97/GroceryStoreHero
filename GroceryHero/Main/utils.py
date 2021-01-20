@@ -2,14 +2,13 @@ import json
 import os
 import numpy as np
 import sklearn
-from numpy.linalg import svd
 from apyori import apriori
+import matplotlib.pyplot as plt
 from flask import current_app
 from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
 from GroceryHero import db
 from GroceryHero.Recipes.utils import Measurements
-from GroceryHero.models import Recipes, Aisles, User_Rec, User_PubRec, Pub_Rec
+from GroceryHero.models import Recipes, Aisles, User_Rec
 
 
 def aisle_grocery_sort(menu_list, aisles):
@@ -292,71 +291,7 @@ def rem_trail_zero(num):
 
 
 def stats_graph(user, all_recipes):
-    # def almaraz_algorithm(dictionary, n, norm=1):
-    #     recipes = one_hot_recipes(dictionary)
-    #     # Split recipes into n groups
-    #     splits = len(recipes) // n
-    #     temp, groups = 0, []
-    #     for _ in range(n):
-    #         groups.append(list(recipes.values())[temp:temp + splits])
-    #         temp += splits
-    #     # Find the 'average' recipe for each group
-    #     average_recipes = [[sum(values) / len(recipes) for values in zip(*group)] for group in groups]
-    #     # Find the cosine distance between each recipe and each 'average' recipe (dot product and norm)
-    #     distances = [tuple(sum([x * y for x, y in zip(recipe, average_recipe)]) ** (1 / norm)
-    #                        for average_recipe in average_recipes) for recipe in recipes.values()]
-    #     return distances
 
-    # coordinates = almaraz_algorithm(all_recipes, 25)
-    # coordinates = values
-    # labels = [x for x in all_recipes.keys()]
-    # dim = 2
-    # reducer = umap.UMAP(n_components=dim, metric='manhattan')
-    # embedding = reducer.fit_transform(coordinates)
-    # if dim == 3:
-    #     ax = plt.axes(projection='3d')
-    #     x, y, z = [x[0] for x in embedding], [x[1] for x in embedding], [x[2] for x in embedding]
-    #     ax.scatter3D(x, y, z, 'blue')
-    #     for xi, yi, zi, label in zip(x, y, z, labels):
-    #         ax.text(xi, yi, zi, label, None)
-    #     # mplcursors.cursor(hover=True)
-    # if dim == 2:
-    #     fig, ax = plt.subplots()
-    #     x, y = [x[0] for x in embedding], [x[1] for x in embedding]
-    #     ax.scatter(x, y)
-    #     for i, txt in enumerate(labels):
-    #         ax.annotate(txt, (x[i], y[i]))
-    # else:
-    #     pass
-    # plt.show()
-    # history = User.query.filter_by(id=1).first().history.values()
-    # if len(history) > 0:
-    #     # Recipe History/Frequency
-    #     history = [item for sublist in history for item in sublist]
-    #     history_set = set(history)
-    #     history_count = {}
-    #     for item in history_set:
-    #         history_count[item] = history.count(item)
-    #     history_count = sorted(history_count.items(), key=lambda x: x[1], reverse=True)
-    #     history_count_names = {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}
-    #     plt.bar(history_count_names.keys(), history_count_names.values())
-    #     plt.show()
-    #     # Ingredient History/Frequency
-    #     ingredient_history = [[x for x in Recipes.query.filter_by(id=k).first().quantity.keys()] * v for
-    #                           k, v in history_count]
-    #     ingredient_history = [item for sublist in ingredient_history for item in sublist]
-    #     ingredient_set = set(ingredient_history)
-    #     ingredient_count = {}
-    #     for item in ingredient_set:
-    #         ingredient_count[item] = ingredient_history.count(item)
-    #     ingredient_count = sorted(ingredient_count.items(), key=lambda x: x[1], reverse=True)
-    #     plt.bar([x[0] for x in ingredient_count], [x[1] for x in ingredient_count])
-    #     plt.show()
-
-    # pca = PCA(n_components=2)
-    # pca = pca.fit_transform(values)
-    # pca_plot = plt.scatter(pca.T[0], pca.T[1])
-    # plt.show()
     all_recipes = all_recipes if all_recipes is not None else Recipes.query.filter_by(author=user).all()
     all_recipes = {k.title: k.quantity for k in all_recipes}
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
@@ -365,30 +300,49 @@ def stats_graph(user, all_recipes):
     recipe_vec = np.array(
         [np.array([1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_vec])
          for recipe in all_recipes])
-    # TSNE
-    tsne = TSNE(n_components=2, perplexity=.5, metric='l2')
-    model = tsne.fit_transform(recipe_vec)
-
-    # TODO SVD #########
-    # u, s, v = np.linalg.svd(recipe_vec)
-    # s = np.concatenate([np.diag(s), np.zeros((162 - 41, 41))], axis=0).T
-    # dim = 2
-    # u = u[:, :dim]
-    # s = s[:dim]
-    # v = v[:, :dim]
-    # model = u@s@v
-
-    # TODO PCA #########
-    # PCA = sklearn.decomposition.PCA(n_components=2)
-    # model = PCA.fit_transform(recipe_vec)
+    algo = 'tsne'
+    if algo == 'pca':
+        pca = sklearn.decomposition.PCA(n_components=2)
+        model = pca.fit_transform(recipe_vec)
+    elif algo == 'tsne':
+        tsne = TSNE(n_components=2, perplexity=.5, metric='l2')
+        model = tsne.fit_transform(recipe_vec)
+    elif algo == 'svd':
+        u, s, v = np.linalg.svd(recipe_vec)
+        s = np.concatenate([np.diag(s), np.zeros((162 - 41, 41))], axis=0).T
+        dim = 2
+        u = u[:, :dim]
+        s = s[:dim]
+        v = v[:, :dim]
+        model = u@s@v
+    else:  # UMAP
+        # def almaraz_algorithm(n, recipes, norm=1):
+        #     # Split recipes into n groups
+        #     splits = len(recipes) // n
+        #     temp, groups = 0, []
+        #     for _ in range(n):
+        #         groups.append(list(recipes.values())[temp:temp + splits])
+        #         temp += splits
+        #     # Find the 'average' recipe for each group
+        #     average_recipes = [[sum(values) / len(recipes) for values in zip(*group)] for group in groups]
+        #     # Find the cosine distance between each recipe and each 'average' recipe (dot product and norm)
+        #     distances = [tuple(sum([x * y for x, y in zip(recipe, average_recipe)]) ** (1 / norm)
+        #                        for average_recipe in average_recipes) for recipe in recipes.values()]
+        #     return distances
+        #
+        # coordinates = almaraz_algorithm(25, recipe_vec)
+        # labels = [x for x in all_recipes.keys()]
+        # reducer = umap.UMAP(n_components=dim, metric='manhattan')
+        # embedding = reducer.fit_transform(coordinates)
+        model = []
+        pass
 
     x, y = [x[0] for x in model], [x[1] for x in model]
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(x, y)
     for i, txt in enumerate(all_recipes.keys()):
         ax.annotate(txt, (x[i], y[i]), fontsize=8)
-    # plt.title(f'TSNE w/ perplexity: {perp}, metric: {met}')
-    plt.title(f'TSNE')
+    plt.title(f'{algo}')
     plt.show()
     filepath = str(user.id) + '.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)

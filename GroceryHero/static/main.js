@@ -170,5 +170,3 @@ $(document).ready(function() {
 //    });
 //});
 
-// todo add clear button ability when all recipes are eaten
-

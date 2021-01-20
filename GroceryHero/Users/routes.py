@@ -1,19 +1,14 @@
-import itertools
 from functools import wraps
 from urllib.parse import urlencode
-
 from authlib.integrations.base_client import OAuthError
 from flask import current_app
-# from authlib.integrations.flask_client import OAuth
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
-from GroceryHero import db  # , bcrypt, Config
+from GroceryHero import db
 from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_PubRec, User_Rec, User_Act
-from GroceryHero.Users.forms import (RegistrationForm, LoginForm, UpdateAccountForm, DeleteAccountForm,
-                                     RequestResetForm, ResetPasswordForm, AdvancedHarmonyForm)
+from GroceryHero.Users.forms import UpdateAccountForm, DeleteAccountForm, AdvancedHarmonyForm
 from GroceryHero.Main.forms import ImportForm
-from GroceryHero.Users.utils import save_picture, import_files, update_harmony_preferences, \
-    load_harmony_form
+from GroceryHero.Users.utils import save_picture, import_files, update_harmony_preferences, load_harmony_form
 from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights, ensure_harmony_keys
 import json
 

@@ -53,7 +53,7 @@ def norm_stack_simple2(input_recipe_dict, algorithm):
 
 
 def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None, tastes=None, sticky_weights=None,
-               ingredient_excludes=None):
+               ingredient_excludes=None, apriori=1):
     """
     Input: Recipe dictionary {name:ingredient list}, the desired norm, and optional arguments
     Output: Harmony score
@@ -121,7 +121,7 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
         taste_comparisons = list(itertools.combinations(input_recipe_dict, 2))  # All taste comparisons for in_rec_dict
         taste_scores = [tastes[comparison] if comparison in tastes else 1 for comparison in taste_comparisons]
         avg_taste = sum(taste_scores) / len(taste_comparisons)
-    return (score / max_l) * (1 / avg_taste)
+    return (score / max_l) * (1 / avg_taste) * apriori
 
 
 def create_combos(recipes, count, excludes, includes, limit):
@@ -148,9 +148,8 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
         dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
                                    sticky_weights=sticky, ingredient_excludes=ing_ex) ** modifier  # (1 / (count * 2 - 3))
-        if max_sim is not None:
-            if harmony_score < max_sim:
-                scores[group] = harmony_score
+        if max_sim is not None and (harmony_score < max_sim):
+            scores[group] = harmony_score
         else:
             scores[group] = harmony_score
     sorted_scored_combos = sorted(scores, key=lambda key: scores[key])
@@ -175,13 +174,6 @@ def return_combo_score(recipes, combos, algo, weights, taste, sticky, ing_ex, mo
     return recommendations
 
 
-def millify(n):
-    n = float(n)
-    millnames = ['', ' thousand', ' million', ' billion', ' trillion']
-    millidx = max(0, min(len(millnames) - 1, int(math.floor(0 if n == 0 else math.log10(abs(n)) / 3))))
-    return '{:.0f}{}'.format(n / 10 ** (3 * millidx), millnames[millidx])
-
-
 def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', rec_limit=5,
                  limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None,
                  sticky_weights=None, home=False):
@@ -201,6 +193,14 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
     combos = return_combo_score(recipes, combos, algorithm, ingredient_weights, tastes, sticky_weights,
                                 ingredient_excludes, modifier)
     return combos, millify(possible)
+
+
+def millify(n):
+    n = float(n)
+    millnames = ['', ' thousand', ' million', ' billion', ' trillion']
+    millidx = max(0, min(len(millnames) - 1, int(math.floor(0 if n == 0 else math.log10(abs(n)) / 3))))
+    return '{:.0f}{}'.format(n / 10 ** (3 * millidx), millnames[millidx])
+
 
 
 # Perhaps vectorize the entire recipe list and A.T @ A whole thing and somehow sub-select portions of that matrix?

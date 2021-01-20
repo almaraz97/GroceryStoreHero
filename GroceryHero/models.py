@@ -41,9 +41,11 @@ class User(db.Model, UserMixin):
     messages = db.Column(db.JSON, nullable=False, default={})
     history = db.Column(db.JSON, nullable=False, default={})
     pantry = db.Column(db.JSON, nullable=False, default={})  # todo False
-    # user_rec = db.relationship('User_Rec', backref='borrower', lazy=True)
+
+    borrows = db.relationship('User_Rec', backref='borrower', lazy=True)
     # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
     # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)  # todo be able to backref these
+
     actions = db.relationship('Actions', backref='author', lazy=True)
     pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
     pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
@@ -56,7 +58,6 @@ class User(db.Model, UserMixin):
     subscription = db.Column(db.JSON, nullable=False, default={})
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
-
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
