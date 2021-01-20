@@ -3,6 +3,25 @@
 <body>
   <h1>About</h1>
   <div class="content-section mt-3">
+      <legend class="border-bottom mb-3">Tips to Being a Grocery Hero</legend>
+      <ul class="mb-3">
+        <li>Ingredients that are metric and ones that are Imperial will not combine in the grocery list as of currently.
+          If you have 1 pound of chicken and 100 grams of chicken, they will stay separated.
+        </li>
+        <li>Recipe ingredients have 3 unit types: generic, weight, or volume. When your grocery list is made ingredients
+          that are of the same type can be combined, ie rice 1 cup + rice 2 cups = rice 3 cups. This is also valid:
+          sugar 15 tablespoons + sugar 1 tablespoon = sugar 1 cup. It will combine to the highest unit within that type.
+          However generic units do not have that ability. Egg 1 jar + egg 1 package = egg 1 unit, egg 1 package since
+          there is no conversion possible from jars to packages/cans/bottles and etc.
+        </li>
+        <li>You can only clear your menu when you have eaten everything on your menu, otherwise remove it from the
+          recipes page.</li>
+        <li>Adding a friends recipe to your menu is in fact borrowing the same copy of that recipe. Whatever change they make to it
+          will change it for you as well. You can download their recipe but with your own copy the number of times that recipe will not
+          be updated for that recipe and instead to your copy and their copy separately.</li>
+      </ul>
+    </div>
+    <div class="content-section mt-3">
     <legend class="border-bottom mb-3">On This Version</legend>
       <h5 class="mt-3">What's new?</h5>
       <ul class="mt-2 mb-2">
@@ -13,29 +32,6 @@
       <li>To be filled in.</li>
     </ul>
   </div>
-  <div class="content-section mt-3">
-      <legend class="border-bottom mb-3">Tips to Being a Grocery Hero</legend>
-      <ul class="mb-3">
-        <li>Ingredients that are metric and ones that are Imperial will not combine in the grocery list as of currently.
-          If you have 1 pound of chicken and 100 grams of chicken, they will stay separated.
-        </li>
-        <li>When importing recipes or aisles, new aisles or recipes that share a name with an aisle or recipe
-          you already have will not be added.</li>
-        <li>You can only add extras from aisles currently. Add them to their aisle so the extra item can be sorted
-          when you add it to you list.</li>
-        <li>Recipe ingredients have 3 unit types: generic, weight, or volume. When your grocerylist is made ingredients
-          that are of the same type can be combined, ie rice 1 cup + rice 2 cups = rice 3 cups. This is also valid:
-          sugar 15 tablespoons + sugar 1 tablespoon = sugar 1 cup. It will combine to the highest unit within that type.
-          However generic units do not have that ability. Egg 1 jar + egg 1 package = egg 1 unit, egg 1 package since
-          there is conversion possible from jars to packages/cans/bottles and etc.
-        </li>
-        <li>You can only clear your menu when you have eaten everything on your menu, otherwise remove it from the
-          recipes page.</li>
-        <li>Adding a friends recipe to your menu is in fact borrowing the same copy of that recipe. Whatever change they make to it
-          will change it for you as well. You can download their recipe but with your own copy the number of times that recipe will not
-          be updated for that recipe and instead to your copy and their copy separately.</li>
-      </ul>
-    </div>
   {% if current_user.pro %}
     <section id="harmonytool">
       <div class="content-section mt-3">

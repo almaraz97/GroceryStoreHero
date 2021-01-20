@@ -181,43 +181,21 @@ def public_recipes():
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
 def friend_feed():
     colors = Colors.act_colors
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    friend = request.args.get('friend', 0, type=int)
+    all_followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    followees = all_followees if friend == 0 else [friend]
+    if followees[0] not in all_followees:
+        return redirect(url_for('recipes.friend_feed'))
     # if current_app.server:
-    #   followees = followees + [current_user.id]  # todo # For testing
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    #   followees = followees + [current_user.id]
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in all_followees}
     page = request.args.get('page', 1, type=int)
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees))\
         .order_by(Actions.date_created.desc()).paginate(page=page, per_page=10)
     cards = generate_feed_contents(friend_acts.items)
-    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  # search=None
+    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,
                            colors=colors, friend_dict=friend_dict, all_friends=friend_dict,
-                           friend_acts=friend_acts, friends=True, feed=True)
-
-
-@login_required
-@recipes.route('/friend_feed/<int:friend_id>', methods=['GET', 'POST'])
-def friend_feed_choice(friend_id=None):  # Use request.args like in friend_recipes
-    if friend_id is None:
-        return redirect(url_for('recipes.friend_feed'))
-    colors = Colors.act_colors
-    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_id).first()
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    if followee is not None and followee.status == 1:
-        # followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-        all_friends = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-        # friend = User.query.filter_by(id=followee.follow_id).all()
-        # friend_dict = {friend.id: friend.username}
-        friend_acts = Actions.query.filter_by(user_id=followee.follow_id).all()
-        cards = generate_feed_contents(friend_acts)
-        # recs = [item for sublist in [r.recipe_ids for r in cards if r.type_ == 'Clear'] for item in sublist]
-        # recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
-        # rec_dict = {r.id: r for r in recs}
-    else:
-        return redirect(url_for('recipes.friend_recipes'))
-    return render_template('friend_feed.html', cards=cards, title='Friend Feed', sidebar=True,  #, rec_dict=rec_dict,
-                           colors=colors, friend_dict=friend_dict, all_friends=all_friends,
-                           friend_acts=friend_acts, friends=True, feed=True, recipes=None)
+                           friend_acts=friend_acts, friend=friend, page=page, friends=True, feed=True)
 
 
 @login_required

@@ -32,7 +32,7 @@
           <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_page') }}">Recipes</a>
           <a class="nav-item nav-link" href="{{ url_for('pantry.pantry_page') }}">Pantry</a>
           <a class="nav-item nav-link" href="{{ url_for('aisles.aisles_page') }}">Aisles</a>
-{#          <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>#}
+          <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
         {% endif %}
         </div>
         <!-- Navbar Right Side -->
@@ -191,7 +191,7 @@
             {% endif %}
             {% for friend in all_friends %}
               {% if feed is defined %}
-                {% set friend_send = url_for('recipes.friend_feed_choice', friend_id=friend) %}
+                {% set friend_send = url_for('recipes.friend_feed', friend=friend, page=page) %}
               {% else %}
                 {% set friend_send = url_for('recipes.friend_recipes_choice', friend=friend) %}
               {% endif %}
