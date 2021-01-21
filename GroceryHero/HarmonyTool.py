@@ -152,8 +152,7 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
         if rules is not None:
             lifts = [x.lift for x in rules if (x.items_add == set(group))]
             p_score = (sum(lifts)/len(lifts))**.5 if len(lifts) > 0 else 1  # todo see what the distribution is
-            if p_score > 2:
-                print(p_score)
+            print(p_score)
         else:
             p_score = 1
         group = group + tuple(includes)
