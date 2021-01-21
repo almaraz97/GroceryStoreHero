@@ -21,20 +21,26 @@ recipes = Blueprint('recipes', __name__)
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
-    recipe_history, form, about, colors = [], HarmonyForm(), True, Colors.rec_colors
+    form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
     in_menu = [r.title for r in in_menu]
     about = None if current_user.pro else True
     preferences = get_harmony_settings(current_user.harmony_preferences)
+    recipe_hist = [[x.title for x in Recipes.query.filter(Recipes.id.in_(sublist)).all()] for sublist in
+                   current_user.history]
+    excludes = int(current_user.harmony_preferences['history'])
+    recipe_ex = [item for sublist in recipe_hist[:excludes] for item in sublist]
     if request.method == "GET":
-        form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu, recipe_list)
+        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list,
+                                                                  recipe_ex)
     if request.method == "POST":
         if form.validate_on_submit():  # Harmony or search button was pressed
-            recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history)
+            recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_ex, recipe_hist)
             recommended = remove_menu_items(in_menu, recommended)
             update_user_preferences(current_user, form, recommended, possible)
-            form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu, recipe_list)
+            form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu,
+                                                                           recipe_list, recipe_ex)
     return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
                            search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
                            recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
@@ -186,8 +192,6 @@ def friend_feed():
     followees = all_followees if friend == 0 else [friend]
     if followees[0] not in all_followees:
         return redirect(url_for('recipes.friend_feed'))
-    # if current_app.server:
-    #   followees = followees + [current_user.id]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in all_followees}
     page = request.args.get('page', 1, type=int)
     friend_acts = Actions.query.filter(Actions.user_id.in_(followees))\

@@ -2,6 +2,10 @@ import itertools
 import math
 import random
 
+from apyori import apriori
+
+from GroceryHero.models import Recipes
+
 
 def dot(v1, v2):
     return sum(x * y for x, y in zip(v1, v2))
@@ -53,7 +57,7 @@ def norm_stack_simple2(input_recipe_dict, algorithm):
 
 
 def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None, tastes=None, sticky_weights=None,
-               ingredient_excludes=None, apriori=1):
+               ingredient_excludes=None, p_score=1):
     """
     Input: Recipe dictionary {name:ingredient list}, the desired norm, and optional arguments
     Output: Harmony score
@@ -121,7 +125,7 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
         taste_comparisons = list(itertools.combinations(input_recipe_dict, 2))  # All taste comparisons for in_rec_dict
         taste_scores = [tastes[comparison] if comparison in tastes else 1 for comparison in taste_comparisons]
         avg_taste = sum(taste_scores) / len(taste_comparisons)
-    return (score / max_l) * (1 / avg_taste) * apriori
+    return (score / max_l) * (1 / avg_taste) * p_score
 
 
 def create_combos(recipes, count, excludes, includes, limit):
@@ -135,19 +139,28 @@ def create_combos(recipes, count, excludes, includes, limit):
     if len(combos) > limit:
         random.shuffle(combos)
         combos = combos[:limit]
-    if includes:  # If there are menu items add to combinations
-        for i, combo in enumerate(combos):
-            combos[i] = combo + tuple(includes)
+    # if includes:  # If there are menu items add to combinations
+    #     for i, combo in enumerate(combos):
+    #         combos[i] = combo + tuple(includes)
     return combos, len(combos)
 
 
-def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky, modifier):
+def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky, modifier, includes, rules=None):
     """Score each combination of recipe"""
     scores = {}
     for group in combos:
-        dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group
+        if rules is not None:
+            lifts = [x.lift for x in rules if (x.items_add == set(group))]
+            p_score = (sum(lifts)/len(lifts))**.5 if len(lifts) > 0 else 1  # todo see what the distribution is
+            if p_score > 2:
+                print(p_score)
+        else:
+            p_score = 1
+        group = group + tuple(includes)
+        dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group  # SLOWEST PART
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
-                                   sticky_weights=sticky, ingredient_excludes=ing_ex) ** modifier  # (1 / (count * 2 - 3))
+                                   sticky_weights=sticky, ingredient_excludes=ing_ex, p_score=p_score) ** modifier
+        # (1 / (count * 2 - 3))
         if max_sim is not None and (harmony_score < max_sim):
             scores[group] = harmony_score
         else:
@@ -176,7 +189,7 @@ def return_combo_score(recipes, combos, algo, weights, taste, sticky, ing_ex, mo
 
 def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', rec_limit=5,
                  limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None,
-                 sticky_weights=None, home=False):
+                 sticky_weights=None, history=None):
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
     max_sim = None if max_sim == float('inf') else int(max_sim)/100
     excludes = [] if excludes is None else excludes  # Comes in as 0 or not
@@ -186,9 +199,15 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
     tastes = {} if tastes is None else tastes
     ingredient_excludes = [] if ingredient_excludes is None else ingredient_excludes
     sticky_weights = {} if sticky_weights is None else sticky_weights
+    history = [] if history is None else history
+
     combos, possible = create_combos(recipes, count, excludes, includes, limit)
+    # todo only expand sets from "includes" if possible
+    rules = [x.ordered_statistics for x in list(apriori(history, min_support=1e-8, min_lift=1e-8))]
+    rules = [item for sublist in rules for item in sublist if (len(item.items_add) == count) and
+             (item.items_base == set(includes)) and all(x not in item.items_add for x in excludes)]
     scored_combos = score_combos(recipes, combos, max_sim, algorithm, ingredient_weights, tastes, ingredient_excludes,
-                                 sticky_weights, modifier)
+                                 sticky_weights, modifier, includes, rules=rules)
     combos = return_unique_combos(scored_combos, rec_limit, includes)
     combos = return_combo_score(recipes, combos, algorithm, ingredient_weights, tastes, sticky_weights,
                                 ingredient_excludes, modifier)

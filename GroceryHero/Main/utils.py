@@ -252,7 +252,7 @@ def show_harmony_weights(user, preferences):
     return ing_weights, tastes, sticky
 
 
-def apriori_test(user, min_support=None):
+def apriori_test(user, min_support=None, harmony=False, includes=None):
     recipes = []
     for week in user.history:
     # for week in user.history.values():
@@ -267,7 +267,14 @@ def apriori_test(user, min_support=None):
             recipes.append(temp)
     # recipes = [temp for temp in []]
     min_support = 2/len(recipes) if min_support is None else min_support
-    return list(apriori(recipes, min_support=min_support, min_lift=1.1))
+    if harmony:
+        aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)
+        if includes is not None:
+            aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
+    else:
+        aprioris = apriori(recipes, min_support=min_support, min_lift=1.1)
+        aprioris = list(aprioris)
+    return aprioris
 
 
 def convert_frac(num):  # form validator already checked for float or fraction
@@ -291,7 +298,6 @@ def rem_trail_zero(num):
 
 
 def stats_graph(user, all_recipes):
-
     all_recipes = all_recipes if all_recipes is not None else Recipes.query.filter_by(author=user).all()
     all_recipes = {k.title: k.quantity for k in all_recipes}
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
@@ -335,8 +341,6 @@ def stats_graph(user, all_recipes):
         # reducer = umap.UMAP(n_components=dim, metric='manhattan')
         # embedding = reducer.fit_transform(coordinates)
         model = []
-        pass
-
     x, y = [x[0] for x in model], [x[1] for x in model]
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(x, y)
@@ -347,5 +351,6 @@ def stats_graph(user, all_recipes):
     filepath = str(user.id) + '.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
     plt.savefig(picture_path)
+
 
 

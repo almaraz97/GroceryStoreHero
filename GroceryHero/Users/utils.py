@@ -118,19 +118,21 @@ def load_harmony_form(form, user):
     ingredients = sorted(set([item for sublist in ingredients for item in sublist]))
     # Recommendation number
     form.recommend_num.data = user.harmony_preferences['rec_limit']
-    # Recipe pair weights
+    # Recipe group (pair) weights
     form.pairs.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
                                            sorted(set([recipe.title for recipe in recipes])))]
     # Ingredient weights
     form.ingredient.choices = [(x, x) for x in (['--select options (ctl+click)--'] + ingredients)]
-    # Sticky weights
-    form.ingredient2.choices = [(x, x) for x in (['--select options (ctl+click)--'] + ingredients)]
     # Exclude ingredients
     current_excludes = user.harmony_preferences['ingredient_excludes']
     form.ingredient_ex.choices = [(x, x) for x in (['--select options (ctl+click)--'] +
                                                    ingredients) if x not in current_excludes]
     form.ingredient_rem.choices = [(x, x) for x in ['--to put back (ctl+click)--'] +
                                    [item for item in current_excludes]]
+    # Sticky weights
+    form.ingredient2.choices = [(x, x) for x in (['--select options (ctl+click)--'] + ingredients)]
+    # History Exclude
+    form.history_exclude.data = user.harmony_preferences['history']
     # Algorithm
     form.algorithm.data = user.harmony_preferences['algorithm']
     # Modifier
@@ -143,6 +145,7 @@ def update_harmony_preferences(form, user):  # Do dictionaries need to be JSON?
     dictionary['rec_limit'] = form.recommend_num.data
     dictionary['algorithm'] = form.algorithm.data
     dictionary['modifier'] = form.modifier.data
+    dictionary['history'] = form.history_exclude.data
     # Ingredient weights
     if isinstance(dictionary['ingredient_weights'], str):  # Load old (If the entries are JSON for some reason?)
         dictionary['ingredient_weights'] = json.loads(dictionary['ingredient_weights'])

@@ -357,30 +357,23 @@ def remove_menu_items(in_menu, recommended):
     return recommended
 
 
-def recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_history):
+def recipe_stack_w_args(recipe_list, preferences, form, in_menu, history_ex, recipe_hist):
     recipes = {r.title: r.quantity.keys() for r in recipe_list}
     count = int(form.groups.data)  # + len(in_menu) if form.groups.data else len(in_menu)
     recommended, possible = recipe_stack(recipes, count, max_sim=form.similarity.data,
-                                         excludes=form.excludes.data + recipe_history, includes=in_menu,
-                                         limit=1_000_000, **preferences)
+                                         excludes=form.excludes.data + history_ex, includes=in_menu,
+                                         limit=1_000_000, history=recipe_hist, **preferences)
     return recommended, possible
 
 
-def load_harmonyform(current_user, form, in_menu, recipe_list):
+def load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex):
     in_menu = [recipe.title for recipe in in_menu]  # List of recipe titles in menu
-    recipe_history = [item for sublist in current_user.history[:current_user.harmony_preferences['history']]
-                      for item in sublist]
-    # recipe_history = [item for sublist in
-    #                   list(current_user.history.values())[:current_user.harmony_preferences['history']]
-    #                       for item in sublist]
-    recipe_history = [x.title for x in Recipes.query.filter(Recipes.id.in_(recipe_history)).all()]
-
     form.groups.choices = [x for x in range(2 - len(in_menu), 5) if 0 < x]
     modifier = current_user.harmony_preferences['modifier']
     form.similarity.choices = [(x, x) for x in range(0, 60, 10)] + [(float('inf'), 'No Limit')] if modifier == 'True' \
         else [(x, x) for x in range(50, 105, 5)] + [(float('inf'), 'No Limit')]
     form.similarity.default = [50, 50]
-    excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_history)]
+    excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_ex)]
     form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
 
     preferences = current_user.harmony_preferences  # Load user's previous preferences dictionary
@@ -394,7 +387,7 @@ def load_harmonyform(current_user, form, in_menu, recipe_list):
         # todo might be redundant, (prevent deleted recipes from being linked in a recommended)
         recommended = {key: value for key, value in recommended.items() if
                        all(x in [r.title for r in recipe_list] for x in key)}
-    return form, recommended, recipe_history, possible
+    return form, recommended, recipe_ex, possible
 
 
 def load_quantityform(recipe):
