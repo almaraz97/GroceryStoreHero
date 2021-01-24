@@ -165,6 +165,8 @@ def auth_login():
         return redirect(url_for('main.home'))
     if session.get('jwt_payload', False):  # User has been authenticated by auth0 and payload is in session
         email = session['jwt_payload'].get('email', False)
+        if type(email) is str:
+            email = email.lower()
         verified = session['jwt_payload'].get('email_verified', False)
         if email and verified:  # User email has been provided
             user = User.query.filter_by(email=email).first()

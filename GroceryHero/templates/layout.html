@@ -32,7 +32,6 @@
           <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_page') }}">Recipes</a>
           <a class="nav-item nav-link" href="{{ url_for('pantry.pantry_page') }}">Pantry</a>
           <a class="nav-item nav-link" href="{{ url_for('aisles.aisles_page') }}">Aisles</a>
-          <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
         {% endif %}
         </div>
         <!-- Navbar Right Side -->
@@ -45,8 +44,9 @@
 {#            {% endif %}#}
 {#            <a class="nav-item nav-link" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>#}
 {#            <a class="nav-item nav-link" href="{{ url_for('pantry.new_shelf') }}">New Shelf</a>#}
-            <a class="nav-item nav-link d-none d-md-flex d-lg-flex d-xl-flex" href="{{ url_for('users.account') }}">Account</a>
-            <a class="nav-item nav-link d-flex d-md-none d-lg-none d-xl-none" href="{{ url_for('main.about') }}">About</a>
+            <a class="nav-item nav-link" href="{{ url_for('main.about') }}">About</a>
+            <a class="nav-item nav-link" href="{{ url_for('users.account') }}">Account</a>
+{#            <a class="nav-item nav-link d-flex d-md-none d-lg-none d-xl-none" href="{{ url_for('main.about') }}">About</a>#}
             <a class="nav-item nav-link" href="{{ url_for('users.auth_logout') }}">Logout</a>
           {% else %}
             <a class="nav-item nav-link" href="{{ url_for('users.auth_login') }}">Login/Register</a>

@@ -149,10 +149,10 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
     """Score each combination of recipe"""
     scores = {}
     for group in combos:
+        # rules = None
         if rules is not None:
             lifts = [x.lift for x in rules if (x.items_add == set(group))]
-            p_score = (sum(lifts)/len(lifts))**.5 if len(lifts) > 0 else 1  # todo see what the distribution is
-            print(p_score)
+            p_score = (sum(lifts)/len(lifts))**.5 if len(lifts) > 0 else 1  # very sparse but reached 17+
         else:
             p_score = 1
         group = group + tuple(includes)
@@ -160,8 +160,9 @@ def score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, sticky,
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
                                    sticky_weights=sticky, ingredient_excludes=ing_ex, p_score=p_score) ** modifier
         # (1 / (count * 2 - 3))
-        if max_sim is not None and (harmony_score < max_sim):
-            scores[group] = harmony_score
+        if max_sim is not None:
+            if harmony_score < max_sim:
+                scores[group] = harmony_score
         else:
             scores[group] = harmony_score
     sorted_scored_combos = sorted(scores, key=lambda key: scores[key])
@@ -202,9 +203,12 @@ def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tast
 
     combos, possible = create_combos(recipes, count, excludes, includes, limit)
     # todo only expand sets from "includes" if possible
-    rules = [x.ordered_statistics for x in list(apriori(history, min_support=1e-8, min_lift=1e-8))]
-    rules = [item for sublist in rules for item in sublist if (len(item.items_add) == count) and
-             (item.items_base == set(includes)) and all(x not in item.items_add for x in excludes)]
+    if count < 3:
+        rules = [x.ordered_statistics for x in list(apriori(history, min_support=1e-8, min_lift=1e-8))]
+        rules = [item for sublist in rules for item in sublist if (len(item.items_add) == count) and
+                 (item.items_base == set(includes)) and all(x not in item.items_add for x in excludes)]
+    else:
+        rules = None
     scored_combos = score_combos(recipes, combos, max_sim, algorithm, ingredient_weights, tastes, ingredient_excludes,
                                  sticky_weights, modifier, includes, rules=rules)
     combos = return_unique_combos(scored_combos, rec_limit, includes)

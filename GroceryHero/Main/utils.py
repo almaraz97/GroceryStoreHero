@@ -347,7 +347,7 @@ def stats_graph(user, all_recipes):
     for i, txt in enumerate(all_recipes.keys()):
         ax.annotate(txt, (x[i], y[i]), fontsize=8)
     plt.title(f'{algo}')
-    plt.show()
+    # plt.show()
     filepath = str(user.id) + '.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
     plt.savefig(picture_path)
