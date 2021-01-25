@@ -213,8 +213,7 @@ def get_history_stats(user):  # For dashboard stats
     if len(history) > 0:
         # Make sure deleted recipes are not included in history
         all_recipes_ids = [r.id for r in Recipes.query.filter_by(author=user).all()]
-        history = [item for sublist in history for item in sublist if item in all_recipes_ids]  # Flatten history
-        # history = [item for sublist in history.values() for item in sublist if item in all_recipes_ids]  # todo dictionary conversion
+        history = [item for sublist in history.values() for item in sublist if item in all_recipes_ids]
         history_set = set(history)
         history_count = {recipe: history.count(recipe) for recipe in history_set}
         sorted_history_count = sorted(history_count, key=lambda x: history_count[x], reverse=True)  # By frequency
@@ -254,7 +253,8 @@ def show_harmony_weights(user, preferences):
 
 def apriori_test(user, min_support=None, harmony=False, includes=None):
     recipes = []
-    for week in user.history:
+    history = user.history.values()
+    for week in history:
     # for week in user.history.values():
         # temp = [recipe.title for recipe in
         # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history.values()]]
@@ -265,7 +265,6 @@ def apriori_test(user, min_support=None, harmony=False, includes=None):
                 temp.append(recipe.title)
         if len(temp) > 0:
             recipes.append(temp)
-    # recipes = [temp for temp in []]
     min_support = 2/len(recipes) if min_support is None else min_support
     if harmony:
         aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)

@@ -1,10 +1,11 @@
 # import csv
+from datetime import datetime, timedelta
+
 from apyori import apriori
 # from flask import current_app
 # from flask_login import current_user
 
 
-# todo rework algorithm to integrate into recipe stack
 # dictionary with transaction number as key and list(set(item_ids)) as value
 # def read_data(file_loc='GroceryStoreDataSet.csv'):
 #     trans = dict()
@@ -191,24 +192,24 @@ with db.app.app_context():
     #     del aprioris[d]
     # aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
 
-    all_users = User.query.all()
-    all_history = [[item for sublist in user.history for item in sublist] for user in all_users]
-    all_user_ids = [user.id for user in all_users]
-    # for user in all_users:
-    #     all_history.append([item for sublist in user.history for item in sublist])
-    #     all_user_ids.append(user.id)
-    all_items = sorted(set(item for sublist in all_history for item in sublist))
-    data = []
-    for i, user_hist in enumerate(all_user_ids):
-        for item in all_items:
-            count = all_history[i].count(item)
-            if count > 0:
-                data.append([all_user_ids[i], item, count])
-            else:
-                data.append([all_user_ids[i], item, 0])
-    data = pd.DataFrame(data, columns=['userID', 'itemID', 'rating'])
-    # print(data[data['rating'] != 0])
-    data.to_csv('user_item.csv')
+    # all_users = User.query.all()
+    # all_history = [[item for sublist in user.history for item in sublist] for user in all_users]
+    # all_user_ids = [user.id for user in all_users]
+    # # for user in all_users:
+    # #     all_history.append([item for sublist in user.history for item in sublist])
+    # #     all_user_ids.append(user.id)
+    # all_items = sorted(set(item for sublist in all_history for item in sublist))
+    # data = []
+    # for i, user_hist in enumerate(all_user_ids):
+    #     for item in all_items:
+    #         count = all_history[i].count(item)
+    #         if count > 0:
+    #             data.append([all_user_ids[i], item, count])
+    #         else:
+    #             data.append([all_user_ids[i], item, 0])
+    # data = pd.DataFrame(data, columns=['userID', 'itemID', 'rating'])
+    # # print(data[data['rating'] != 0])
+    # data.to_csv('user_item.csv')
     # data['rating'] = (data['rating'] - data['rating'].min())/(data['rating'].max()-data['rating'].min())
     # data = Dataset.load_from_df(data[['userID', 'itemID', 'rating']], Reader(rating_scale=(0, 1)))
     # svd = S.SVD()
@@ -217,108 +218,13 @@ with db.app.app_context():
     # print(pd.DataFrame(svd.compute_similarities()))
     # predictions = svd.test(trainset)
     # accuracy.rmse(predictions, verbose=True)
-
-
-"""
-RelationRecord(
-items=frozenset({'Burgers', 'Chicken Enchiladas', 'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), support=0.25, ordered_statistics=
-
-[
-OrderedStatistic(items_base=frozenset(), 
-items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas', 'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=0.25, lift=1.0),
-
-OrderedStatistic(items_base=frozenset({'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), confidence=0.5, lift=2.0),
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Burgers'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=0.5, lift=2.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs'}), 
-items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
-
-OrderedStatistic(items_base=frozenset({'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers'}), confidence=1.0, lift=4.0),
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs'}), 
-items_add=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers'}), 
-items_add=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Burgers', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Burgers'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Burgers'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers'}), 
-items_add=frozenset({'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0), 
-
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), 
-items_add=frozenset({'Chicken Enchiladas'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Chicago Hotdogs'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Burgers'}), confidence=1.0, lift=2.0), 
-
-OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Black Bean Burgers'}), confidence=1.0, lift=4.0), 
-
-OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), 
-items_add=frozenset({'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=2.0)
-
-])
-"""
+    users = User.query.all()
+    for user in users:
+        hist_dict = {}
+        today = datetime.utcnow() - timedelta(days=1)
+        history = user.history
+        for week in history:
+            hist_dict[today.strftime(today.strftime('%Y-%m-%d %H:%M:%S'))] = week
+            today = today - timedelta(days=7)
+        user.history = hist_dict
+    db.session.commit()

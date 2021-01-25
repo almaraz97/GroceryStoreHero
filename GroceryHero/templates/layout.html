@@ -419,21 +419,21 @@
             </div>
           </form>
           {% if combos is defined %}
-          <p class='text-muted mb-2 mt-3 pt-1 border-top' style="text-align: center;">{{combos}} combinations were evaluated</p>
+            <p class='text-muted mb-2 mt-3 pt-1 border-top' style="text-align: center;">{{combos}} combinations were evaluated</p>
           {% endif %}
           <!-- Recommendations -->
           {% if recommended %}
           <!-- Multi-select Recipes -->
           {% if (recommended.keys()|first)|length < 2 %}
-          <form action="{{ url_for('recipes.multi_add_to_menu', multi=True) }}" method="POST">
-            <select multiple class="form-control mt-3" name="harmony">
-              <option value="">-- select options (clt+click) --</option>
-              {% for recipe in recommended %}
-              <option value="{{ recipe_ids[recipe[0]] }}">{{ recipe[0] }} {{ recommended[recipe] }}%</option>
-              {% endfor %}
-            </select>
-            <button class="btn btn-success btn-block btn-sm mt-3 mb-2">Add to Menu</button>
-          </form>
+            <form action="{{ url_for('recipes.multi_add_to_menu', multi=True) }}" method="POST">
+              <select multiple class="form-control mt-3" name="harmony" style="width: 100%; overflow: scroll; text-overflow: ellipsis; white-space: nowrap;">
+                <option value="">-- select options (clt+click) --</option>
+                {% for recipe in recommended %}
+                  <option value="{{ recipe_ids[recipe[0]] }}">{{ recipe[0] }} {{ recommended[recipe] }}%</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-success btn-block btn-sm mt-3 mb-2">Add to Menu</button>
+            </form>
           {% else %}
           <!--Accordion recipe recommendations-->
           <div id="accordion">

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import string
 from flask import render_template, url_for, redirect, Blueprint, request, session
@@ -8,7 +8,7 @@ from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import FullQuantityForm
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
-from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
+from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User
 from flask_login import current_user, login_required
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
                                     show_harmony_weights, apriori_test, convert_frac, stats_graph)
@@ -61,7 +61,7 @@ def home():
 
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
-def clear_menu():  # todo not clearing borrowed recipes
+def clear_menu():
     menu_recipes = Recipes.query.filter_by(author=current_user, in_menu=True, eaten=True).all()
     borrowed_recipes = User_Rec.query.filter_by(user_id=current_user.id, in_menu=True, eaten=True).all()
     menu_recipes = menu_recipes + borrowed_recipes
@@ -69,18 +69,17 @@ def clear_menu():  # todo not clearing borrowed recipes
         histories = current_user.history.copy()
         history = []
         for recipe in menu_recipes:
-            if isinstance(recipe, Recipes) and recipe.eaten:
+            if isinstance(recipe, Recipes):
                 history.append(recipe.id)
-            elif isinstance(recipe, User_Rec) and recipe.eaten:
+            elif isinstance(recipe, User_Rec):
                 history.append(recipe.recipe_id)
             recipe.in_menu = False
             recipe.eaten = False
             recipe.times_eaten = recipe.times_eaten + 1
         update_pantry(current_user, menu_recipes)
         update_grocery_list(current_user)
-        histories.append(history)
-        current_user.history = histories  # todo conversion to dict
-        # current_user.history[datetime.utcnow()] = histories
+        histories[datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')] = history
+        current_user.history = histories
         recipes = Recipes.query.filter(Recipes.id.in_(history)).all()
         ids = [rec.id for rec in recipes]
         titles = [x.title for x in recipes]
@@ -158,19 +157,15 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         #     print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         # print(listRules)
-        average_menu_len = sum(len(x) for x in history) / len(history)  # todo dictionary conversion
-        # average_menu_len = sum([len(x) for x in history.values()]) / len(history)  # todo dictionary conversion
+        average_menu_len = sum([len(x) for x in history.values()]) / len(history)
         all_ids = [r.id for r in current_user.recipes]
         # Recipe History/Frequency
-        history = [item for sublist in history for item in sublist if item in all_ids]  # Flatten ID list of lists
-        # history = [item for sublist in history.values() for item in sublist if item in all_ids]  # todo dictionary conversion
-        history2 = current_user.history
+        history = [item for sublist in history.values() for item in sublist if item in all_ids]
+        history2 = current_user.history.values()
         history_set = set(history)
-        # history_set = set(history.values())
         history_count = {}
         for item in history_set:
             history_count[item] = history.count(item)
-            # history_count[item] = history.values().count(item) # todo dictionary conversion
         history_count = sorted(history_count.items(), key=lambda x: x[1], reverse=True)
         history_count_names = [list(x) for x in
                                {Recipes.query.filter_by(id=k).first().title: v for k, v in history_count}.items()]
@@ -191,7 +186,6 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         harmony = round((norm_stack({r.title: r.quantity.keys() for r in all_recipes}) * 100), 5)
         avg_harmony = []
         for batch in history2:
-        # for batch in history2.values():
             if len(batch) > 1:
                 recs = {recipe.title: recipe.quantity for recipe in Recipes.query.filter(Recipes.id.in_(batch)).all()}
                 modifier = 1 / (len(recs) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
@@ -336,3 +330,6 @@ def clear_extras():
 #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
 #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
 #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
+
+
+
