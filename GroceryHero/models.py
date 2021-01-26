@@ -71,7 +71,6 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     quantity = db.Column(db.JSON, nullable=False, default={})  # Format: {ingredient: [value, unit]}
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
-
     notes = db.Column(db.Text, nullable=True)
     link = db.Column(db.String(512), nullable=True)
     recipe_type = db.Column(db.String(16), nullable=True)
@@ -92,7 +91,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
 
     def __eq__(self, other):
         if isinstance(other, Recipes):
-            return self.title == other.title and self.quantity.keys() == other.quantity.keys()
+            return (self.title == other.title) and (self.quantity.keys() == other.quantity.keys())
         return False
 
 

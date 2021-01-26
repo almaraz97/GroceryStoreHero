@@ -349,24 +349,30 @@ def recipe_download(recipe_id):
         if recipe == r:
             flash(f'Recipe {recipe.title} already in recipe library', 'danger')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
-    new_recipe = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
-                         link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
-                         picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
-                         price=recipe.price, options=recipe.options)
-    db.session.add(recipe)
+    new_rec = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
+                      link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
+                      picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
+                      price=recipe.price, options=recipe.options)
+    db.session.add(new_rec)
     db.session.commit()
     user_rec = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
-    if user_rec is None:
-        user_rec = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id, downloaded=True)
-        user_rec.downloaded_dates.append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
+    if user_rec is None:  # User has no record with recipe they are downloading
+        user_rec = User_Rec(recipe_id=recipe_id, user_id=current_user.id, downloaded=True)
+        user_rec.downloaded_dates = [datetime.utcnow().strftime('%Y-%m-%d-%H-%M')]
         db.session.add(user_rec)
-    if not user_rec.downloaded:  # user hasn't downloaded this recipe before
-        action = Actions(user_id=current_user.id, type_='Download', recipe_ids=[new_recipe.id], date_created=datetime.utcnow(),
-                         titles=[new_recipe.title])
+        action = Actions(user_id=current_user.id, type_='Download', recipe_ids=[new_rec.id],
+                         date_created=datetime.utcnow(), titles=[new_rec.title])
         db.session.add(action)
+    else:
+        if not user_rec.downloaded:  # user hasn't downloaded this recipe before
+            action = Actions(user_id=current_user.id, type_='Download', recipe_ids=[new_rec.id],
+                             date_created=datetime.utcnow(), titles=[new_rec.title])
+            db.session.add(action)
+            user_rec.downloaded = True
+        user_rec.downloaded_dates.append(datetime.utcnow().strftime('%Y-%m-%d-%H-%M'))
     db.session.commit()
-    flash(f'{recipe.title} added to your library!', 'success')
-    return redirect(url_for('recipes.recipe_single', recipe_id=new_recipe.id))
+    flash(f'{new_rec.title} added to your library!', 'success')
+    return redirect(url_for('recipes.recipe_single', recipe_id=new_rec.id))
 
 
 @login_required
