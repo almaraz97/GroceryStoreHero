@@ -36,7 +36,6 @@ def upgrade():
         batch_op.alter_column('history',
                               existing_type=sqlite.JSON(),
                               nullable=False, server_default='{}')
-        batch_op.drop_column('recipe_hide')
     # ### end Alembic commands ###
 
 
