@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
     History: Current: [{title:[ingredients]},...];  Future: {datetime:[{title:[ingredients]},...]}
     Ingredients: {Ingredient: [quantity, unit, price]}
     Subscription: {datetime:level(hero, super-saver, eco-warrior)}
-    Messages = {}
+    Messages = {user_id: {date: message}}
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=False, nullable=False)
