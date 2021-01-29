@@ -40,10 +40,11 @@ class UpdateAccountForm(FlaskForm):
     submit = SubmitField('Update')
 
     def validate_username(self, username):
-        if username.data != current_user.username:
-            user = User.query.filter_by(username=username.data).first()
-            if user:
-                raise ValidationError('That username is taken. Please choose a different one.')
+        pass
+    #     if username.data != current_user.username:
+    #         user = User.query.filter_by(username=username.data).first()
+    #         if user:
+    #             raise ValidationError('That username is taken. Please choose a different one.')
 
     def validate_email(self, email):
         if email.data != current_user.email:
@@ -74,7 +75,7 @@ class DeleteAccountForm(FlaskForm):
 
 
 class HarmonyForm(FlaskForm):
-    groups = SelectField("Number of Recipes per Recommendation", choices=[[x, x] for x in range(1, 5)], coerce=int)
+    groups = SelectField("Number of Recipes per Recommendation", choices=[(x, x) for x in range(1, 5)], coerce=int)
     excludes = SelectMultipleField("Exclude Recipes", choices=[])
     similarity = SelectField("Maximum Harmony", choices=[(x, x) for x in range(10, 90, 10)] +
                                                         [(float('inf'), 'No limit')], coerce=float)
@@ -83,21 +84,22 @@ class HarmonyForm(FlaskForm):
 
 class AdvancedHarmonyForm(FlaskForm):
     pairs = SelectMultipleField("Recipes", choices=[])
-    pair_weight = SelectField("Weight", choices=[1, 2, 3, 4, 5], default=1)
+    pair_weight = SelectField("Weight", choices=[(x, x) for x in range(1, 6)], default=1)
 
     ingredient = SelectMultipleField("Ingredient", choices=[])
-    ingredient_weights = SelectField("Weight", choices=[0.001, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 10.0], default=1.0)
+    ingredient_weights = SelectField("Weight", choices=[(x, x) for x in
+                                                        [0.001, 0.4, 0.6, 0.8, 1.0, 2.0, 3.0, 4.0, 10.0]], default=1.0)
     delete_weights = SubmitField('Delete All Weights')
 
     ingredient_ex = SelectMultipleField('Ingredients', choices=[])
     ingredient_rem = SelectMultipleField('Ingredients', choices=[])
 
     ingredient2 = SelectMultipleField("Ingredient", choices=[])
-    sticky_weights = SelectField("Weight", choices=[1.0, 2.0, 3.0, 4.0, 5.0], default=0)
+    sticky_weights = SelectField("Weight", choices=[(x,x) for x in range(6)], default=0)
 
-    history_exclude = SelectField("Menu Weight", choices=[0, 1, 2, 3, 4, 5], default=0)
+    history_exclude = SelectField("Menu Weight", choices=[(x,x) for x in range(6)], default=0)
 
-    recommend_num = SelectField("Max Number of Recommendations", choices=[3, 4, 5, 6, 7, 8, 9, 10], default=3)
+    recommend_num = SelectField("Max Number of Recommendations", choices=[(x,x) for x in range(3,11)], default=3)
     algorithm = SelectField("Algorithm", choices=['Charity', 'Fairness', 'Balanced', 'Selfish', 'Greedy'],
                             default='Balanced')
     modifier = SelectField("Scoring", choices=['True', 'Graded'],
@@ -109,4 +111,16 @@ class FullHarmonyForm(FlaskForm):
     basic = FormField(HarmonyForm)
     advanced = FormField(AdvancedHarmonyForm)
     submit = SubmitField('Submit')
+
+
+class FriendForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()],
+                        render_kw={"placeholder": "Followees Email Address"})
+    submit = SubmitField('Request')
+
+
+class FollowForm(FlaskForm):
+    add = SubmitField('Add')
+    ignore = SubmitField('Ignore')
+    block = SubmitField('Block')
 

@@ -7,11 +7,10 @@ import requests
 from PIL import Image
 from flask import url_for, current_app, flash
 from flask_login import current_user
-from flask_mail import Message
 from werkzeug.utils import redirect
 from GroceryHero import mail, db
 from GroceryHero.Recipes.utils import Measurements
-from GroceryHero.models import Aisles, Recipes
+from GroceryHero.models import Aisles, Recipes, Followers, User
 
 
 class Colors:
@@ -222,4 +221,15 @@ def import_recipes_terminal(recipe_dictionary, user, database):
             database.session.add(recipe)
             index += 1
     database.session.commit()
+
+
+def getRequestsFollowers():
+    requesters = Followers.query.filter_by(follow_id=current_user.id, status=0).all()  # Users that request you
+    requesters = User.query.filter(User.id.in_([x.user_id for x in requesters])).all()
+    followers = Followers.query.filter_by(follow_id=current_user.id, status=1).all()  # Users that follow you
+    return requesters, followers
+
+
+def account_forms():
+    return None
 

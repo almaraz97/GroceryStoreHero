@@ -22,7 +22,7 @@ class User(db.Model, UserMixin):
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=False, nullable=False)
-    # nickname = db.Column(db.String(20), unique=False, nullable=False)
+    # #nickname = db.Column(db.String(20), unique=False, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     # password = db.Column(db.String(60), nullable=False)  # todo Delete this for auth0 handling
@@ -44,9 +44,8 @@ class User(db.Model, UserMixin):
 
     borrows = db.relationship('User_Rec', backref='borrower', lazy=True)
     # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
-    # user_pub_rec = db.relationship('User_PubRec', backref='borrower', lazy=True)  # todo be able to backref these
-
     actions = db.relationship('Actions', backref='author', lazy=True)
+
     pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
     pro3 = db.Column(db.Boolean, nullable=False, default=False)  # Extra recipes
     pro4 = db.Column(db.Boolean, nullable=False, default=False)  # Extra for future use
@@ -130,10 +129,10 @@ class Actions(db.Model):  # Where friend feed stuff will be held
 class Followers(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
     follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
-    user = db.relationship('User', foreign_keys=[user_id])
-    follow = db.relationship('User', foreign_keys=[follow_id])
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.Integer, nullable=False)
+    user = db.relationship('User', foreign_keys=[user_id])
+    follow = db.relationship('User', foreign_keys=[follow_id])
 
     def __repr__(self):
         codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
@@ -153,6 +152,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=True, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
+    # comments = db.Column(db.JSON, nullable=False, default={})  #
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"

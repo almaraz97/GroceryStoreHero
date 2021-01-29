@@ -52,7 +52,7 @@
   {% endfor %}
 {% endif %}
 <button class="btn btn-sm btn-secondary mb-4 col-12" id="tool" style="float: right;" onClick="document.getElementById('top').scrollIntoView();">Go to Top</button>
-
+{% if friend_acts %}
   {% for page_num in friend_acts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
     {% if page_num %}
       {% if friend_acts.page == page_num %}
@@ -64,5 +64,6 @@
       ...
     {% endif %}
   {% endfor %}
+{% endif %}
 {% endblock content %}
 

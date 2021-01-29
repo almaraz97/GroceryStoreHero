@@ -194,9 +194,11 @@
                 </button>
             </div>
             <div class="modal-footer">
+              <p class="mr-3">This cannot be undone.</p>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <form method="POST" action="{{ url_for('users.delete_account', token=1) }}">
-                    {{ form.submit(class="btn btn-danger", value="Delete") }}
+                <form method="POST" action="{{ url_for('users.delete_account') }}">
+                  {{ form4.hidden_tag() }}
+                  {{ form4.submit(class="btn btn-danger", value="Delete") }}
                 </form>
             </div>
         </div>

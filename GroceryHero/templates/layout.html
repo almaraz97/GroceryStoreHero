@@ -111,7 +111,7 @@
                     {{ form2.file_name(class="form-control-file") }}
                     {% if form2.file_name.errors %}
                       {% for error in form2.file_name.errors %}
-                        <span class="text-danger">{{ error }}</span></br>
+                        <span class="text-danger">{{ error }}</span>
                       {% endfor %}
                     {% endif %}
                   </div>
@@ -121,14 +121,45 @@
                   {{ form2.import_aisles_button(class="btn btn-info") }}
                 </div>
               </form>
+            <form method="POST" action="{{ url_for('users.export') }}" enctype="multipart/form-data">
+              <h4 class="mt-3 mb-2">Download</h4>
+              <fieldset class="form-group">
+                <input class="btn btn-info" type="submit" value="Recipes" name="export">
+                <input class="btn btn-info" type="submit" value="Aisles" name="export">
+              </fieldset>
+            </form>
           {% endif %}
-          <form method="POST" action="{{ url_for('users.export') }}" enctype="multipart/form-data">
-            <h4 class="mt-3 mb-2">Download</h4>
-            <fieldset class="form-group">
-              <input class="btn btn-info" type="submit" value="Recipes" name="export">
-              <input class="btn btn-info" type="submit" value="Aisles" name="export">
-            </fieldset>
+          <!-- Requesters Forms -->
+          {% if requests|length > 0 %}
+            <div class="mb-3">
+            <h3 class='border-bottom pb-2'>Your Follow Requests</h3>
+            {% for request in requests %}
+            <img class="float-left mr-1" src="{{ request.image_file }}" width="25px" height="25px">{{ request.username }}
+              <a class="btn btn-sm btn-danger float-right ml-1" href="{{ url_for('users.reject_friend', f_id=request.id) }}">Reject</a>
+              <a class="btn btn-sm btn-success float-right" href="{{ url_for('users.accept_friend', f_id=request.id) }}">Accept</a>
+            {% endfor %}
+{#          {% else %}#}
+{#            <div class="p-0 m-0">No Friend Requests Yet</div>#}
+          </div>
+          {% endif %}
+
+          <!-- Request Form -->
+          <h3 class='border-bottom pb-2'>Request by Email</h3>
+          <form class="form-group" action="{{ url_for('users.request_friend') }}" method="POST">
+          {{ form5.hidden_tag() }}
+          {% if form5.email.errors %}
+              {{ form5.email(class="form-control form-control-md is-invalid", value='Followees Email Address') }}
+              <div class="invalid-feedback">
+                  {% for error in form5.email.errors %}
+                      <span>{{ error }}</span>
+                  {% endfor %}
+              </div>
+          {% else %}
+              {{ form5.email(class='form-control form-control-md') }}
+          {% endif %}
+          {{ form5.submit(class='btn btn-info btn-sm btn-block mt-2') }}
           </form>
+
         {% elif aisle is defined %}
           <h3 class=''>Un-added Ingredients</h3>
           <p class='text-muted border-bottom pb-2'>Give your ingredients a home and your grocery list will be sorted for you.</p>

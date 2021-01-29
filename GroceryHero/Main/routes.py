@@ -210,11 +210,10 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
 def add_to_extras():
     aisles = Aisles.query.filter_by(user_id=current_user.id).all()
     ingredients = [aisle.content.split(', ') for aisle in aisles]
-    choices = sorted(set([item for sublist in ingredients for item in sublist if item]))
+    choices = sorted({item for sublist in ingredients for item in sublist if item})
     form = ExtrasForm()
     form.multi.choices = [('', 'Ingredients Choices')] + [(choice, choice) for choice in choices]
     if form.validate_on_submit():  # Form is submitted and not empty list
-        form.other.data.split(', ')
         choices = form.multi.data
         if form.other.data != '':
             choices = choices + [string.capwords(x.strip()) for x in form.other.data.split(', ') if x.strip() != '']

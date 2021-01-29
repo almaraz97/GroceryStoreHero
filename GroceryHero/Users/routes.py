@@ -6,9 +6,10 @@ from flask import render_template, url_for, flash, redirect, request, Blueprint,
 from flask_login import login_user, current_user, logout_user, login_required
 from GroceryHero import db
 from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_PubRec, User_Rec, User_Act
-from GroceryHero.Users.forms import UpdateAccountForm, DeleteAccountForm, AdvancedHarmonyForm
+from GroceryHero.Users.forms import UpdateAccountForm, DeleteAccountForm, AdvancedHarmonyForm, FriendForm
 from GroceryHero.Main.forms import ImportForm
-from GroceryHero.Users.utils import save_picture, import_files, update_harmony_preferences, load_harmony_form
+from GroceryHero.Users.utils import save_picture, import_files, update_harmony_preferences, load_harmony_form, \
+    getRequestsFollowers
 from GroceryHero.Main.utils import get_harmony_settings, show_harmony_weights, ensure_harmony_keys
 import json
 
@@ -24,10 +25,13 @@ def account():
     form2 = ImportForm()
     form3 = AdvancedHarmonyForm()
     form4 = DeleteAccountForm()
+    form5 = FriendForm()
     # Shows user their previous settings
     preferences = get_harmony_settings(current_user.harmony_preferences)
     ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
-    if form.validate_on_submit():
+    requests, followers = getRequestsFollowers()
+    # Update user info
+    if form.validate_on_submit():  # Only on change
         if form.picture.data:
             picture_file = save_picture(form.picture.data)
             current_user.image_file = picture_file
@@ -36,38 +40,97 @@ def account():
         db.session.commit()
         flash('Your account has been updated', 'success')
         return redirect(url_for('users.account'))
-    if form2.import_recipes_button.data or form2.import_aisles_button.data:  # Importing recipes
+    # Importing
+    if form2.import_recipes_button.data or form2.import_aisles_button.data:
         import_type = 'recipes' if form2.import_recipes_button.data else 'aisles'
         import_files(form2.file_name.data, import_type)
         return redirect(url_for('users.account'))
-    if form3.is_submitted():  # todo change to validate
+    # Update harmony
+    if form3.validate_on_submit():
         update_harmony_preferences(form3, current_user)
         db.session.commit()
         flash('Your settings have been updated', 'success')
         return redirect(url_for('users.account'))
-    if form4.validate_on_submit():
-        token = 4040404  # todo put in session
-        return redirect(url_for('users.delete_account', token=token))
     if request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
         form3 = load_harmony_form(AdvancedHarmonyForm(), current_user)
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
-    return render_template('account.html', title='Account', image_file=image_file, form=form, form2=form2,
-                           form3=form3, form4=form4, sidebar=True, account=True, ing_weights=ing_weights, tastes=tastes,
-                           sticky_weights=sticky)
+    return render_template('account.html', title='Account', image_file=image_file, form=form, form2=form2,form3=form3,
+                           form4=form4, form5=form5, sidebar=True, account=True, ing_weights=ing_weights, tastes=tastes,
+                           sticky_weights=sticky, requests=requests, followers=followers)
 
 
-@users.route('/delete_account/<int:token>', methods=['GET', 'POST'])
+@users.route('/account/add_friend', methods=['GET', 'POST'])
 @login_required
-def delete_account(token):
-    if token == 4040404:  # todo look up if this is in tutorial
+def request_friend():
+    if len(current_user.recipes) >= 80:
+        flash('You\'ve reached the maximum recipes without a membership. Borrow more or consider upgrading.', 'info')
+    form = UpdateAccountForm()
+    form2 = ImportForm()
+    form3 = load_harmony_form(AdvancedHarmonyForm(), current_user)
+    form4 = DeleteAccountForm()
+    form5 = FriendForm()
+    # Shows user their previous settings
+    preferences = get_harmony_settings(current_user.harmony_preferences)
+    ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
+    form.username.data = current_user.username
+    form.email.data = current_user.email
+    requests, followers = getRequestsFollowers()
+    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+    if form5.validate_on_submit():
+        email = form5.email.data
+        followee = User.query.filter_by(email=email).first()
+        follow_id = followee.id if followee is not None else None
+        if follow_id is not None:  # Email exists in db
+            follow = Followers.query.filter_by(user_id=current_user.id, follow_id=follow_id).first()
+            if follow is None:  # Hasn't requested this person before
+                follow = Followers(user_id=current_user.id, follow_id=follow_id, status=0)
+                db.session.add(follow)
+                db.session.commit()
+            if follow.status == 1:
+                flash('You already follow this user', 'success')
+            else:  # Has requested before
+                flash('Your request has been sent', 'info')
+        return redirect(url_for('users.account'))
+    return render_template('account.html', title='Account', image_file=image_file, form=form, form2=form2,form3=form3,
+                           form4=form4, form5=form5, sidebar=True, account=True, ing_weights=ing_weights, tastes=tastes,
+                           sticky_weights=sticky, requests=requests, followers=followers)
+
+
+@users.route('/account/accept/<int:f_id>', methods=['GET', 'POST'])
+@login_required
+def accept_friend(f_id):
+    follow = Followers.query.filter_by(user_id=f_id, follow_id=current_user.id).first()
+    if follow is not None:
+        follow.status = 1
+        db.session.commit()
+    return redirect(url_for('users.account'))
+
+
+@users.route('/account/reject/<int:f_id>', methods=['GET', 'POST'])
+@login_required
+def reject_friend(f_id):
+    follow = Followers.query.filter_by(user_id=f_id, follow_id=current_user.id).first()
+    if follow is not None:
+        follow.status = 3  # Blocked
+        db.session.commit()
+    return redirect(url_for('users.account'))
+
+
+@users.route('/account/delete', methods=['GET', 'POST'])
+@login_required
+def delete_account():
+    form4 = DeleteAccountForm()
+    # delete account
+    if form4.validate_on_submit():
         for x in [Recipes, Aisles, Followers, Actions, User_Rec, User_PubRec, User_Act]:
-            try:
+            try:  # Deletes all user info from each table
                 z = x.query.filter_by(author=current_user).all()
                 for i in z:
                     db.session.delete(i)
-            except:
+            except Exception as e:
+                print(e)
                 z = x.query.filter_by(user_id=current_user.id).all()
                 for i in z:
                     db.session.delete(i)
@@ -75,6 +138,7 @@ def delete_account(token):
         db.session.commit()
         flash('Your account and everything associated has been deleted.', 'success')
         return redirect(url_for('main.home'))
+    return redirect(url_for('users.account'))
 
 
 @users.route('/account/download', methods=['GET', 'POST'])

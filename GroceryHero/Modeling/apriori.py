@@ -1,9 +1,7 @@
 # import csv
-from datetime import datetime, timedelta
-
+from GroceryHero.models import Recipes, User
 from apyori import apriori
-# from flask import current_app
-# from flask_login import current_user
+from GroceryHero import db, create_app
 
 
 # dictionary with transaction number as key and list(set(item_ids)) as value
@@ -16,10 +14,6 @@ from apyori import apriori
 #             count += 1
 #             trans[count] = list(set(line))
 #     return trans  # Probably not necessary for me
-from GroceryHero.models import Recipes, User
-import surprise as S
-from surprise import SVD, Reader, Dataset, accuracy
-import pandas as pd
 
 # def frequence(items_lst, trans, check=False):
 #     items_counts = {}
@@ -136,12 +130,38 @@ import pandas as pd
 # main(0.01, 0.7, 'GroceryStoreDataSet.csv')
 
 
-def apriori_test(user, min_support=None, harmony=False, includes=None):
+# def apriori_test(user, min_support=None, harmony=False, includes=None):
+#     recipes = []
+#     for week in user.history:
+#         # for week in user.history.values():
+#         #     temp = [recipe.title for recipe in
+#         #     [Recipes.query.filter_by(id=item).first() for item in week for week in user.history.values()]]
+#         temp = []
+#         for item in week:
+#             recipe = Recipes.query.filter_by(id=item).first()
+#             if recipe is not None:
+#                 temp.append(recipe.title)
+#         if len(temp) > 0:
+#             recipes.append(temp)
+#     # recipes = [temp for temp in []]
+#     min_support = 2/len(recipes) if min_support is None else min_support
+#     if harmony:
+#         aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)
+#         if includes is not None:
+#             aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
+#     else:
+#         aprioris = apriori(recipes, min_support=min_support, min_lift=1.1)
+#         aprioris = list(aprioris)
+#     return aprioris
+
+
+db.app = create_app()
+with db.app.app_context():
+    user = User.query.all()[0]
     recipes = []
-    for week in user.history:
-    # for week in user.history.values():
-        # temp = [recipe.title for recipe in
-        # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history.values()]]
+    includes = [84]
+    history = user.history
+    for week in history:
         temp = []
         for item in week:
             recipe = Recipes.query.filter_by(id=item).first()
@@ -149,82 +169,17 @@ def apriori_test(user, min_support=None, harmony=False, includes=None):
                 temp.append(recipe.title)
         if len(temp) > 0:
             recipes.append(temp)
-    # recipes = [temp for temp in []]
-    min_support = 2/len(recipes) if min_support is None else min_support
-    if harmony:
-        aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)
-        if includes is not None:
-            aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
-    else:
-        aprioris = apriori(recipes, min_support=min_support, min_lift=1.1)
-        aprioris = list(aprioris)
-    return aprioris
 
+    includes = [x.title for x in Recipes.query.filter(Recipes.id.in_(includes)).all()]
+    aprioris = list(apriori(history, min_support=1e-8, min_lift=1e-8))
+    deletes = []
+    for i, x in enumerate(aprioris):
+        if includes != x.items:
+            deletes.append(i)
+        if not all(y in x.items for y in includes) or len(x.items) < 2:
+            deletes.append(i)
+    deletes = sorted(deletes, reverse=True)
+    for d in deletes:
+        del aprioris[d]
+    aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
 
-from GroceryHero import db, create_app
-
-
-db.app = create_app()
-with db.app.app_context():
-    # user = User.query.all()[0]
-    # recipes = []
-    # includes = [84]
-    # history = user.history
-    # for week in history:
-    #     temp = []
-    #     for item in week:
-    #         recipe = Recipes.query.filter_by(id=item).first()
-    #         if recipe is not None:
-    #             temp.append(recipe.title)
-    #     if len(temp) > 0:
-    #         recipes.append(temp)
-    #
-    # includes = [x.title for x in Recipes.query.filter(Recipes.id.in_(includes)).all()]
-    # aprioris = list(apriori(history, min_support=1e-8, min_lift=1e-8))
-    # deletes = []
-    # for i, x in enumerate(aprioris):
-    #     if includes != x.items:
-    #         deletes.append(i)
-    #     if not all(y in x.items for y in includes) or len(x.items) < 2:
-    #         deletes.append(i)
-    # deletes = sorted(deletes, reverse=True)
-    # for d in deletes:
-    #     del aprioris[d]
-    # aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
-
-    # all_users = User.query.all()
-    # all_history = [[item for sublist in user.history for item in sublist] for user in all_users]
-    # all_user_ids = [user.id for user in all_users]
-    # # for user in all_users:
-    # #     all_history.append([item for sublist in user.history for item in sublist])
-    # #     all_user_ids.append(user.id)
-    # all_items = sorted(set(item for sublist in all_history for item in sublist))
-    # data = []
-    # for i, user_hist in enumerate(all_user_ids):
-    #     for item in all_items:
-    #         count = all_history[i].count(item)
-    #         if count > 0:
-    #             data.append([all_user_ids[i], item, count])
-    #         else:
-    #             data.append([all_user_ids[i], item, 0])
-    # data = pd.DataFrame(data, columns=['userID', 'itemID', 'rating'])
-    # # print(data[data['rating'] != 0])
-    # data.to_csv('user_item.csv')
-    # data['rating'] = (data['rating'] - data['rating'].min())/(data['rating'].max()-data['rating'].min())
-    # data = Dataset.load_from_df(data[['userID', 'itemID', 'rating']], Reader(rating_scale=(0, 1)))
-    # svd = S.SVD()
-    # trainset = data.build_full_trainset()
-    # svd.fit(trainset)
-    # print(pd.DataFrame(svd.compute_similarities()))
-    # predictions = svd.test(trainset)
-    # accuracy.rmse(predictions, verbose=True)
-    users = User.query.all()
-    for user in users:
-        hist_dict = {}
-        today = datetime.utcnow() - timedelta(days=1)
-        history = user.history
-        for week in history:
-            hist_dict[today.strftime(today.strftime('%Y-%m-%d %H:%M:%S'))] = week
-            today = today - timedelta(days=7)
-        user.history = hist_dict
-    db.session.commit()
