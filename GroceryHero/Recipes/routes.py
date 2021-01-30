@@ -7,6 +7,7 @@ from flask import (render_template, url_for, flash,
 from flask_login import current_user, login_required
 from GroceryHero import db
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
+from GroceryHero.Modeling.svd import recipe_svd
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, get_recipes, \
     remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform
@@ -171,16 +172,21 @@ def friend_recipes_choice(friend=None):
 
 @login_required
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
-def public_recipes():
-    colors = Colors.rec_colors
+def public_recipes():  # todo handle public recipes
+    colors, rankings = Colors.rec_colors, {}
     user_id = current_user.id
     recipe_list = [x for x in Pub_Rec.query.all() if x.user_id != user_id]
     recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    if request.method == "POST" and current_user.history:
+        all_users = User.query.all()
+        rankings = recipe_svd(all_users)[current_user.id]
+        rankings = [[x[0], round(x[1]*5, 2)] for x in rankings if x[0] is not None and x[0].user_id != current_user.id]
+        rankings = rankings[:5]
     return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
                            recommended=None,  colors=colors, search_recipes=recipe_list,
-                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, public=True)
+                           friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings)
 
 
 @login_required
