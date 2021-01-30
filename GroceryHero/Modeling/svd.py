@@ -1,7 +1,7 @@
 from GroceryHero.models import Recipes, User
 import surprise as s
 import pandas as pd
-from GroceryHero import db, create_app
+# from GroceryHero import db, create_app
 
 
 def recipe_svd(all_users):
