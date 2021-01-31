@@ -13,7 +13,7 @@ from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents,
     remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture, Colors
-from GroceryHero.models import Recipes, User, Followers, Actions, Pub_Rec, User_Rec
+from GroceryHero.models import Recipes, User, Followers, Actions, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 
 recipes = Blueprint('recipes', __name__)
@@ -33,8 +33,7 @@ def recipes_page(possible=0, recommended=None):
     excludes = int(current_user.harmony_preferences['history'])
     recipe_ex = [item for sublist in recipe_hist[:excludes] for item in sublist]
     if request.method == "GET":
-        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list,
-                                                                  recipe_ex)
+        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
     if request.method == "POST":
         if form.validate_on_submit():  # Harmony or search button was pressed
             recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_ex, recipe_hist)
@@ -108,12 +107,12 @@ def recipe_single(recipe_id):
             db.session.commit()
             flash('Your image has been uploaded!', 'success')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
-        if recipe_post.user_id == current_user.id:
-            title = recipe_post.title
-            recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-            return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-                                                                     f"attachment; filename={title}.txt"})
-        else:  # POST on recipe single borrows if not same user
+        # elif recipe_post.user_id == current_user.id:
+        #     title = recipe_post.title
+        #     recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+        #     return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+        #                                                              f"attachment; filename={title}.txt"})
+        elif recipe_post.author != current_user:  # POST on recipe single borrows if not same user
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
                            url=url, form=form, others_eaten=others_eaten, others_borrowed=others_borrowed,
@@ -172,21 +171,50 @@ def friend_recipes_choice(friend=None):
 
 @login_required
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
-def public_recipes():  # todo handle public recipes
+def public_recipes():  # todo add user credit?
     colors, rankings = Colors.rec_colors, {}
-    user_id = current_user.id
-    recipe_list = [x for x in Pub_Rec.query.all() if x.user_id != user_id]
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+    u_id = current_user.id
+    count = Recipes.query.filter(Recipes.user_id.isnot(u_id)).count()  # And that are public
+    borrows = {x.recipe_id: x.in_menu for x in
+               User_Rec.query.filter_by(user_id=u_id).all() if x.borrowed}
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=u_id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    page = request.args.get('page', 1, type=int)
+    sort = request.args.get('sort', 'date')
+    if sort in ['date', 'eaten']:
+        sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
+        recipe_list = Recipes.query.filter(Recipes.user_id.isnot(u_id)).order_by(sorting).paginate(page=page)
+        # print([x.title for x in Recipes.query.filter(Recipes.user_id.isnot(u_id)).paginate(page=page).items])
+    elif sort in ['hot', 'borrow']:
+        recipe_list = Recipes.query.filter(Recipes.user_id.isnot(u_id)).order_by(Recipes.date_created.desc()).paginate(page=page)  # todo why are recipes missing without order by?
+        if sort == 'hot':  # Eaten//date
+            recipe_list.items = sorted(recipe_list.items, key=lambda x: x.times_eaten / (datetime.utcnow() - x.date_created).days, reverse=True)
+        else:  # Most borrowed
+            # print([x.title for x in recipe_list.items])
+            all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
+            for x in all_borrowed:
+                if x.recipe_id in [x.id for x in Recipes.query.all()]:
+                    print(Recipes.query.filter_by(id=x.recipe_id).first().title, x.recipe_id)
+            all_borrowed = [x.recipe_id for x in all_borrowed]
+            recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
+            # print([[x.id, all_borrowed.count(x.id)] for x in recipe_list.items])
+            # print(len(recipe_list.items))
+    else:  # Date
+        sorting = Recipes.date_created.desc()
+        recipe_list = Recipes.query.filter(Recipes.user_id.isnot(u_id)).order_by(sorting).paginate(page=page)
+    cards = recipe_list.items
     if request.method == "POST" and current_user.history:
         all_users = User.query.all()
-        rankings = recipe_svd(all_users)[current_user.id]
-        rankings = [[x[0], round(x[1]*5, 2)] for x in rankings if x[0] is not None and x[0].user_id != current_user.id]
+        rankings = recipe_svd(all_users)[u_id]
+        rankings = [[x[0], round(x[1]**(1/3)*5, 2)] for x in rankings if
+                    (x[0] is not None) and (x[0].user_id != u_id) and (x[0].id not in borrows)]
         rankings = rankings[:5]
-    return render_template('recipes_public.html', recipes=None, cards=recipe_list, title='Public Recipes', sidebar=True,
-                           recommended=None,  colors=colors, search_recipes=recipe_list,
-                           friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings)
+    elif not current_user.history:
+        flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
+    return render_template('recipes_public.html', recipes=None, cards=cards, title='Public Recipes', sidebar=True,
+                           recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows, count=count,
+                           friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings,
+                           recipe_list=recipe_list, page=page, sort=sort)
 
 
 @login_required

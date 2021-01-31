@@ -1,4 +1,5 @@
 # import csv
+from GroceryHero.Main.utils import getUserRecipeHistory
 from GroceryHero.models import Recipes, User
 from apyori import apriori
 from GroceryHero import db, create_app
@@ -160,15 +161,7 @@ with db.app.app_context():
     user = User.query.all()[0]
     recipes = []
     includes = [84]
-    history = user.history
-    for week in history:
-        temp = []
-        for item in week:
-            recipe = Recipes.query.filter_by(id=item).first()
-            if recipe is not None:
-                temp.append(recipe.title)
-        if len(temp) > 0:
-            recipes.append(temp)
+    history = getUserRecipeHistory(user)
 
     includes = [x.title for x in Recipes.query.filter(Recipes.id.in_(includes)).all()]
     aprioris = list(apriori(history, min_support=1e-8, min_lift=1e-8))
@@ -182,4 +175,3 @@ with db.app.app_context():
     for d in deletes:
         del aprioris[d]
     aprioris = [x for x in aprioris if all(y in x.items for y in includes)]
-

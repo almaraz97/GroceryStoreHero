@@ -251,13 +251,10 @@ def show_harmony_weights(user, preferences):
     return ing_weights, tastes, sticky
 
 
-def apriori_test(user, min_support=None, harmony=False, includes=None):
+def getUserRecipeHistory(user):
     recipes = []
     history = user.history.values()
     for week in history:
-    # for week in user.history.values():
-        # temp = [recipe.title for recipe in
-        # [Recipes.query.filter_by(id=item).first() for item in week for week in user.history.values()]]
         temp = []
         for item in week:
             recipe = Recipes.query.filter_by(id=item).first()
@@ -265,6 +262,11 @@ def apriori_test(user, min_support=None, harmony=False, includes=None):
                 temp.append(recipe.title)
         if len(temp) > 0:
             recipes.append(temp)
+    return recipes
+
+
+def apriori_test(user, min_support=None, harmony=False, includes=None):
+    recipes = getUserRecipeHistory(user)
     min_support = 2/len(recipes) if min_support is None else min_support
     if harmony:
         aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)
