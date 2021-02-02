@@ -13,7 +13,7 @@ class RecipeForm(FlaskForm):
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
     type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']],
                         default='Dinner')
-    public = RadioField('Public', choices=['True', 'False'], default='True')
+    public = RadioField('Public', choices=[('True', 'True'), ('False', 'False')], default='True')
     notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
 

@@ -25,6 +25,7 @@
 <!--        </select>-->
 <!--    </div>-->
 <!--</form>-->
+{% if friends is not defined %}
   <!--Search bar with button-->
   <div style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.recipes_search') }}" method="POST">
@@ -37,6 +38,7 @@
       </div>
     </form>
   </div>
+{% endif %}
 <div class="row p-0 mx-0 mb-1 mt-4">
   {% if title == 'Friend Recipes' %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>

@@ -43,15 +43,24 @@
             <!-- Public -->
             <div class="form-group">
                 {{ form.public.label(class="form-control-label") }}
-              <div class="m-0 p-0">
-                {% for button in form.public %}
-                  <tr>
-                    <td>{{ button }}</td>
-                    <td>{{ button.label }}</td>
-                </tr>
-                {% endfor %}
-{#              form.public(class="form-check form-check-inline")#}
-              </div>
+                {% if form.public.errors %}
+                    {{ form.public(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.public.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                  <div class="m-0 p-0">
+                  {% for button in form.public %}
+                    <tr>
+                      <td>{{ button }}</td>
+                      <td>{{ button.label }}</td>
+                    </tr>
+                  {% endfor %}
+                    {#              form.public(class="form-check form-check-inline")#}
+                  </div>
+                {% endif %}
             </div>
             <!-- Notes -->
             <div class="form-group">
