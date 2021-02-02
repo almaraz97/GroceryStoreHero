@@ -8,7 +8,6 @@
                 <h3 class="" style="display:inline;">{{ legend }}</h3>
                 {% if link is defined %}<a class="btn btn-info btn-sm" href="{{ url_for('recipes.recipe_from_link') }}" style="color:white; float:right;">From Link</a>{% endif %}
             </div>
-
             <!--Title-->
             <div class="form-group">
                 {{ form.title.label(class="form-control-label") }}
@@ -23,6 +22,7 @@
                     {{ form.title(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
+            <!-- Ingredients -->
             <div class="form-group">
                 {{ form.content.label(class="form-control-label") }}
                 {% if form.content.errors %}
@@ -40,6 +40,20 @@
                 {{ form.type_.label(class="form-control-label") }}
                 {{ form.type_(class="custom-select") }}
             </div>
+            <!-- Public -->
+            <div class="form-group">
+                {{ form.public.label(class="form-control-label") }}
+              <div class="m-0 p-0">
+                {% for button in form.public %}
+                  <tr>
+                    <td>{{ button }}</td>
+                    <td>{{ button.label }}</td>
+                </tr>
+                {% endfor %}
+{#              form.public(class="form-check form-check-inline")#}
+              </div>
+            </div>
+            <!-- Notes -->
             <div class="form-group">
                 {{ form.notes.label(class="form-control-label") }}
                 {% if form.notes.errors %}

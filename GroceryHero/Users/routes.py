@@ -98,6 +98,19 @@ def request_friend():
                            sticky_weights=sticky, requests=requests, followers=followers)
 
 
+@users.route('/account/request/<int:f_id>', methods=['POST'])  # todo do I need to redirect back?
+@login_required
+def recipe_follow(f_id):
+    print(f_id)
+    if f_id != 'none' and f_id != '':  # todo what happens to empty user?
+        follow = Followers.query.filter_by(user_id=f_id, follow_id=current_user.id).first()
+        if follow is None:
+            follow = Followers(user_id=f_id, follow_id=current_user.id, status=0)
+            db.session.add(follow)
+            db.session.commit()
+    return None
+
+
 @users.route('/account/accept/<int:f_id>', methods=['GET', 'POST'])
 @login_required
 def accept_friend(f_id):

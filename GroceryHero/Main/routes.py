@@ -31,8 +31,7 @@ def landing():
 @login_required
 @main.route('/home')
 def home():
-    authenticated = current_user.is_authenticated
-    if not authenticated:
+    if not current_user.is_authenticated:
         return redirect(url_for('users.auth_login'))
     menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
         [], [], [], 0, 0, None, None, None, None, None  # []*3, 0, 0, None*4

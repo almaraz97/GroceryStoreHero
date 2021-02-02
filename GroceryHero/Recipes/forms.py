@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from werkzeug.routing import ValidationError
 from wtforms import StringField, SubmitField, TextAreaField, SelectField, FieldList, FormField, ValidationError, \
-    FileField
+    FileField, RadioField
 from wtforms.validators import InputRequired, DataRequired, URL, NoneOf
 from GroceryHero.Recipes.utils import Measurements
 
@@ -13,6 +13,7 @@ class RecipeForm(FlaskForm):
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
     type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']],
                         default='Dinner')
+    public = RadioField('Public', choices=['True', 'False'], default='True')
     notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
 

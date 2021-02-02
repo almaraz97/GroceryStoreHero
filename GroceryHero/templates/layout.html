@@ -256,27 +256,40 @@
 {#          <h5 class="mt-3">Image</h5>#}
           {% if url is defined and url != '' and url != False %}
             <div>
-              <img class="mx-auto mb-3" src="{{ url_for('static', filename='/recipe_pics/'+url) }}" style="height:auto; width:175px; border: solid 1px #6c757d; display:block;">
+              <img class="mx-auto mb-3" src="{{ url_for('static', filename='recipe_pics/'+url) }}" style="height:auto; max-width:100%; display:block;">
             </div>
           {% else %}
               No Image
           {% endif %}
           {% if recipe.author == current_user %}
             <div class="text-center">
-              <button class="btn btn-outline-info" data-toggle="modal" data-target="#pictureModal">Upload</button>
+              <button class="btn btn-sm btn-block btn-outline-info" data-toggle="modal" data-target="#pictureModal">Upload</button>
             </div>
+          {% endif %}
+          <h5 class="mt-3">Author: </h5>
+          {% if not recipe.author.public %}
+            <a href="#">{{ recipe.author.username }}</a>
+            {% if status == 'none' %}
+              <button href="{{ url_for('users.recipe_follow', f_id=recipe.author.id) }}" class="float-right btn btn-sm btn-info">Request</button>
+            {% elif status == 'requested' %}
+              <button href="" class="float-right btn btn-sm btn-secondary">Requested</button>  <!-- deactivate button -->
+            {% elif status =='followed' %}
+              <button href="" class="float-right btn btn-sm btn-info">Following</button>
+            {% endif %}
+          {% else %}
+            Anonymous
           {% endif %}
           <h5 class="mt-3">Recipe Type: </h5> <p>{{ recipe.recipe_type }}</p>
           <h5 class="mt-3">Recipe Statistics: </h5>
           <ul class="mt-2">
             {% if recipe.author == current_user %}
-              <li>Eaten by you: {{ recipe.times_eaten }} times</li>
+              <li>Eaten by you: {{ recipe.times_eaten }} time{% if recipe.times_eaten != 1 %}s{% endif %}</li>
             {% else %}
-              <li>Eaten by author: {{ recipe.times_eaten }} times</li>
+              <li>Eaten by author: {{ recipe.times_eaten }} time{% if recipe.times_eaten != 1 %}s{% endif %}</li>
             {% endif %}
-            <li>Eaten by others: {{ others_eaten }} times</li>
-            <li>Borrowed by others: {{ others_borrowed }} times</li>
-            <li>Downloaded by others: {{ other_downloaded }} times</li>
+            <li>Eaten by others: {{ others_eaten }} time{% if others_eaten != 1 %}s{% endif %}</li>
+            <li>Borrowed by others: {{ others_borrowed }} time{% if others_borrowed != 1 %}s{% endif %}</li>
+            <li>Downloaded by others: {{ other_downloaded }} time{% if other_downloaded != 1 %}s{% endif %}</li>
           </ul>
         <!-- Modal -->
         <div class="modal fade" id="pictureModal" tabindex="-1" role="dialog" aria-labelledby="pictureModalLabel" aria-hidden="true">
