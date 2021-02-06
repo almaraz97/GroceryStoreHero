@@ -256,7 +256,7 @@
 {#          <h5 class="mt-3">Image</h5>#}
           {% if url is defined and url != '' and url != False %}
             <div>
-              <img class="mx-auto mb-3" src="{{ url_for('static', filename='recipe_pics/'+url) }}" style="height:auto; max-width:100%; display:block;">
+              <img class="mx-auto mb-3" src="{{ url_for('static', filename='recipe_pics/'+url) }}" style="background-color: lightgray;height:auto; max-width:100%; display:block;">
             </div>
           {% else %}
               No Image

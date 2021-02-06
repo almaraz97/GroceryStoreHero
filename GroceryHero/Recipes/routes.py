@@ -182,40 +182,27 @@ def public_recipes():  # todo add user credit dynamic
     colors, rankings = Colors.rec_colors, {}
     u_id = current_user.id
     count = Recipes.query.filter(Recipes.user_id.isnot(u_id)).count()  # And that are public
-    borrows = {x.recipe_id: x.in_menu for x in
-               User_Rec.query.filter_by(user_id=u_id).all() if x.borrowed}
+    borrows = {x.recipe_id: x.in_menu for x in User_Rec.query.filter_by(user_id=u_id).all() if x.borrowed}  # NECESSARY?
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=u_id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'hot')
     types = request.args.get('types', 'all')
+    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
     if sort in ['date', 'eaten']:
         sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
-        if types != 'all':
-            recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).order_by(sorting).paginate(page=page)
-        else:
-            recipe_list = Recipes.query.order_by(sorting).paginate(page=page)
-        # print([x.title for x in Recipes.query.filter(Recipes.user_id.isnot(u_id)).paginate(page=page).items])
+        recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).order_by(sorting).paginate(page=page) if types != 'all' else Recipes.query.order_by(sorting).paginate(page=page)
     elif sort in ['hot', 'borrow']:
-        if types != 'all':
-            recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).paginate(page=page)
-        else:
-            recipe_list = Recipes.query.paginate(page=page)
+        recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).paginate(page=page) if types != 'all' else Recipes.query.paginate(page=page)
         if sort == 'hot':  # Eaten//date
             recipe_list.items = sorted(recipe_list.items, key=lambda x: x.times_eaten / (datetime.utcnow() - x.date_created).days, reverse=True)
         else:  # Most borrowed
-            # print([x.title for x in recipe_list.items])
             all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
-            # for x in all_borrowed:
-            #     if x.recipe_id in [x.id for x in Recipes.query.all()]:
-            #         print(Recipes.query.filter_by(id=x.recipe_id).first().title, x.recipe_id)
             all_borrowed = [x.recipe_id for x in all_borrowed]
             recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
-            # print([[x.id, all_borrowed.count(x.id)] for x in recipe_list.items])
-            # print(len(recipe_list.items))
     else:  # Date
         sorting = Recipes.date_created.desc()
-        recipe_list = Recipes.query.filter(Recipes.user_id.isnot(u_id)).order_by(sorting).paginate(page=page)
+        recipe_list = Recipes.query.order_by(sorting).paginate(page=page)
     cards = recipe_list.items
     if request.method == "POST" and current_user.history:
         all_users = User.query.all()
@@ -278,7 +265,7 @@ def new_recipe_quantity():
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
         pic_fn = pic_fn if pic_fn is not None else ''
-        public = recipe['public']
+        public = False if recipe['public'] == 'False' else True
         recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn, public=public)
@@ -463,17 +450,17 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
-@recipes.route('/publify/<int:recipe_id>', methods=['GET', 'POST'])
-@login_required
-def publify_recipe(recipe_id):
-    recipe = Recipes.query.filter_by(id=recipe_id).first()
-    # credit = current_user.credit  # todo public
-    public = Recipes(user_id=current_user.id, title=recipe.title, quantity=recipe.quantity, notes=recipe.notes,
-                     link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
-                     picture=recipe.picture, servings=recipe.servings, originator=current_user.id)
-    db.session.add(public)
-    db.session.commit()
-    return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
+# @recipes.route('/publify/<int:recipe_id>', methods=['GET', 'POST'])
+# @login_required
+# def publify_recipe(recipe_id):
+#     recipe = Recipes.query.filter_by(id=recipe_id).first()
+#     # credit = current_user.credit  # todo public
+#     public = Recipes(user_id=current_user.id, title=recipe.title, quantity=recipe.quantity, notes=recipe.notes,
+#                      link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
+#                      picture=recipe.picture, servings=recipe.servings, originator=current_user.id)
+#     db.session.add(public)
+#     db.session.commit()
+#     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
 # ######################################### functions, not views #################################################
