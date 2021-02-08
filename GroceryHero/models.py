@@ -127,6 +127,7 @@ class Actions(db.Model):  # Where friend feed stuff will be held
 
 
 class Followers(db.Model):
+    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
     follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -135,10 +136,12 @@ class Followers(db.Model):
     follow = db.relationship('User', foreign_keys=[follow_id])
 
     def __repr__(self):
-        codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
-        status = codes[self.status] if self.status in codes else 'Error'
+        status = self.codes[self.status] if self.status in self.codes else 'Error'
         time = self.date_created.strftime('%Y-%m-%d')
         return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
+
+    def getStatus(self):
+        return self.codes[self.status]
 
 
 class User_Rec(db.Model):  # For borrowed recipes

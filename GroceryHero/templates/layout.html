@@ -266,18 +266,20 @@
               <button class="btn btn-sm btn-block btn-outline-info" data-toggle="modal" data-target="#pictureModal">Upload</button>
             </div>
           {% endif %}
-          <h5 class="mt-3">Author: </h5>
-          {% if not recipe.author.public %}
-            <a href="#">{{ recipe.author.username }}</a>
-            {% if status == 'none' %}
-              <button href="{{ url_for('users.recipe_follow', f_id=recipe.author.id) }}" class="float-right btn btn-sm btn-info">Request</button>
-            {% elif status == 'requested' %}
-              <button href="" class="float-right btn btn-sm btn-secondary">Requested</button>  <!-- deactivate button -->
-            {% elif status =='followed' %}
-              <button href="" class="float-right btn btn-sm btn-info">Following</button>
+          {% if recipe.author != current_user %}
+            <h5 class="mt-3">Poster: </h5>
+            {% if not recipe.author.public %}  <!-- todo remove not add public ability -->
+              <p class="d-inline"><img width="30px" height="30px" class="d-inline rounded-circle mb-1" src={{ url_for('static', filename='profile_pics/'+recipe.author.image_file) }}> {{ recipe.author.username }}</p>
+              {% if status == 'None' %}
+                <button href="{{ url_for('users.recipe_follow', f_id=recipe.author.id) }}" class="float-right btn btn-sm btn-info" disabled>Request</button>
+              {% elif status == 'Requested' %}
+                <button href="" class="float-right btn btn-sm btn-secondary" disabled>Requested</button>  <!-- deactivate button -->
+              {% elif status =='Followed' %}
+                <button href="" class="float-right btn btn-sm btn-info" disabled>Following</button>
+              {% endif %}
+            {% else %}
+              Anonymous
             {% endif %}
-          {% else %}
-            Anonymous
           {% endif %}
           <h5 class="mt-3">Recipe Type: </h5> <p>{{ recipe.recipe_type }}</p>
           <h5 class="mt-3">Recipe Statistics: </h5>

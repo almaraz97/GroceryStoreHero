@@ -50,7 +50,7 @@ def recipes_page(possible=0, recommended=None):
 
 @login_required
 @recipes.route('/recipes/search', methods=['GET', 'POST'])
-def recipes_search(possible=0, recommended=None):
+def recipes_search(possible=0, recommended=None):  # todo Make compatible with all recipe pages
     if current_user.is_authenticated:
         search = request.form['search']
         if search == 'Recipe Options' or search == '':
@@ -59,7 +59,7 @@ def recipes_search(possible=0, recommended=None):
                   'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
         followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]  # todo replace
         friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-        recipe_list = Recipes.query.filter_by(author=current_user).order_by(Recipes.title).all()  # Get all recipes  # TODO replace
+        recipe_list = current_user.recipes  # Get all recipes  # TODO replace
         borrows = {x.recipe_id: x.in_menu for x in
                   User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
         borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
@@ -100,24 +100,22 @@ def recipe_single(recipe_id):
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
     borrowed = True
     author_id = recipe_post.author.id
-    following = Followers.query.filter_by(user_id=author_id, follow_id=current_user.id).first()
-    if following is None:  # Not following, requested, accepted, blocked
-        status = 'none'
-    elif following.status == 0:
-        status = 'requested'
-    elif following.status == 1:
-        status = 'following'
+    if author_id != current_user.id:
+        following = Followers.query.filter_by(user_id=author_id, follow_id=current_user.id).first()
+        status = following.getStatus() if following is not None else 'None'
     else:
-        status = 'blocked'
+        status = 'Followed'
+    print(status)
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
         borrowed = False if borrow is None else borrow.borrowed
     if request.method == 'POST':  # Download recipe
-        if form.validate_on_submit() and (recipe_post.author == current_user) and form.picture.data:
-            picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
-            recipe_post.picture = picture_file
-            db.session.commit()
-            flash('Your image has been uploaded!', 'success')
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
+                recipe_post.picture = picture_file
+                db.session.commit()
+                flash('Your image has been uploaded!', 'success')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
         elif recipe_post.author != current_user:  # POST on recipe single borrows if not same user
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
@@ -265,8 +263,8 @@ def new_recipe_quantity():
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
         pic_fn = pic_fn if pic_fn is not None else ''
-        public = False if recipe['public'] == 'False' else True
-        recipe = Recipes(title=(recipe['title']), quantity=formatted, author=current_user,
+        public = False if recipe.get('public', 'True') == 'False' else True
+        recipe = Recipes(title=(recipe['title']), quantity=formatted, user_id=current_user.id,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn, public=public)
         db.session.add(recipe)
@@ -305,7 +303,7 @@ def recipe_from_link():
 
 
 @login_required
-@recipes.route('/recipes/new_link', methods=['GET', 'POST'])
+@recipes.route('/recipes/new_link', methods=['GET', 'POST'])  # todo import says not your recipe mima
 def new_recipe_link():  # filling out the form data from link page
     form = RecipeForm()
     if request.method == 'GET':
@@ -332,7 +330,7 @@ def new_recipe_link():  # filling out the form data from link page
 @recipes.route('/recipes/<int:recipe_id>/update', methods=['GET', 'POST'])
 def update_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
-    if recipe.author != current_user or recipe.public:  # You can only update your own recipes
+    if recipe.author != current_user:  # You can only update your own recipes
         abort(403)
     form = RecipeForm()  # add public loaded
     if form.validate_on_submit():
