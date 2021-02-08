@@ -105,7 +105,6 @@ def recipe_single(recipe_id):
         status = following.getStatus() if following is not None else 'None'
     else:
         status = 'Followed'
-    print(status)
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
         borrowed = False if borrow is None else borrow.borrowed
@@ -262,7 +261,7 @@ def new_recipe_quantity():
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
-        pic_fn = pic_fn if pic_fn is not None else ''
+        pic_fn = pic_fn if pic_fn is not None else 'default.png'
         public = False if recipe.get('public', 'True') == 'False' else True
         recipe = Recipes(title=(recipe['title']), quantity=formatted, user_id=current_user.id,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
