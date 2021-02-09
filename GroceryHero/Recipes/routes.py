@@ -204,7 +204,7 @@ def public_recipes():  # todo add user credit dynamic
     if request.method == "POST" and current_user.history:
         all_users = User.query.all()
         rankings = recipe_svd(all_users)[u_id]
-        rankings = [[x[0], round(x[1]**(1/3)*5, 2)] for x in rankings if
+        rankings = [[x[0], round(x[1]**(1/4)*5, 2)] for x in rankings if
                     (x[0] is not None) and (x[0].user_id != u_id) and (x[0].id not in borrows)]
         rankings = rankings[:5]
     elif not current_user.history:
@@ -262,7 +262,7 @@ def new_recipe_quantity():
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
         pic_fn = pic_fn if pic_fn is not None else 'default.png'
-        public = False if recipe.get('public', 'True') == 'False' else True
+        public = False if recipe.get('public') == 'False' else True
         recipe = Recipes(title=(recipe['title']), quantity=formatted, user_id=current_user.id,
                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
                          picture=pic_fn, public=public)

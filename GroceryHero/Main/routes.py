@@ -23,7 +23,7 @@ main = Blueprint('main', __name__)
 def landing():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
-    if request.method == 'POST':  # send me an email
+    if request.method == 'POST':  # todo send me an email
         pass
     return render_template('landing.html')
 
@@ -198,10 +198,9 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         if not os.path.isfile(f'GroceryHero/static/visualizations/{str(current_user.id)}.jpg'):
             stats_graph(current_user, all_recipes)
         graph = url_for('static', filename='visualizations/' + str(current_user.id) + '.jpg')
-    return render_template('stats.html', title='Your Statistics', sidebar=True, about=True,
+    return render_template('stats.html', title='Your Statistics', sidebar=True, about=True, clears=clears, graph=graph,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
-                           clears=clears, graph=graph)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,)
 
 
 @login_required

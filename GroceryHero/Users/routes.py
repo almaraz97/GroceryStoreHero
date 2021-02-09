@@ -245,6 +245,8 @@ def auth_login():
         if type(email) is str:
             email = email.lower()
         verified = session['jwt_payload'].get('email_verified', False)
+        session['verify'] = verified
+        session['email'] = email
         if email and verified:  # User email has been provided
             user = User.query.filter_by(email=email).first()
             if user is not None:  # User is in database
@@ -253,7 +255,9 @@ def auth_login():
                 ensure_harmony_keys(user)  # Make sure groceryList, extras and harmony_preferences JSON columns exist
                 return redirect(next_page) if next_page else redirect(url_for('main.home'))
             else:  # User is not in database, register them
-                name = session['jwt_payload'].get('nickname')
+                name = session['jwt_payload'].get('given_name')
+                name = session['jwt_payload'].get('nickname') if name is None else name
+                name = session['jwt_payload'].get('name') if name is None else name
                 username = name if name is not None else email
                 user = User(email=email, username=username)
                 picture_url = session['jwt_payload'].get('picture')
@@ -271,17 +275,19 @@ def auth_login():
                 login_user(user)
                 redirect(url_for('main.home'))
         else:
-            flash(f"Login unsuccessful- email address was not provided and/or verified."
-                  f"Sign up here or sign in through another connection.", 'danger')
             return redirect(url_for('users.auth_logout'))
     return current_app.auth0.authorize_redirect(redirect_uri=current_app.auth0_urls['callback'])
 
 
 @users.route('/auth_logout')
 def auth_logout():
+    if not session.get('verify', True):  # todo is this needed?
+        flash("Email verification sent. Check your email to confirm you account.", 'info')
+    if not session.get('email', False):
+        flash(f"Login unsuccessful- an email address was not provided."
+              f"Sign up manually or sign in through another connection.", 'danger')
     logout_user()
-    # Clear session stored data
-    session.clear()
+    session.clear()  # Clear session stored data
     # Redirect user to logout endpoint
     params = {'returnTo': url_for('main.landing', _external=True), 'client_id': current_app.client_id}
     return redirect(current_app.auth0.api_base_url + '/v2/logout?' + urlencode(params))
