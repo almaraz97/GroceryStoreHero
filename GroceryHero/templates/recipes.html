@@ -107,9 +107,9 @@
       <div class="media-body ml-4">
         <div class="article-metadata">  <!--article-metadata-->
           {% if friends is defined%}
-            <div class="text-muted" style="float: right">@{{friend_dict[recipe.user_id].username}}</div>
+            <div class="text-muted" style="float: right">@{{ recipe.author.username }}</div>
           {% elif recipe.user_id != current_user.id %}
-            <div class="text-muted" style="float: right">Borrowed from: {{friend_dict[recipe.user_id].username}}</div>
+            <div class="text-muted" style="float: right">Borrowed from: {{ recipe.author.username }}</div>
           {% endif %}
           <a style="font-size: 18px;" class="mr-2" href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">{{ recipe.title }}</a>
         </div>

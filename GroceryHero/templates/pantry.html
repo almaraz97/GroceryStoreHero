@@ -36,7 +36,7 @@
                 {% if current_user.is_authenticated %}
                   <a style="text-decoration:none; color: grey;" href="{{ url_for('pantry.new_shelf') }}">You have no shelves yet. Click to add a shelf.</a>
                 {% else %}
-                   <a style="text-decoration:none; color: grey;" href="{{ url_for('users.login') }}">You have no shelves yet. Login to add an shelf.</a>
+                   <a style="text-decoration:none; color: grey;" href="{{ url_for('users.auth_login') }}">You have no shelves yet. Login to add an shelf.</a>
                 {% endif %}
               </button>
             </h5>

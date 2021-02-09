@@ -8,6 +8,24 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+class Followers(db.Model):
+    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
+    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    status = db.Column(db.Integer, nullable=False)
+    user = db.relationship('User', foreign_keys=[user_id])
+    follow = db.relationship('User', foreign_keys=[follow_id])
+
+    def __repr__(self):
+        status = self.codes[self.status] if self.status in self.codes else 'Error'
+        time = self.date_created.strftime('%Y-%m-%d')
+        return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
+
+    def getStatus(self):
+        return self.codes[self.status]
+
+
 class User(db.Model, UserMixin):
     """
     Rec:{str(list()): score} taste:{str(list()): similarity} weight:{ing:val} rec_ids:{recipe.title: recipe.id}
@@ -44,6 +62,11 @@ class User(db.Model, UserMixin):
 
     borrows = db.relationship('User_Rec', backref='borrower', lazy=True)
     # follows = db.relationship('Followers', backref='follower', lazy=True)  # People they follow
+    # followed = db.relationship(
+    #     'User', secondary=Followers,
+    #     primaryjoin=(Followers.user_id == id),
+    #     secondaryjoin=(Followers.follow_id == id),
+    #     backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
     actions = db.relationship('Actions', backref='author', lazy=True)
 
     pro2 = db.Column(db.Boolean, nullable=False, default=False)  # Friends features
@@ -75,7 +98,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     recipe_type = db.Column(db.String(16), nullable=True)
     picture = db.Column(db.String(20), nullable=True)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
-
+    # original = db.Column(db.Integer, nullable=True)  # Original recipe, in spite of downloads
     recipe_genre = db.Column(db.String(32), nullable=True)  # Asian, Hispanic, Southern
     public = db.Column(db.Boolean, nullable=False, default=False)  # Public recipe
     # private = db.Column(db.Boolean, nullable=False, default=False)  # Only friends can see
@@ -113,7 +136,7 @@ class Aisles(db.Model):
 
 
 class Actions(db.Model):  # Where friend feed stuff will be held
-    id = db.Column(db.Integer, primary_key=True)  # todo works here but not pub_rec
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     type_ = db.Column(db.String(20), nullable=False)  # Update, Add, Delete, Clear, Borrow, Download, Follow
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -124,24 +147,6 @@ class Actions(db.Model):  # Where friend feed stuff will be held
 
     def __repr__(self):
         return f"Actions(User {self.user_id} {self.type_}ed {self.recipe_ids} on {self.date_created})"
-
-
-class Followers(db.Model):
-    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
-    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    status = db.Column(db.Integer, nullable=False)
-    user = db.relationship('User', foreign_keys=[user_id])
-    follow = db.relationship('User', foreign_keys=[follow_id])
-
-    def __repr__(self):
-        status = self.codes[self.status] if self.status in self.codes else 'Error'
-        time = self.date_created.strftime('%Y-%m-%d')
-        return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
-
-    def getStatus(self):
-        return self.codes[self.status]
 
 
 class User_Rec(db.Model):  # For borrowed recipes

@@ -23,7 +23,7 @@ recipes = Blueprint('recipes', __name__)
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
     if not current_user.is_authenticated:
-        return redirect(url_for('users.auth_login'))
+        return redirect(url_for('users.landing'))
     form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
@@ -41,8 +41,7 @@ def recipes_page(possible=0, recommended=None):
             recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_ex, recipe_hist)
             recommended = remove_menu_items(in_menu, recommended)
             update_user_preferences(current_user, form, recommended, possible)
-            form, recommended, recipe_history, possible = load_harmonyform(current_user, form, in_menu,
-                                                                           recipe_list, recipe_ex)
+            form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
     return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
                            search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
                            recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
@@ -87,6 +86,8 @@ def recipes_search(possible=0, recommended=None):  # todo Make compatible with a
 @login_required
 @recipes.route('/recipes/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_single(recipe_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe_post = Recipes.query.get_or_404(recipe_id)
     form = UploadRecipeImage()
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
