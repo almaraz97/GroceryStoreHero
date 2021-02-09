@@ -374,7 +374,7 @@ def update_recipe_quantity(recipe_id):
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     rec = Recipes.query.get_or_404(recipe_id)
-    if rec.author != current_user or rec.public:  # You can only update your own recipes
+    if rec.author != current_user:  # You can only update your own recipes
         abort(403)
     recipe = session['recipe']  # Has {RecipeName: string, Quantity: {ingredient: [value,type]}}
     form = load_quantityform(recipe)
