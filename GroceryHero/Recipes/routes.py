@@ -23,7 +23,7 @@ recipes = Blueprint('recipes', __name__)
 @recipes.route('/recipes', methods=['GET', 'POST'])
 def recipes_page(possible=0, recommended=None):
     if not current_user.is_authenticated:
-        return redirect(url_for('users.landing'))
+        return redirect(url_for('main.landing'))
     form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
@@ -50,36 +50,38 @@ def recipes_page(possible=0, recommended=None):
 @login_required
 @recipes.route('/recipes/search', methods=['GET', 'POST'])
 def recipes_search(possible=0, recommended=None):  # todo Make compatible with all recipe pages
-    if current_user.is_authenticated:
-        search = request.form['search']
-        if search == 'Recipe Options' or search == '':
-            return redirect(url_for('recipes.recipes_page'))
-        colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-        followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]  # todo replace
-        friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-        recipe_list = current_user.recipes  # Get all recipes  # TODO replace
-        borrows = {x.recipe_id: x.in_menu for x in
-                  User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
-        borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
-        all_rec = sorted(recipe_list + borrowed, key=lambda x: x.title)
-        recipe_list = recipe_list + borrowed
-        ids = {recipe.title: recipe.id for recipe in recipe_list}
-        cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
-        # Sidebar form
-        # form = HarmonyForm()
-        # choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
-        # form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
-        # if request.method == 'POST':  # Load previous preferences/recommendations
-        #     preference = current_user.harmony_preferences  # Preference dictionary
-        #     form.similarity.data = preference['similarity']
-        #     form.groups.data = preference['groups']
-        #     possible = preference['possible']
-        #     if preference['recommended']:  # If saved recommended is not empty
-        #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
-        #                        group in preference['recommended']}
-        return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
-                               colors=colors, borrows=borrows, friend_dict=friend_dict)
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
+    search = request.form['search']
+    # search = request.args.get('page', 1)
+    if search == 'Recipe Options' or search == '':
+        return redirect(url_for('recipes.recipes_page'))
+    colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
+              'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
+    followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]  # todo replace
+    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    recipe_list = current_user.recipes  # Get all recipes  # TODO replace
+    borrows = {x.recipe_id: x.in_menu for x in
+               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
+    borrowed = Recipes.query.filter(Recipes.id.in_(borrows.keys())).all()
+    all_rec = sorted(recipe_list + borrowed, key=lambda x: x.title)
+    recipe_list = recipe_list + borrowed
+    ids = {recipe.title: recipe.id for recipe in recipe_list}
+    cards = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()]
+    # Sidebar form
+    # form = HarmonyForm()
+    # choices = [recipe.title for recipe in recipe_list if not recipe.in_menu]  # Can't exclude menu items
+    # form.excludes.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
+    # if request.method == 'POST':  # Load previous preferences/recommendations
+    #     preference = current_user.harmony_preferences  # Preference dictionary
+    #     form.similarity.data = preference['similarity']
+    #     form.groups.data = preference['groups']
+    #     possible = preference['possible']
+    #     if preference['recommended']:  # If saved recommended is not empty
+    #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
+    #                        group in preference['recommended']}
+    return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
+                           colors=colors, borrows=borrows, friend_dict=friend_dict)
         # form=form, sidebar=True, combos=possible, recommended=recommended,
 
 
@@ -150,11 +152,14 @@ def friend_recipes():  # todo handle deleted account ids
 @login_required
 @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
 def friend_recipes_choice(friend=None):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     if friend is None or friend == current_user.id:
         return redirect(url_for('recipes.friend_recipes'))
     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
     if followee is None:
         return redirect(url_for('recipes.friend_recipes'))
+
     colors = Colors.rec_colors
     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
     all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
@@ -177,6 +182,8 @@ def friend_recipes_choice(friend=None):
 @login_required
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
 def public_recipes():  # todo add user credit dynamic
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     colors, rankings = Colors.rec_colors, {}
     u_id = current_user.id
     count = Recipes.query.filter(Recipes.user_id.isnot(u_id)).count()  # And that are public
@@ -219,6 +226,8 @@ def public_recipes():  # todo add user credit dynamic
 @login_required
 @recipes.route('/friend_feed', methods=['GET', 'POST'])
 def friend_feed():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     colors = Colors.act_colors
     cards, friend_dict, friend_acts, page = [], {}, [], 1
     friend = request.args.get('friend', 0, type=int)
@@ -240,6 +249,8 @@ def friend_feed():
 @login_required
 @recipes.route('/recipes/new', methods=['GET', 'POST'])
 def new_recipe():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     if len(current_user.recipes) > 80:  # User recipe limit
         return redirect(url_for('main.account'))
     form = RecipeForm()
@@ -255,6 +266,8 @@ def new_recipe():
 @login_required
 @recipes.route('/recipes/new/quantity', methods=['GET', 'POST'])
 def new_recipe_quantity():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe = session['recipe']  # {RecipeName: string, Quantity: {ingredient: [value,type]}}
     form = load_quantityform(recipe)
     if form.validate_on_submit():
@@ -282,6 +295,8 @@ def new_recipe_quantity():
 @login_required
 @recipes.route('/recipes/link', methods=['GET', 'POST'])
 def recipe_from_link():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     form = RecipeLinkForm()
     if form.validate_on_submit():
         try:
@@ -305,6 +320,8 @@ def recipe_from_link():
 @login_required
 @recipes.route('/recipes/new_link', methods=['GET', 'POST'])  # todo import says not your recipe mima
 def new_recipe_link():  # filling out the form data from link page
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     form = RecipeForm()
     if request.method == 'GET':
         if len(current_user.recipes) > 75:  # User recipe limit
@@ -329,6 +346,8 @@ def new_recipe_link():  # filling out the form data from link page
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/update', methods=['GET', 'POST'])
 def update_recipe(recipe_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only update your own recipes
         abort(403)
@@ -352,6 +371,8 @@ def update_recipe(recipe_id):
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
 def update_recipe_quantity(recipe_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     rec = Recipes.query.get_or_404(recipe_id)
     if rec.author != current_user or rec.public:  # You can only update your own recipes
         abort(403)
@@ -379,6 +400,8 @@ def update_recipe_quantity(recipe_id):
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
 def recipe_download(recipe_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     all_recipes = Recipes.query.filter_by(author=current_user).all()
     recipe = Recipes.query.filter_by(id=recipe_id).first()
     for r in all_recipes:
@@ -414,6 +437,8 @@ def recipe_download(recipe_id):
 @login_required
 @recipes.route('/borrow/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.user_id == current_user.id:
         return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
@@ -467,6 +492,8 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/delete', methods=['POST'])
 def delete_recipe(recipe_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only change your own recipes
         abort(403)
@@ -492,6 +519,8 @@ def delete_recipe(recipe_id):
 @recipes.route('/recipes/change_menu', methods=['POST'])
 @login_required
 def change_to_menu():  # JavaScript way of adding to menu without reload
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
@@ -508,6 +537,8 @@ def change_to_menu():  # JavaScript way of adding to menu without reload
 @recipes.route('/recipes/change_borrow', methods=['POST'])
 @login_required
 def change_to_borrow():  # JavaScript way of adding to menu without reload  # todo public recipes
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe_id = int(request.form['recipe_id'])
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
@@ -536,6 +567,8 @@ def change_to_borrow():  # JavaScript way of adding to menu without reload  # to
 @recipes.route('/recipes/<int:recipe_id>/add_menu', methods=['GET', 'POST'])  # ??REQUIRES 'GET'
 @login_required
 def add_to_menu(recipe_id):  # Adding from RHT recommendations
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:
         recipe = User_Rec.query.get([current_user.id, recipe_id])
@@ -550,6 +583,8 @@ def add_to_menu(recipe_id):  # Adding from RHT recommendations
 @recipes.route('/recipes/multi_add_menu/', methods=['GET', 'POST'])  # From Recipe Harmony Tool Multi-select
 @login_required
 def multi_add_to_menu():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
     for recipe_id in request.form.getlist('harmony'):
         recipe = Recipes.query.get_or_404(recipe_id)
         if recipe.author != current_user:  # You can only add your own recipes # Might not be needed
