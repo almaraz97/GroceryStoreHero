@@ -10,7 +10,8 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Modeling.svd import recipe_svd
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, get_recipes, \
-    remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform
+    remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, date_sort, \
+    paginate_sort
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture, Colors
 from GroceryHero.models import Recipes, User, Followers, Actions, User_Rec
@@ -24,9 +25,15 @@ recipes = Blueprint('recipes', __name__)
 def recipes_page(possible=0, recommended=None):
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
+    search = request.form.get('search', None)
+    if (search is not None) and (search == 'Recipe Options' or search == ''):
+        return redirect(url_for('recipes.recipes_page'))
+    recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
+    if search is not None:
+        recipe_list = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()
+                       or search.lower() in recipe.quantity.keys()]
     form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
-    recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
     in_menu = [r.title for r in in_menu]
     about = None if current_user.pro else True
     preferences = get_harmony_settings(current_user.harmony_preferences)
@@ -42,7 +49,7 @@ def recipes_page(possible=0, recommended=None):
             recommended = remove_menu_items(in_menu, recommended)
             update_user_preferences(current_user, form, recommended, possible)
             form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
-    return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids,
+    return render_template('recipes.html', title='Recipes', cards=recipe_list, recipe_ids=recipe_ids, friend=None,
                            search_recipes=recipe_list, about=about, sidebar=True, combos=possible,
                            recommended=recommended, form=form, colors=colors, borrows=borrows, friend_dict=friend_dict)
 
@@ -81,7 +88,7 @@ def recipes_search(possible=0, recommended=None):  # todo Make compatible with a
     #         recommended = {tuple(group.split(', ')): preference['recommended'][group] for
     #                        group in preference['recommended']}
     return render_template('recipes.html', title='Recipes', cards=cards, recipe_ids=ids, search_recipes=all_rec,
-                           colors=colors, borrows=borrows, friend_dict=friend_dict)
+                           colors=colors, borrows=borrows, friend_dict=friend_dict, friend=None)
         # form=form, sidebar=True, combos=possible, recommended=recommended,
 
 
@@ -131,52 +138,43 @@ def recipe_single(recipe_id):
 def friend_recipes():  # todo handle deleted account ids
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
+    friend_choice = request.args.get('friend', None, type=int)
+    page = request.args.get('page', 1, type=int)
+    sort = request.args.get('sort', 'hot')
+    sort = sort if sort in ['hot', 'borrow', 'date', 'eaten'] else 'hot'
+    types = request.args.get('types', 'all')
+    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
+    if friend_choice is not None:
+        followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_choice).first()
+        if followee is None or followee.status != 1:
+            return redirect(url_for('recipes.friend_recipes', page=page, sort=sort, types=types))
     colors = Colors.rec_colors
-    recipe_list = []
-    borrows = {x.recipe_id: x.borrowed for x in
-               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
-    user_recipes = Recipes.query.filter_by(author=current_user).all()
-    followees, friend_dict = get_friends(current_user)
-    borrowed_list = []
-    for friend in followees:  # Add their recipes to recipe_list
-        for recipe in Recipes.query.filter_by(user_id=friend).all():
-            if recipe not in user_recipes:
-                borrowed_list.append(recipe) if recipe.id in borrows else recipe_list.append(recipe)
-    recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
-    recipe_list = recipe_list + borrowed_list
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
-                           recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
-                           friend_dict=friend_dict, all_friends=friend_dict, friends=True, switch=True)
+    followees, all_friends = get_friends(current_user)
+    borrows = {x.recipe_id: x.borrowed for x in User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
+    recipe_list, count = paginate_sort(all_friends, friend_choice, page, sort, types, view='friends')
+    # if friend_choice is not None:
+    #     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_choice).first()
+    #     if followee is None or followee.status != 1:
+    #         return redirect(url_for('recipes.friend_recipes', page=page, sort=sort, types=types))
 
-
-@login_required
-@recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
-def friend_recipes_choice(friend=None):
-    if not current_user.is_authenticated:
-        return redirect(url_for('main.landing'))
-    if friend is None or friend == current_user.id:
-        return redirect(url_for('recipes.friend_recipes'))
-    followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
-    if followee is None:
-        return redirect(url_for('recipes.friend_recipes'))
-
-    colors = Colors.rec_colors
-    all_followees = Followers.query.filter_by(user_id=current_user.id).all()
-    all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
-                   for F in all_followees if F.status == 1}
-    borrows = {x.recipe_id: x.in_menu for x in
-               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
-    if followee.status == 1:
-        user_recipes = Recipes.query.filter_by(author=current_user).all()
-        friend = User.query.filter_by(id=friend).first()
-        friend_dict = {friend.id: friend}
-        recipe_list = [x for x in Recipes.query.filter_by(user_id=friend.id).all() if x not in user_recipes]
-        recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
-    else:
-        return redirect(url_for('recipes.friend_recipes'))
-    return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
-                           recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
-                           friend_dict=friend_dict, all_friends=all_friends, friends=True)
+    # friend_dict = {friend.id: friend for friend in User.query.filter_by(id=friend_choice).all()}
+    # recipe_list = sorted([x for x in Recipes.query.filter_by(user_id=list(friend_dict.keys())[0]).all() if
+    #                       x not in Recipes.query.filter_by(author=current_user).all()],
+    #                      key=lambda x: x.date_created, reverse=True)
+    # else:
+    # if cards is not None:
+    #     recipe_list, borrowed_list = [], []
+    #     user_recipes = Recipes.query.filter_by(author=current_user).all()
+    #     for recipe in Recipes.query.filter(Recipes.user_id.in_(followees)).all():
+    #         if recipe not in user_recipes:
+    #             borrowed_list.append(recipe) if recipe.id in borrows else recipe_list.append(recipe)
+    #     recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
+    #     recipe_list = recipe_list + borrowed_list
+    cards = recipe_list.items
+    return render_template('recipes.html', cards=cards, title='Friend Recipes', sidebar=True,
+                           colors=colors, search_recipes=recipe_list, borrows=borrows, friend_dict=all_friends,
+                           all_friends=all_friends, friends=True, switch=True, recipe_list=recipe_list,
+                           friend=friend_choice, page=page, sort=sort, types=types, count=count)
 
 
 @login_required
@@ -186,7 +184,7 @@ def public_recipes():  # todo add user credit dynamic
         return redirect(url_for('main.landing'))
     colors, rankings = Colors.rec_colors, {}
     u_id = current_user.id
-    count = Recipes.query.filter(Recipes.user_id.isnot(u_id)).count()  # And that are public
+    count = Recipes.query.filter(Recipes.user_id.isnot(u_id)).count()  # todo and that are public
     borrows = {x.recipe_id: x.in_menu for x in User_Rec.query.filter_by(user_id=u_id).all() if x.borrowed}  # NECESSARY?
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=u_id).all() if x.status == 1]
     friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
@@ -209,6 +207,8 @@ def public_recipes():  # todo add user credit dynamic
         sorting = Recipes.date_created.desc()
         recipe_list = Recipes.query.order_by(sorting).paginate(page=page)
     cards = recipe_list.items
+
+
     if request.method == "POST" and current_user.history:
         all_users = User.query.all()
         rankings = recipe_svd(all_users)[u_id]
@@ -699,3 +699,32 @@ def convert_history():
     #     recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
     #     return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
     #                                                              f"attachment; filename={title}.txt"})
+
+
+# @login_required
+# @recipes.route('/friend_recipes/<int:friend>', methods=['GET', 'POST'])
+# def friend_recipes_choice(friend=None):
+#     if not current_user.is_authenticated:
+#         return redirect(url_for('main.landing'))
+#     if friend is None or friend == current_user.id:
+#         return redirect(url_for('recipes.friend_recipes'))
+#     followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend).first()
+#     colors = Colors.rec_colors
+#     if followee is None:
+#         return redirect(url_for('recipes.friend_recipes'))
+#     borrows = {x.recipe_id: x.in_menu for x in
+#                User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
+#     all_followees = Followers.query.filter_by(user_id=current_user.id).all()
+#     all_friends = {F.follow_id: User.query.filter_by(id=F.follow_id).first()
+#                    for F in all_followees if F.status == 1}
+#     if followee.status == 1:
+#         user_recipes = Recipes.query.filter_by(author=current_user).all()
+#         friend = User.query.filter_by(id=friend).first()
+#         friend_dict = {friend.id: friend}
+#         recipe_list = [x for x in Recipes.query.filter_by(user_id=friend.id).all() if x not in user_recipes]
+#         recipe_list = sorted(recipe_list, key=lambda x: x.date_created, reverse=True)
+#     else:
+#         return redirect(url_for('recipes.friend_recipes'))
+#     return render_template('recipes.html', recipes=None, cards=recipe_list, title='Friend Recipes', sidebar=True,
+#                            recommended=None,  colors=colors, search_recipes=recipe_list, borrows=borrows,
+#                            friend_dict=friend_dict, all_friends=all_friends, friends=True)

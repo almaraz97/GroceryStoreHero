@@ -1,3 +1,4 @@
+from datetime import datetime
 from difflib import SequenceMatcher
 import pytz
 from flask import url_for
@@ -275,6 +276,14 @@ def add_follow(users):
     db.session.commit()
 
 
+def date_sort(item):
+    try:
+        value = item.times_eaten / (datetime.utcnow() - item.date_created).days
+    except ZeroDivisionError:
+        value = 0
+    return value
+
+
 def generate_feed_contents(cards):
     # cards = sorted(friend_acts, key=lambda x: x.date_created, reverse=True)
     actions = []
@@ -322,7 +331,7 @@ def get_friends(user):
     return followees, followee_dict
 
 
-def get_recipes(user):
+def get_recipes(user, search=None):
     recipe_list = Recipes.query.filter_by(author=user).order_by(Recipes.title).all()  # Get all recipes
     borrows = {x.recipe_id: x.in_menu for x in
                User_Rec.query.filter_by(user_id=user.id).all() if x.borrowed}
@@ -397,6 +406,39 @@ def load_quantityform(recipe):
     form = FullQuantityForm(data=data)
     form.ingredients = [x for x in recipe['quantity'].keys()]
     return form
+
+
+def paginate_sort(all_friends, friend_choice=None, page=1, sort='hot', types='all', view='home'):
+    all_friends = list(all_friends.keys())
+    if sort in ['date', 'eaten']:
+        sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
+        if friend_choice is not None:  # There is a friend choice
+            recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types).order_by(sorting) if \
+                types != 'all' else Recipes.query.filter_by(user_id=friend_choice).order_by(sorting)
+        else:
+            recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends))\
+                .filter_by(recipe_type=types).order_by(sorting) if \
+                types != 'all' else Recipes.query.order_by(sorting)
+        count = recipe_list.count()
+        recipe_list = recipe_list.paginate(page=page)
+    else:
+        if friend_choice is not None:  # No sorting yet
+            recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types) if \
+                types != 'all' else Recipes.query.filter_by(user_id=friend_choice)
+        else:
+            recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends)).filter_by(recipe_type=types) if \
+                types != 'all' else Recipes.query.filter(Recipes.user_id.in_(all_friends))
+
+        count = recipe_list.count()
+        recipe_list = recipe_list.paginate(page=page)
+        if sort == 'hot':  # Eaten//Date
+            recipe_list.items = sorted(recipe_list.items, key=lambda x: date_sort(x), reverse=True)
+        else:  # Most borrowed
+            all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
+            all_borrowed = [x.recipe_id for x in all_borrowed]
+            recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
+    return recipe_list, count
+
 
 # @recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
 # @login_required
