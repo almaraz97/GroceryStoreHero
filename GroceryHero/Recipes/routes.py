@@ -9,7 +9,7 @@ from GroceryHero import db
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Modeling.svd import recipe_svd
 from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage
-from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, get_recipes, \
+from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, \
     remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, date_sort, \
     paginate_sort
 from GroceryHero.Users.forms import HarmonyForm
@@ -22,22 +22,17 @@ recipes = Blueprint('recipes', __name__)
 
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
-def recipes_page(possible=0, recommended=None):
+@recipes.route('/recipes/<string:view>', methods=['GET', 'POST'])
+def recipes_page(view='self'):
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
-    search = request.form.get('search', None)
-    recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
-    page = request.args.get('page', 1, type=int)
-    sort = request.args.get('sort', 'hot')
+    possible, recommended, form, about, colors = 0, None, HarmonyForm(), True, Colors.rec_colors
+    search, page, sort, types = request.form.get('search', None), request.args.get('page', 1, type=int), request.args.get('sort', 'hot'), request.args.get('types', 'all')
     sort = sort if sort in ['hot', 'borrow', 'date', 'eaten'] else 'hot'
-    types = request.args.get('types', 'all')
     types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
-    recipe_list, count = paginate_sort(search=search, page=1, sort=sort, types=types, view='own')
-    if (search is not None) and (search not in ['Recipe Options', '']):
-        recipe_list.items = [recipe for recipe in recipe_list.items if search.lower() in recipe.title.lower()
-                       or search.lower() in recipe.quantity.keys()]
+    recipe_list, count, in_menu, borrows, recipe_ids = paginate_sort(search=search, page=page, sort=sort,
+                                                                     types=types, view=view, per=160)
     cards = recipe_list.items
-    form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     in_menu = [r.title for r in in_menu]
     about = None if current_user.pro else True
@@ -57,7 +52,7 @@ def recipes_page(possible=0, recommended=None):
     return render_template('recipes.html', title='Recipes', cards=cards, sidebar=True, colors=colors,
                            borrows=borrows, count=count, friend_dict=friend_dict,
                            recipe_ids=recipe_ids, friend=None, about=about, combos=possible,
-                           recommended=recommended, form=form)
+                           recommended=recommended, form=form, recipe_list=recipe_list, view=view)
 
 
 @login_required
@@ -76,14 +71,15 @@ def friend_recipes():  # todo handle deleted account ids
         if followee is None or followee.status != 1:
             return redirect(url_for('recipes.friend_recipes', page=page, sort=sort, types=types))
     colors = Colors.rec_colors
+
     followees, all_friends = get_friends(current_user)
     borrows = {x.recipe_id: x.borrowed for x in User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}
-    recipe_list, count = paginate_sort(all_friends, friend_choice, page, sort, types, view='friends')
+    recipe_list, count, _, _, _ = paginate_sort(all_friends, friend_choice, page, sort, types, view='friends')
     cards = recipe_list.items
     return render_template('recipes.html', title='Friend Recipes', cards=cards, sidebar=True, colors=colors,
                            borrows=borrows, count=count, friend_dict=all_friends,
                            all_friends=all_friends, friends=True, recipe_list=recipe_list,
-                           friend=friend_choice, page=page, sort=sort, types=types)
+                           friend=friend_choice, page=page, sort=sort, types=types, view='friends')
 
 
 @login_required
@@ -92,17 +88,15 @@ def public_recipes():  # todo add user credit dynamic
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     colors, rankings = Colors.rec_colors, {}
-    u_id = current_user.id
-    borrows = {x.recipe_id: x.in_menu for x in User_Rec.query.filter_by(user_id=u_id).all() if x.borrowed}  # NECESSARY?
-    followees = [x.follow_id for x in Followers.query.filter_by(user_id=u_id).all() if x.status == 1]
-    friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+    followees, friend_dict = get_friends(current_user)
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'hot')
     types = request.args.get('types', 'all')
     types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
-    recipe_list, count = paginate_sort(page=page, sort=sort, types=types, search=None, view='public')
+    recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, types=types, search=None, view='public')
     cards = recipe_list.items
     if request.method == "POST" and current_user.history:
+        u_id = current_user.id
         all_users = User.query.all()
         rankings = recipe_svd(all_users)[u_id]
         rankings = [[x[0], round(x[1]**(1/4)*5, 2)] for x in rankings if
@@ -110,9 +104,10 @@ def public_recipes():  # todo add user credit dynamic
         rankings = rankings[:5]
     elif not current_user.history:
         flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
-    return render_template('recipes_public.html', title='Public Recipes', cards=cards, sidebar=True, colors=colors,
+    template = 'recipes_public.html'
+    return render_template(template, title='Public Recipes', cards=cards, sidebar=True, colors=colors,
                            borrows=borrows, count=count,
-                           recipe_list=recipe_list, page=page, sort=sort, types=types,
+                           recipe_list=recipe_list, page=page, sort=sort, types=types,view='public',
                            friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings)
 
 
