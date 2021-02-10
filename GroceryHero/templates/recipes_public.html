@@ -9,16 +9,16 @@
 {% if current_user.is_authenticated %}
 
   <!--Search bar with button-->
-{#  <div style="margin-bottom: 15px;">#}
-{#    <form action="{{ url_for('recipes.recipes_search') }}" method="POST">#}
-{#      <div class="input-group flex-nowrap">#}
-{#        <input type="text" class="form-control" placeholder="Recipe Name" name="search">#}
-{#        <div class="input-group-prepend">#}
-{#          <button class="input-group-text" id="addon-wrapping">Search</button>#}
-{#        </div>#}
-{#      </div>#}
-{#    </form>#}
-{#  </div>#}
+  <div class="mt-4" style="margin-bottom: 15px;">
+    <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
+      <div class="input-group flex-nowrap">
+        <input type="text" class="form-control" placeholder="Recipe Name" name="search">
+        <div class="input-group-prepend">
+          <button class="input-group-text" id="addon-wrapping">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
   <!-- Recipe Pages Bar -->
   <div class="row p-0 mt-4 mx-0 mb-1">
     <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>

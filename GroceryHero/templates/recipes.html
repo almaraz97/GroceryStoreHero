@@ -25,7 +25,7 @@
 <!--        </select>-->
 <!--    </div>-->
 <!--</form>-->
-{% if friends is not defined %}
+{#{% if friends is not defined %}#}
   <!--Search bar with button-->
   <div style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
@@ -38,7 +38,7 @@
       </div>
     </form>
   </div>
-{% endif %}
+{#{% endif %}#}
 <div class="row p-0 mx-0 mb-1 mt-4">
   {% if title == 'Friend Recipes' %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
@@ -53,7 +53,7 @@
 <div class="d-none d-sm-none d-md-flex d-lg-flex">
 <div class="btn-group btn-sm d-inline-block mb-2 mt-2 p-0" style="width: 100%;">
   <div class="d-inline">
-  {% if friends is defined %}{% set label = 'friend' %}{% else %}{% set label='public' %}{% endif %}
+  {% if friends is defined %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
     <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
     <button type="button" class="px-3 btn btn-sm btn-outline-info dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
@@ -107,7 +107,8 @@
     </div>
   </div>
   <button class="btn btn-sm btn-outline-secondary px-2 m-0 float-left d-sm-block d-md-none" style="width:110px;border-radius:0.2rem;" onClick="document.getElementById('tool').scrollIntoView();">Recommender</button>
-<p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} public recipes</p>
+  {% if friends is defined %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
+  <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
 </div>
 </div>
 {% if cards is not defined or cards|length < 1 %}
@@ -126,14 +127,15 @@
     </div>
   </div>
 {% else %}
-  <div class="row mx-0 my-0 p-0">
-    {% if friends is not defined %}
-      <p class="text-muted my-2 pb-0" style="float: left;">You have {{ search_recipes|length }} recipe(s)</p>
-    {% else %}
-      <p class="text-muted my-2 pb-0" style="float: left;"></p>
-    {% endif %}
-    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>
-  </div>
+{#  <div class="row mx-0 my-0 p-0">#}
+{#    {% if friends is not defined %}#}
+{#      <p class="text-muted my-2 pb-0" style="float: left;">You have {{ search_recipes|length }} recipe(s)</p>#}
+{#    {% else %}#}
+{#      <p class="text-muted my-2 pb-0" style="float: left;"></p>#}
+{#    {% endif %}#}
+{#    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>#}
+{#  </div>#}
+<button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>
   <!--Recipe cards-->
   {% for recipe in cards %}
     <!--style="border-right:solid 20px #9C1A1C;"-->

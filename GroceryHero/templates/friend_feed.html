@@ -13,7 +13,7 @@
       </div>
     </form>
   </div>
-<div class="row p-0 mx-0 mb-1">
+<div class="row p-0 mt-4 mx-0 mb-1">
   <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
   <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
   <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
@@ -37,12 +37,12 @@
   <!--Action Cards-->
   {% for action in cards %}
     <article class="media content-section" style="border-left-color:{{colors[action['type_']]}}; border-left-width: 5px; border-radius: 5px; border-bottom: 0; border-top: 0; border-right: 0"> <!--border-right-color-->
-      <a href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">
+      <a href="{{ url_for('recipes.friend_recipes', friend=action['user_id']) }}">
         <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + friend_dict[action['user_id']].image_file) }}">
       </a>
       <div class="media-body ml-4 row">
         <div class="col-8 my-auto py-auto">
-          <p style="font-size: 18px;" class="m-0"><a style="font-size: 20px;" href="{{ url_for('recipes.friend_recipes_choice', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
+          <p style="font-size: 18px;" class="m-0"><a style="font-size: 20px;" href="{{ url_for('recipes.friend_recipes', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
         </div>
         <div class="text-muted col-4" style="">
             {{ action['date_created'].strftime('%Y-%m-%d %H:%M') }}

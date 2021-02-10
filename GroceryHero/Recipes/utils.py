@@ -2,6 +2,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 import pytz
 from flask import url_for
+from flask_login import current_user
+
 from GroceryHero import db
 from GroceryHero.HarmonyTool import recipe_stack
 from GroceryHero.models import Recipes, Followers, User, User_Rec
@@ -408,36 +410,93 @@ def load_quantityform(recipe):
     return form
 
 
-def paginate_sort(all_friends, friend_choice=None, page=1, sort='hot', types='all', view='home'):
-    all_friends = list(all_friends.keys())
-    if sort in ['date', 'eaten']:
-        sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
-        if friend_choice is not None:  # There is a friend choice
-            recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types).order_by(sorting) if \
-                types != 'all' else Recipes.query.filter_by(user_id=friend_choice).order_by(sorting)
+def paginate_sort(all_friends=None, friend_choice=None, page=1, sort='hot', types='all', search=None, view='home'):
+    if all_friends is not None:
+        all_friends = list(all_friends.keys())
+        if sort in ['date', 'eaten']:
+            sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
+            if friend_choice is not None:  # There is a friend choice
+                recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types).order_by(sorting) if \
+                    types != 'all' else Recipes.query.filter_by(user_id=friend_choice).order_by(sorting)
+            else:
+                recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends))\
+                    .filter_by(recipe_type=types).order_by(sorting) if \
+                    types != 'all' else Recipes.query.order_by(sorting)
+            count = recipe_list.count()
+            recipe_list = recipe_list.paginate(page=page)
         else:
-            recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends))\
-                .filter_by(recipe_type=types).order_by(sorting) if \
-                types != 'all' else Recipes.query.order_by(sorting)
-        count = recipe_list.count()
-        recipe_list = recipe_list.paginate(page=page)
-    else:
-        if friend_choice is not None:  # No sorting yet
-            recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types) if \
-                types != 'all' else Recipes.query.filter_by(user_id=friend_choice)
-        else:
-            recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends)).filter_by(recipe_type=types) if \
-                types != 'all' else Recipes.query.filter(Recipes.user_id.in_(all_friends))
+            if friend_choice is not None:  # No sorting yet
+                recipe_list = Recipes.query.filter_by(user_id=friend_choice, recipe_type=types) if \
+                    types != 'all' else Recipes.query.filter_by(user_id=friend_choice)
+            else:
+                recipe_list = Recipes.query.filter(Recipes.user_id.in_(all_friends)).filter_by(recipe_type=types) if \
+                    types != 'all' else Recipes.query.filter(Recipes.user_id.in_(all_friends))
 
-        count = recipe_list.count()
-        recipe_list = recipe_list.paginate(page=page)
-        if sort == 'hot':  # Eaten//Date
-            recipe_list.items = sorted(recipe_list.items, key=lambda x: date_sort(x), reverse=True)
-        else:  # Most borrowed
-            all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
-            all_borrowed = [x.recipe_id for x in all_borrowed]
-            recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
+            count = recipe_list.count()
+            recipe_list = recipe_list.paginate(page=page)
+            if sort == 'hot':  # Eaten//Date
+                recipe_list.items = sorted(recipe_list.items, key=lambda x: date_sort(x), reverse=True)
+            else:  # Most borrowed
+                all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
+                all_borrowed = [x.recipe_id for x in all_borrowed]
+                recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
+    else:
+        count = Recipes.query.filter(Recipes.user_id.isnot(current_user.id)).count()  # todo and that are public
+        if sort in ['date', 'eaten']:
+            sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
+            recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).order_by(sorting).paginate(
+                page=page) if types != 'all' else Recipes.query.order_by(sorting).paginate(page=page)
+        elif sort in ['hot', 'borrow']:
+            recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).paginate(
+                page=page) if types != 'all' else Recipes.query.paginate(page=page)
+            if sort == 'hot':  # Eaten//date
+                recipe_list.items = sorted(recipe_list.items,
+                                           key=lambda x: x.times_eaten / (datetime.utcnow() - x.date_created).days,
+                                           reverse=True)
+            else:  # Most borrowed
+                all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
+                all_borrowed = [x.recipe_id for x in all_borrowed]
+                recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
+        else:  # Date
+            sorting = Recipes.date_created.desc()
+            recipe_list = Recipes.query.order_by(sorting).paginate(page=page)
     return recipe_list, count
+
+
+def add_eatens():
+    all_users = User.query.all()
+    for user in all_users:
+        user_history = [item for sublist in user.history for item in sublist]
+        if user_history:
+            counts = dict()
+            for i in user_history:
+                counts[i] = counts.get(i, 0) + 1
+            for key in counts:
+                recipe = Recipes.query.filter_by(id=key).first()
+                if recipe is not None:
+                    if recipe in user.recipes:
+                        recipe.times_eaten = counts[key]
+                    else:
+                        recipe = User_Rec.query.filter_by(recipe_id=key, user_id=user.id).first()
+                        if recipe is not None:
+                            recipe.times_eaten = counts[key]
+            # db.session.commit()
+
+
+def convert_history():
+    all_users = User.query.all()
+    for user in all_users:
+        user_history = user.history
+        if user_history:  # There are entries
+            Dict = {}
+            now = datetime.utcnow()
+            now = now - timedelta(days=2)  # days
+            for list_ in user_history:
+                Dict[now] = list_
+                now = now - timedelta(days=7)
+        else:
+            user_history = {}
+    # db.session.commit()
 
 
 # @recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
