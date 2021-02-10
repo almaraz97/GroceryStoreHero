@@ -27,15 +27,16 @@ def recipes_page(possible=0, recommended=None):
         return redirect(url_for('main.landing'))
     search = request.form.get('search', None)
     recipe_list, borrows, in_menu, recipe_ids = get_recipes(current_user)
-    # page = request.args.get('page', 1, type=int)
-    # sort = request.args.get('sort', 'hot')
-    # sort = sort if sort in ['hot', 'borrow', 'date', 'eaten'] else 'hot'
-    # types = request.args.get('types', 'all')
-    # types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
-    # recipe_list, count = paginate_sort(search=search, page=1, sort='hot', types='', view='own')
+    page = request.args.get('page', 1, type=int)
+    sort = request.args.get('sort', 'hot')
+    sort = sort if sort in ['hot', 'borrow', 'date', 'eaten'] else 'hot'
+    types = request.args.get('types', 'all')
+    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
+    recipe_list, count = paginate_sort(search=search, page=1, sort=sort, types=types, view='own')
     if (search is not None) and (search not in ['Recipe Options', '']):
-        recipe_list = [recipe for recipe in recipe_list if search.lower() in recipe.title.lower()
+        recipe_list.items = [recipe for recipe in recipe_list.items if search.lower() in recipe.title.lower()
                        or search.lower() in recipe.quantity.keys()]
+    cards = recipe_list.items
     form, about, colors = HarmonyForm(), True, Colors.rec_colors
     followees, friend_dict = get_friends(current_user)
     in_menu = [r.title for r in in_menu]
@@ -45,19 +46,18 @@ def recipes_page(possible=0, recommended=None):
                    current_user.history]
     excludes = int(current_user.harmony_preferences['history'])
     recipe_ex = [item for sublist in recipe_hist[:excludes] for item in sublist]
-    count = len(recipe_list)
     if request.method == "GET":
-        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
+        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list.items, recipe_ex)
     if request.method == "POST":
         if form.validate_on_submit():  # Harmony or search button was pressed
             recommended, possible = recipe_stack_w_args(recipe_list, preferences, form, in_menu, recipe_ex, recipe_hist)
             recommended = remove_menu_items(in_menu, recommended)
             update_user_preferences(current_user, form, recommended, possible)
             form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
-    return render_template('recipes.html', title='Recipes', cards=recipe_list, sidebar=True, colors=colors,
-                           recipe_ids=recipe_ids, friend=None,
-                           search_recipes=recipe_list, about=about, combos=possible, count=count,
-                           recommended=recommended, form=form, borrows=borrows, friend_dict=friend_dict)
+    return render_template('recipes.html', title='Recipes', cards=cards, sidebar=True, colors=colors,
+                           borrows=borrows, count=count, friend_dict=friend_dict,
+                           recipe_ids=recipe_ids, friend=None, about=about, combos=possible,
+                           recommended=recommended, form=form)
 
 
 @login_required
@@ -81,9 +81,9 @@ def friend_recipes():  # todo handle deleted account ids
     recipe_list, count = paginate_sort(all_friends, friend_choice, page, sort, types, view='friends')
     cards = recipe_list.items
     return render_template('recipes.html', title='Friend Recipes', cards=cards, sidebar=True, colors=colors,
-                           search_recipes=recipe_list, borrows=borrows, friend_dict=all_friends,
+                           borrows=borrows, count=count, friend_dict=all_friends,
                            all_friends=all_friends, friends=True, recipe_list=recipe_list,
-                           friend=friend_choice, page=page, sort=sort, types=types, count=count)
+                           friend=friend_choice, page=page, sort=sort, types=types)
 
 
 @login_required
@@ -111,9 +111,9 @@ def public_recipes():  # todo add user credit dynamic
     elif not current_user.history:
         flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
     return render_template('recipes_public.html', title='Public Recipes', cards=cards, sidebar=True, colors=colors,
-                           recipes=None, recommended=None, search_recipes=recipe_list, borrows=borrows, count=count,
-                           friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings,
-                           recipe_list=recipe_list, page=page, sort=sort, types=types)
+                           borrows=borrows, count=count,
+                           recipe_list=recipe_list, page=page, sort=sort, types=types,
+                           friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings)
 
 
 @login_required

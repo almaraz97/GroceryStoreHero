@@ -203,3 +203,5 @@ GroceryHero/static/profile_pics/*
 /cert.pem
 /key.pem
 /venv2/
+/aprioriFormat.txt
+/svdFormat.txt
