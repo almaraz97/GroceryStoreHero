@@ -228,7 +228,7 @@
           {% else %}
             <p class="text-muted">This will appear after you eat your first weeks' meals.</p>
           {% endif %}
-        {% elif friends is defined %}
+        {% elif friends is defined and friends is not none %}
           <h3>Heroes You Follow</h3>
           <p class='text-muted border-bottom pb-2'>Your fellow heroes in eco-justice! Clicking their names will reveal their recipes.</p>
           <ul class="pl-1">
@@ -238,7 +238,7 @@
                 </li>
             {% endif %}
             {% for friend in all_friends %}
-              {% if feed is defined %} {% set friend_send = url_for('recipes.friend_feed', friend=friend, page=page) %}{% else %} {% set friend_send = url_for('recipes.friend_recipes', friend=friend) %}{% endif %}
+              {% if feed is defined %}{% set friend_send = url_for('recipes.friend_feed', friend=friend) %}{% else %} {% set friend_send = url_for('recipes.recipes_page', view='friends', sort=sort, types=types, friend=friend) %}{% endif %}
                 <li class="mb-2" style="list-style-type: None; font-size: 20px;">
                 <a href="{{ friend_send }}">
                   <img class="rounded-circle account-img mb-0" style="width:30px;height: 30px; float:left;" src="{{ url_for('static', filename='profile_pics/' + all_friends[friend].image_file) }}">{{ all_friends[friend].username }}

@@ -21,7 +21,7 @@
   </div>
   <!-- Recipe Pages Bar -->
   <div class="row p-0 mt-4 mx-0 mb-1">
-    <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
+    <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
     <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
     <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
   </div>
@@ -56,13 +56,12 @@
   </div>
 </div>
 </div>
-<!-- Sort By Button Mobile -->
-<div class="d-md-none d-lg-none d-xl-none">
-<div class="btn-group btn-sm d-inline-block mb-2 mt-2 p-0" style="width: 100%;">
-  <div class="float-right">
-    <button type="button" class="px-4 btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<!-- Sort By Buttons Mobile -->
+<div class="d-md-none d-lg-none d-xl-none btn-group btn-sm row p-0 mx-0 my-2" style="width: 100%">
+  <button class="col-4 btn btn-sm btn-outline-secondary" style="border-radius:0.2rem;" onClick="document.getElementById('tool').scrollIntoView();">Recommender</button>
+  <div class="col-4 px-2">
+    <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
-{#      {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}#}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=page) }}">Trending</a>
       <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=page) }}">Most Recent</a>
@@ -70,7 +69,7 @@
       <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='borrow', types=types, page=page) }}">Most Borrowed</a>
     </div>
   </div>
-  <div class="float-right mr-2">
+  <div class="col-4 px-0">
     <button type="button" class="px-2 btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
@@ -83,9 +82,7 @@
       <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Other', page=page) }}">Other</a>
     </div>
   </div>
-  <button class="btn btn-sm btn-outline-secondary px-2 m-0 float-left d-sm-block d-md-none" style="width:110px;border-radius:0.2rem;" onClick="document.getElementById('tool').scrollIntoView();">Recommender</button>
 <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} public recipes</p>
-</div>
 </div>
 
 {% endif %}

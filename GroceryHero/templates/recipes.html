@@ -1,7 +1,8 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="mb-4">
-    <h1 style="display: inline" class="">Your {{ title }}</h1>
+  {% if view == 'friends' %}{% set title = 'Friend Recipes' %}{% elif view == 'public' %}{% set title = 'Public Recipes' %}{% else %}{% set title = 'Your Recipes' %}{% endif %}
+    <h1 style="display: inline">{{ title }}</h1>
     {#<a style="display: inline; float:right" class="btn btn-sm btn-outline-info mt-2" href="{{ url_for('aisles.new_aisle') }}">New Aisle</a>#}
     {% if current_user.recipes|length <=80 %}  <!--If user has less than max recipes-->
       <a style="display: inline; float:right" class="btn btn-sm btn-info mt-3" href="{{ url_for('recipes.new_recipe') }}">New Recipe</a>
@@ -27,85 +28,81 @@
     {% if title == 'Friend Recipes' %}
       <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
     {% else %}
-      <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_recipes') }}">Friend Recipes</a>
+      <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
     {% endif %}
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
     <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
   </div>
 {% endif %}
-{% if view != 'self' %}
-<!-- Sort By Button -->
+<!-- Sort By Buttons -->
 <div class="d-none d-sm-none d-md-flex d-lg-flex">
 <div class="btn-group btn-sm d-inline-block mb-2 mt-2 p-0" style="width: 100%;">
   <div class="d-inline">
-  {% if friends is defined %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
+  {% if friends is defined and friends is not none %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
     <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
     <button type="button" class="px-3 btn btn-sm btn-outline-info dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
       {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='hot', types=types,  page=1, friend=friend, view=view) }}">Trending</a>
-      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='date', types=types, page=1, friend=friend, view=view) }}">Most Recent</a>
-      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='eaten', types=types, page=1, friend=friend, view=view) }}">Most Eaten</a>
-      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='borrow', types=types, page=1, friend=friend, view=view) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
+      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='date', types=types, page=1, view=view) }}">Most Recent</a>
+      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='eaten', types=types, page=1, view=view) }}">Most Eaten</a>
+      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='borrow', types=types, page=1, view=view) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
     </div>
   </div>
 <div class="d-inline">
   <button type="button" class="px-3 mr-2 btn btn-sm btn-outline-success dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='all', page=1, friend=friend, view=view) }}">All</a>
-      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Breakfast', page=1, friend=friend, view=view) }}">Breakfast</a>
-      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Lunch', page=1, friend=friend, view=view) }}">Lunch</a>
-      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Dinner', page=1, friend=friend, view=view) }}">Dinner</a>
-      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Snack', page=1, friend=friend, view=view) }}">Snack</a>
-      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Dessert', page=1, friend=friend, view=view) }}">Dessert</a>
-      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Other', page=1, friend=friend, view=view) }}">Other</a>
+      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='all', page=1, view=view) }}">All</a>
+      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Breakfast', page=1, view=view) }}">Breakfast</a>
+      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Lunch', page=1, view=view) }}">Lunch</a>
+      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Dinner', page=1, view=view) }}">Dinner</a>
+      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Snack', page=1, view=view) }}">Snack</a>
+      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Dessert', page=1, view=view) }}">Dessert</a>
+      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Other', page=1, view=view) }}">Other</a>
     </div>
   </div>
 </div>
 </div>
-<!-- Sort By Button Mobile -->
-<div class="d-md-none d-lg-none d-xl-none">
-<div class="btn-group btn-sm d-inline-block mb-2 mt-2 p-0" style="width: 100%;">
-  <div class="float-right">
-    <button type="button" class="px-4 btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<!-- Sort By Buttons Mobile -->
+<div class="d-md-none d-lg-none d-xl-none btn-group btn-sm row p-0 mx-0 my-2" style="width: 100%">
+  <button class="col-4 btn btn-sm btn-outline-secondary" style="border-radius:0.2rem;" onClick="document.getElementById('tool').scrollIntoView();">Recommender</button>
+  <div class="col-4 px-2">
+    <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='hot', types=types,  page=1, friend=friend, view=view) }}">Trending</a>
-      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='date', types=types, page=1, friend=friend, view=view) }}">Most Recent</a>
-      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='eaten', types=types, page=1, friend=friend, view=view) }}">Most Eaten</a>
-      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort='borrow', types=types, page=1, friend=friend, view=view) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
+      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='date', types=types, page=1, view=view) }}">Most Recent</a>
+      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='eaten', types=types, page=1, view=view) }}">Most Eaten</a>
+      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='borrow', types=types, page=1, view=view) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
     </div>
   </div>
-  <div class="float-right mr-2">
-    <button type="button" class="px-2 btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <div class="col-4 px-0">
+    <button type="button" class="btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='all', page=page, friend=friend, view=view) }}">All</a>
-      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Breakfast', page=1, view=view) }}">Breakfast</a>
-      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Lunch', page=1, view=view) }}">Lunch</a>
-      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Dinner', page=1, view=view) }}">Dinner</a>
-      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Snack', page=1, view=view) }}">Snack</a>
-      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Dessert', page=1, view=view) }}">Dessert</a>
-      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.friend_recipes', sort=sort, types='Other', page=1, view=view) }}">Other</a>
+      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='all', page=page, view=view) }}">All</a>
+      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Breakfast', page=1, view=view) }}">Breakfast</a>
+      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Lunch', page=1, view=view) }}">Lunch</a>
+      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Dinner', page=1, view=view) }}">Dinner</a>
+      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Snack', page=1, view=view) }}">Snack</a>
+      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Dessert', page=1, view=view) }}">Dessert</a>
+      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Other', page=1, view=view) }}">Other</a>
     </div>
   </div>
-  <button class="btn btn-sm btn-outline-secondary px-2 m-0 float-left d-sm-block d-md-none" style="width:110px;border-radius:0.2rem;" onClick="document.getElementById('tool').scrollIntoView();">Recommender</button>
-  {% if friends is defined %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
+  {% if friends is defined and friends is not none %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
   <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
 </div>
-</div>
-{% else %}
-  <div class="mt-4"></div>
-{% endif %}
 {% if cards is not defined or cards|length < 1 %}
   <div class="card mt-4 mb-2">
     <div class="card-header p-0" id="headingMenu">
       <h5 class="mb-0">
         <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
          {% if current_user.is_authenticated %}
-          {% if public is defined%}{% set empty_message, from_empty = 'No recipes have been posted yet.', url_for('recipes.new_recipe')%}{% elif friends is defined%}{% set empty_message, from_empty = 'No friend recipes have been posted yet.', url_for('recipes.recipes_page')%}{% else %}{% set empty_message, from_empty = 'You have no recipes yet. Click to add a recipe.', url_for('recipes.new_recipe')%}{% endif %}
+          {% if public is defined%}{% set empty_message, from_empty = 'No recipes have been posted yet.', url_for('recipes.new_recipe')%}{% elif friends is defined and friends is not none %}{% set empty_message, from_empty = 'No friend recipes have been posted yet.', url_for('recipes.recipes_page')%}{% else %}{% set empty_message, from_empty = 'You have no recipes yet. Click to add a recipe.', url_for('recipes.new_recipe')%}{% endif %}
            <a style="text-decoration:none; color: grey;" href="{{ from_empty }}">{{ empty_message }}</a>
          {% else %}
            <a style="text-decoration:none; color: grey;" href="{{ url_for('users.auth_login') }}">You have no recipes yet. Login to add a recipe.</a>
@@ -123,7 +120,7 @@
 {#    {% endif %}#}
 {#    <button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>#}
 {#  </div>#}
-<button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>
+{#<button class="btn btn-sm btn-secondary mb-2 col-12 d-sm-block d-md-none" style="float: right;" onClick="document.getElementById('tool').scrollIntoView();">{%if current_user.pro%}Go to Harmony Tool{%else%}Go to Bottom{%endif%}</button>#}
   <!--Recipe cards-->
   {% for recipe in cards %}
     <!--style="border-right:solid 20px #9C1A1C;"-->
@@ -136,10 +133,10 @@
           <button class="btn btn-light btn-sm mt-3 updateButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Menu</button>
         {% endif %}
       {% else %} <!--Not your recipe-->
-        {% if friends is defined %}  <!--Looking at Friend Recipes page-->
+        {% if friends is defined and friends is not none %}  <!--Looking at Friend Recipes page-->
             {% if borrows[recipe.id] is defined %}  <!-- if recipe has User_Rec entry, say if it is borrowed or not -->
               {% if borrows[recipe.id] %}{% set borrow_button = 'info' %}{% else %}{% set borrow_button = 'light' %}{% endif %}
-              <button class="btn btn-{{borrow_button}} btn-sm mt-3 borrowButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
+              <button class="btn btn-{{ borrow_button }} btn-sm mt-3 borrowButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
             {% else %}
               <button class="btn btn-light btn-sm mt-3 borrowButton" r_id="{{ recipe.id }}" value="{{ recipe.id }}">Borrow</button>
             {% endif %}
@@ -153,7 +150,7 @@
       {% endif %}
       <div class="media-body ml-4">
         <div class="article-metadata">  <!--article-metadata-->
-          {% if friends is defined%}
+          {% if friends is defined and friends is not none%}
             <div class="text-muted" style="float: right">@{{ recipe.author.username }}</div>
           {% elif recipe.user_id != current_user.id %}
             <div class="text-muted" style="float: right">Borrowed from: {{ recipe.author.username }}</div>
@@ -167,14 +164,13 @@
 {% endif %}
 <button class="btn btn-sm btn-secondary mb-4 col-12" id="tool" style="float: right;" onClick="document.getElementById('top').scrollIntoView();">Go to Top</button>
 {% if recipe_list %}
-  {% if view == 'self' %}{% set own = 'recipes.recipes_page' %}{% else %}{% set own = 'recipes.friend_recipes' %}{% endif %}
   {% for page_num in recipe_list.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
     {% if page_num %}
       {% if recipe_list.page == page_num %}{% set state = 'btn-success' %}{% else %}{% set state = 'btn-outline-success' %}{% endif %}
       {% if view != 'self' %}
-        <a class="btn {{ state }} mb-4" href="{{ url_for(own, page=page_num, view=view) }}">{{ page_num }}</a>
+        <a class="btn {{ state }} mb-4" href="{{ url_for('recipes.recipes_page', page=page_num, view=view) }}">{{ page_num }}</a>
       {% else %}
-        <a class="btn {{ state }} mb-4" href="{{ url_for(own, page=page_num) }}">{{ page_num }}</a>
+        <a class="btn {{ state }} mb-4" href="{{ url_for('recipes.recipes_page', page=page_num) }}">{{ page_num }}</a>
       {% endif %}
     {% else %}
       ...
