@@ -160,7 +160,7 @@
           {{ form5.submit(class='btn btn-info btn-sm btn-block mt-2') }}
           </form>
         {% elif public is defined %}
-          <h3>Recipe Recommender</h3>
+          <h3>Recipe Recommender</h3>  <!-- SVD -->
           <p class='text-muted border-bottom pb-2'>The more often you clear your menu, the more personalized the recommendations!</p>
 {#          After clearing your menu, the recipe recommender can find you new recipes you'll enjoy! The more often you clear, the more accurate it becomes.#}
           {# Once you clear your menu we can find recipes we think you'll love. Try it!#}
@@ -175,7 +175,19 @@
             </div>
           {% endif %}
           <form action="" method="POST" class="mb-2">
-            <input type="submit" class="btn btn-sm btn-block btn-success" value="Find New Recipes">
+            {{ form.hidden_tag() }}
+            {{ form.type_(class='mb-3 custom-select') }}
+            {{ form.submit(class='btn btn-sm btn-block btn-success') }}
+{#            <select id="types">#}
+{#              <option value="all">All</option>#}
+{#              <option value="Breakfast">Breakfast</option>#}
+{#              <option value="Lunch">Lunch</option>#}
+{#              <option value="Dinner">Dinner</option>#}
+{#              <option value="Dessert">Dessert</option>#}
+{#              <option value="Snack">Snack</option>#}
+{#              <option value="Other">Other</option>#}
+{#            </select>#}
+{#            <input type="submit" class="btn btn-sm btn-block btn-success" value="Find New Recipes">#}
           </form>
         {% elif aisle is defined %}
           <h3 class=''>Un-added Ingredients</h3>

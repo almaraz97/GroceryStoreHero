@@ -8,7 +8,7 @@ from flask_login import current_user, login_required
 from GroceryHero import db
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Modeling.svd import recipe_svd
-from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage
+from GroceryHero.Recipes.forms import RecipeForm, FullQuantityForm, RecipeLinkForm, UploadRecipeImage, SvdForm
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, \
     remove_menu_items, recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, date_sort, \
     paginate_sort
@@ -77,18 +77,22 @@ def public_recipes():  # todo add user credit dynamic
     types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
     recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, types=types, search=None, view='public')
     cards = recipe_list.items
-    if request.method == "POST" and current_user.history:
-        u_id = current_user.id
-        all_users = User.query.all()
-        rankings = recipe_svd(all_users)[u_id]
-        rankings = [[x[0], round(x[1]**(1/4)*5, 2)] for x in rankings if
-                    (x[0] is not None) and (x[0].user_id != u_id) and (x[0].id not in borrows)]
-        rankings = rankings[:5]
+    form = SvdForm()
+    if request.method == 'POST':
+        if form.validate_on_submit() and current_user.history:
+            types = form.type_.data
+            u_id = current_user.id
+            all_users = User.query.all()
+            rankings = recipe_svd(all_users)[u_id]
+            rankings = [[x[0], round(x[1]**(1/4)*5, 2)] for x in rankings if
+                        (x[0] is not None) and (x[0].user_id != u_id) and (x[0].id not in borrows)]
+            rankings = [x for x in rankings if x[0].recipe_type == types][:5] if types != 'all' else rankings[:5]
     elif not current_user.history:
         flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
     template = 'recipes_public.html'
+
     return render_template(template, title='Public Recipes', cards=cards, sidebar=True, colors=colors,
-                           borrows=borrows, count=count,
+                           borrows=borrows, count=count, form=form,
                            recipe_list=recipe_list, page=page, sort=sort, types=types, view='public',
                            friend_dict=friend_dict, all_friends=friend_dict, public=True, rankings=rankings)
 

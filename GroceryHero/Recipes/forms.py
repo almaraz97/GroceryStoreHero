@@ -51,3 +51,8 @@ class FullQuantityForm(FlaskForm):
 class UploadRecipeImage(FlaskForm):
     picture = FileField('Update Recipe Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit = SubmitField('Upload')
+
+
+class SvdForm(FlaskForm):
+    type_ = SelectField('Type', choices=[('all', 'All')]+[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']])
+    submit = SubmitField('Find New Recipes')
