@@ -147,7 +147,7 @@ def harmony_tool():
 @login_required
 @main.route('/stats', methods=['GET', 'POST'])  # todo include borrowed recipes
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
-    all_recipes, graph = None, ''
+    all_recipes, graph, timeline = None, '', {}
     history = current_user.history
     clears = len(history)
     if len(history) > 0:
@@ -155,7 +155,9 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         # for rule in rules:
         #     print(rule)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
-        # print(listRules)
+        timeline = sorted([[datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),
+                            [r.title for r in Recipes.query.filter(Recipes.id.in_(rec_list)).all()]]
+                           for date, rec_list in history.items()], key=lambda x: x[0], reverse=True)
         average_menu_len = sum([len(x) for x in history.values()]) / len(history)
         all_ids = [r.id for r in current_user.recipes]
         # Recipe History/Frequency
@@ -193,14 +195,14 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5)
     else:
         history_count_names, ingredient_history, ingredient_count, \
-        harmony, avg_harmony, average_menu_len, rules = None, None, None, 0, 0, 0, None
+        harmony, avg_harmony, average_menu_len, rules, timeline = None, None, None, 0, 0, 0, None, {}
     if len(current_user.recipes) > 1:
         if not os.path.isfile(f'GroceryHero/static/visualizations/{str(current_user.id)}.jpg'):
             stats_graph(current_user, all_recipes)
         graph = url_for('static', filename='visualizations/' + str(current_user.id) + '.jpg')
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True, clears=clears, graph=graph,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules, timeline=timeline)
 
 
 @login_required

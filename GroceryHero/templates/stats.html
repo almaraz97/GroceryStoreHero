@@ -12,7 +12,36 @@
        <li>Number of Menu Clears- {{ clears }}</li>
     </ul>
     {% endif %}
-    <h4 class="mt-2 mb-2 pb-1">Total Recipe Consumption Frequency Chart </h4>
+
+    <h4 class="mt-2 mb-2 pb-1">Recipe Timeline</h4>
+    <div style="max-height:300px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
+    <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
+       <tr class="bg-success">
+          <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Date</th>
+          <th style="color:white; position:sticky; top:-1px; background:#5cb85c;">Recipes</th>
+       </tr>
+       {% if timeline %}
+          {% for date in timeline %}
+             <tr>
+                <td>{{ date[0].strftime('%b %d %Y') }}</td>
+                <td>
+                  {% for recipe in date[1] %}
+                    {{ recipe }}<br>
+                  {% endfor %}
+                </td>
+             </tr>
+          {% endfor %}
+       {% else %}
+          <tr>
+             <td>None</td>
+             <td>None</td>
+          </tr>
+       {% endif %}
+    </table>
+    </div>
+
+
+    <h4 class="mt-2 mb-2 pb-1">Consumption Frequency</h4>
     <div style="max-height:200px; overflow-y: auto; overflow-x: hidden;" class="mb-3">
     <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
        <tr class="bg-success">
