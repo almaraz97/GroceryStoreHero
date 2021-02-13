@@ -54,5 +54,5 @@ class UploadRecipeImage(FlaskForm):
 
 
 class SvdForm(FlaskForm):
-    type_ = SelectField('Type', choices=[('all', 'All')]+[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']])
+    type_ = SelectField('Recipe Type', choices=[('all', 'All')]+[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']])
     submit = SubmitField('Find New Recipes')

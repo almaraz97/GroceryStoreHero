@@ -198,6 +198,7 @@ def new_recipe_quantity():
                          picture=pic_fn, public=public)
         db.session.add(recipe)
         db.session.commit()
+        recipe.originator = recipe.id
         action = Actions(user_id=current_user.id, type_='Add', recipe_ids=[recipe.id], date_created=datetime.utcnow(),
                          titles=[recipe.title])
         db.session.add(action)
@@ -210,7 +211,7 @@ def new_recipe_quantity():
 
 @login_required
 @recipes.route('/recipes/link', methods=['GET', 'POST'])
-def recipe_from_link():
+def recipe_from_link():  # page where user enters url
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     form = RecipeLinkForm()
@@ -227,7 +228,7 @@ def recipe_from_link():
         ings, quantity = parse_ingredients(ingredients)
         im_path = scraper.image()
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
-                                 'measures': quantity, 'link': form.link.data if len(form.link.data) <= 20 else '',
+                                 'measures': quantity, 'link': form.link.data if len(form.link.data) <= 64 else '',
                                  'im_path': im_path}
         return redirect(url_for('recipes.new_recipe_link'))  # todo change link string limit
     return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
@@ -235,7 +236,7 @@ def recipe_from_link():
 
 @login_required
 @recipes.route('/recipes/new_link', methods=['GET', 'POST'])
-def new_recipe_link():  # filling out the form data from link page
+def new_recipe_link():  # Filling out the form data from link page
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     form = RecipeForm()
@@ -254,7 +255,7 @@ def new_recipe_link():  # filling out the form data from link page
             ings[ing] = session['recipe_raw']['measures'][i]  # except IndexError: ings[ing] = [1, 'Unit']
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ings,
                              'notes': form.notes.data, 'type': form.type_.data, 'link': session['recipe_raw']['link'],
-                             'im_path': session['recipe_raw']['im_path']}
+                             'im_path': session['recipe_raw']['im_path'], 'originator': None}
         return redirect(url_for('recipes.new_recipe_quantity'))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
 
@@ -324,9 +325,11 @@ def recipe_download(recipe_id):
         if recipe == r:
             flash(f'Recipe {recipe.title} already in recipe library', 'danger')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
+    originator = recipe.originator
+    originator = originator if originator != recipe_id else recipe_id
     new_rec = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
                       link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
-                      picture=recipe.picture, servings=recipe.servings, originator=recipe.originator,
+                      picture=recipe.picture, servings=recipe.servings, originator=originator,
                       price=recipe.price, options=recipe.options)
     db.session.add(new_rec)
     db.session.commit()

@@ -160,7 +160,8 @@ class User_Rec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=True, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
-    # comments = db.Column(db.JSON, nullable=False, default={})  #
+    # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}
+    # switches =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
@@ -173,7 +174,7 @@ class User_Act(db.Model):  # For comments and likes on other's actions
     liked = db.Column(db.Boolean, nullable=False, default=False)
 
 
-# class User_User(db.Model):  # Messages, follow requests, etc between others
+# class User_User(db.Model):  # Messages, etc between others
 #     act_id = db.Column(db.Integer, db.ForeignKey('actions.id'), nullable=False)
 #     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
 #     comment = db.Column(db.String(200), nullable=True)

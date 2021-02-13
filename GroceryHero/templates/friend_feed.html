@@ -45,7 +45,7 @@
           <p style="font-size: 18px;" class="m-0"><a style="font-size: 20px;" href="{{ url_for('recipes.recipes_page', view='friends', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
         </div>
         <div class="text-muted col-4" style="">
-            {{ action['date_created'].strftime('%Y-%m-%d %H:%M') }}
+            {{ action['date_created'].strftime('%b %d %Y %H:%M ') }}  <!-- -->
         </div>
       </div>
     </article>

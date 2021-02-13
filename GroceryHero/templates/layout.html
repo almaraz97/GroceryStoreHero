@@ -176,6 +176,7 @@
           {% endif %}
           <form action="" method="POST" class="mb-2">
             {{ form.hidden_tag() }}
+            {{ form.type_.label(class='form-control-label') }}
             {{ form.type_(class='mb-3 custom-select') }}
             {{ form.submit(class='btn btn-sm btn-block btn-success') }}
 {#            <select id="types">#}
