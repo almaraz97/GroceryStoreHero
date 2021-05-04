@@ -130,17 +130,19 @@
 {#            </form>#}
 {#          {% endif %}#}
           <!-- Requesters Forms -->
+          <h3 class='border-bottom pb-2'>Follow Requests</h3>
           {% if requests|length > 0 %}
             <div class="mb-3">
-            <h3 class='border-bottom pb-2'>Your Follow Requests</h3>
-            {% for request in requests %}
-            <img class="float-left mr-1" src="{{ request.image_file }}" width="25px" height="25px">{{ request.username }}
-              <a class="btn btn-sm btn-danger float-right ml-1" href="{{ url_for('users.reject_friend', f_id=request.id) }}">Reject</a>
-              <a class="btn btn-sm btn-success float-right" href="{{ url_for('users.accept_friend', f_id=request.id) }}">Accept</a>
-            {% endfor %}
-{#          {% else %}#}
-{#            <div class="p-0 m-0">No Friend Requests Yet</div>#}
-          </div>
+              {% for request in requests %}
+                <img alt="Profile Pic" src="{{ request.image_file }}" width="25px" height="25px">{{ request.username }}
+                <div class="d-inline">
+                  <a class="btn btn-sm btn-secondary float-right" href="{{ url_for('users.reject_friend', f_id=request.id) }}">Reject</a>
+                  <a class="btn btn-sm btn-success float-right mr-1" href="{{ url_for('users.accept_friend', f_id=request.id) }}">Accept</a>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="mb-3">No Friend Requests Yet</div>
           {% endif %}
 
           <!-- Request Form -->

@@ -29,7 +29,7 @@ def account():
     # Shows user their previous settings
     preferences = get_harmony_settings(current_user.harmony_preferences)
     ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
-    requests, followers = getRequestsFollowers()
+    requests, followers = getRequestsFollowers(current_user)
     # Update user info
     if form.validate_on_submit():  # Only on change
         if form.picture.data:
@@ -76,10 +76,10 @@ def request_friend():
     ing_weights, tastes, sticky = show_harmony_weights(current_user, preferences)
     form.username.data = current_user.username
     form.email.data = current_user.email
-    requests, followers = getRequestsFollowers()
+    requests, followers = getRequestsFollowers(current_user)
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     if form5.validate_on_submit():
-        email = form5.email.data
+        email = form5.email.data.strip()  # Needed?
         followee = User.query.filter_by(email=email).first()
         follow_id = followee.id if followee is not None else None
         if follow_id is not None:  # Email exists in db
@@ -101,7 +101,7 @@ def request_friend():
 @users.route('/account/request/<int:f_id>', methods=['POST'])  # todo do I need to redirect back?
 @login_required
 def recipe_follow(f_id):
-    print(f_id)
+    # print(f_id)
     if f_id != 'none' and f_id != '':  # todo what happens to empty user?
         follow = Followers.query.filter_by(user_id=f_id, follow_id=current_user.id).first()
         if follow is None:
@@ -126,7 +126,7 @@ def accept_friend(f_id):
 def reject_friend(f_id):
     follow = Followers.query.filter_by(user_id=f_id, follow_id=current_user.id).first()
     if follow is not None:
-        follow.status = 3  # Blocked
+        db.session.delete(follow)
         db.session.commit()
     return redirect(url_for('users.account'))
 
@@ -258,7 +258,7 @@ def auth_login():
                 name = session['jwt_payload'].get('given_name')
                 name = session['jwt_payload'].get('nickname') if name is None else name
                 name = session['jwt_payload'].get('name') if name is None else name
-                username = name if name is not None else email
+                username = name.strip() if name is not None else email.strip()
                 user = User(email=email, username=username)
                 picture_url = session['jwt_payload'].get('picture')
                 if picture_url is not None:

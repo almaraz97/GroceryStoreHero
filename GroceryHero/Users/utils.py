@@ -223,10 +223,10 @@ def import_recipes_terminal(recipe_dictionary, user, database):
     database.session.commit()
 
 
-def getRequestsFollowers():
-    requesters = Followers.query.filter_by(follow_id=current_user.id, status=0).all()  # Users that request you
+def getRequestsFollowers(user):
+    requesters = Followers.query.filter_by(follow_id=user.id, status=0).all()  # Users that request you
     requesters = User.query.filter(User.id.in_([x.user_id for x in requesters])).all()
-    followers = Followers.query.filter_by(follow_id=current_user.id, status=1).all()  # Users that follow you
+    followers = Followers.query.filter_by(follow_id=user.id, status=1).all()  # Users that follow you
     return requesters, followers
 
 

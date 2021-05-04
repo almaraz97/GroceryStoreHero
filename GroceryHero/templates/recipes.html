@@ -11,44 +11,42 @@
     {% endif %}
 </div>
 
-{% if current_user.is_authenticated %}
-  <!--Search bar with button-->
-  <div style="margin-bottom: 15px;">
-    <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
-      <div class="input-group flex-nowrap">
-          {% if friends is defined %}{% set search_str = "Recipe Name" %}{% else %}{% set search_str = "Recipe Name" %}{% endif %}
-          <input type="text" class="form-control" placeholder="{{ search_str }}" name="search">
-        <div class="input-group-prepend">
-          <button class="input-group-text" id="addon-wrapping">Search</button>
-        </div>
+<!--Search bar with button-->
+<div style="margin-bottom: 15px;">
+  <form action="{{ url_for('recipes.recipes_page', sort=sort, types=types, view=view, page=1) }}" method="POST">
+    <div class="input-group flex-nowrap">
+        {% if friends is defined %}{% set search_str = "Recipe Name" %}{% else %}{% set search_str = "Recipe Name" %}{% endif %}
+        <input type="text" class="form-control" placeholder="{{ search_str }}" name="search">
+      <div class="input-group-prepend">
+        <button class="input-group-text" id="addon-wrapping">Search</button>
       </div>
-    </form>
-  </div>
-  <div class="row p-0 mx-0 mb-1 mt-4">
-    {% if title == 'Friend Recipes' %}
-      <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
-    {% else %}
-      <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
-    {% endif %}
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
-  </div>
-{% endif %}
+    </div>
+  </form>
+</div>
+<div class="row p-0 mx-0 mb-1 mt-4">
+  {% if title == 'Friend Recipes' %}
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+  {% else %}
+    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
+  {% endif %}
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+</div>
 <!-- Sort By Buttons -->
 <div class="d-none d-sm-none d-md-flex d-lg-flex">
 <div class="btn-group btn-sm d-inline-block mb-2 mt-2 p-0" style="width: 100%;">
   <div class="d-inline">
   {% if friends is defined and friends is not none %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
-    <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
+    <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">{% if label == 'friend' %}There are{% else %}You have{% endif %} {{ count }} {{ label }} recipes</p>
     <button type="button" class="px-3 btn btn-sm btn-outline-info dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
       {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
+      <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
       <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='date', types=types, page=1, view=view) }}">Most Recent</a>
       <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='eaten', types=types, page=1, view=view) }}">Most Eaten</a>
       <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='borrow', types=types, page=1, view=view) }}">Most Borrowed</a>
-      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
     </div>
   </div>
 <div class="d-inline">
@@ -73,11 +71,11 @@
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
     <div class="dropdown-menu">
+      <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
       <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='date', types=types, page=1, view=view) }}">Most Recent</a>
       <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='eaten', types=types, page=1, view=view) }}">Most Eaten</a>
       <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='borrow', types=types, page=1, view=view) }}">Most Borrowed</a>
-      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
     </div>
   </div>
   <div class="col-4 px-0">
@@ -94,7 +92,7 @@
     </div>
   </div>
   {% if friends is defined and friends is not none %}{% set label = 'friend' %}{% elif public is defined %}{% set label='public' %}{% else %}{% set label='' %}{% endif %}
-  <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} {{ label }} recipes</p>
+  <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">{% if label == 'friend' %}There are{% else %}You have{% endif %} {{ count }} {{ label }} recipes</p>
 </div>
 {% if cards is not defined or cards|length < 1 %}
   <div class="card mt-4 mb-2">

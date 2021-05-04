@@ -1,6 +1,9 @@
 from datetime import datetime
+from sqlalchemy import select, and_
 from GroceryHero import db, login_manager
 from flask_login import UserMixin
+import sqlalchemy as sa
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 
 @login_manager.user_loader
@@ -10,8 +13,8 @@ def load_user(user_id):
 
 class Followers(db.Model):
     codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User
-    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person user follows
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # User (sender)
+    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Followee (receiver)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.Integer, nullable=False)
     user = db.relationship('User', foreign_keys=[user_id])
@@ -84,8 +87,20 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
+    @property
+    def all_recipes(self):
+        all_recipes = User_Rec.query.filter_by(recipe_id=self.id, borrowed=True)
+        return all_recipes + self.recipes
+
 
 class Recipes(db.Model):  # Recipes are first class citizens!
+    """ quantity column  # WIP
+    {section title:  # If title is <"MAIN"> then don't display it as a section
+        {ingredient:
+            [value, unit, descriptor(optional, chopped, dried)]
+        }
+    }
+    """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(50), nullable=False)
@@ -94,19 +109,24 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     notes = db.Column(db.Text, nullable=True)
-    link = db.Column(db.String(512), nullable=True)
-    recipe_type = db.Column(db.String(16), nullable=True)
+    link = db.Column(db.String(512), nullable=True)  # 1024
+    recipe_type = db.Column(db.String(16), nullable=True)  # Breakfast, Lunch, etc
     picture = db.Column(db.String(20), nullable=True)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
-    # original = db.Column(db.Integer, nullable=True)  # Original recipe, in spite of downloads
     recipe_genre = db.Column(db.String(32), nullable=True)  # Asian, Hispanic, Southern
     public = db.Column(db.Boolean, nullable=False, default=False)  # Public recipe
-    # private = db.Column(db.Boolean, nullable=False, default=False)  # Only friends can see
-    # credit = db.Column(db.Boolean, nullable=False, default=False)
     servings = db.Column(db.Integer, nullable=True, default=0)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
     options = db.Column(db.JSON, nullable=False, default={})
+    copies = db.relationship('User_Rec', backref='author', lazy=True)
+
+    # prep_time = db.Column(db.JSON, nullable=False, default={})  # cook time, prep time
+    # nutrition = db.Column(db.JSON, nullable=False, default={})
+    # glycemic = db.Column(db.Float, nullable=True)
+    # description = db.Column(db.String(512), nullable=True)
+    # private = db.Column(db.Boolean, nullable=False, default=False)  # Only ?friends can see
+    # credit = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
@@ -115,6 +135,47 @@ class Recipes(db.Model):  # Recipes are first class citizens!
         if isinstance(other, Recipes):
             return (self.title == other.title) and (self.quantity.keys() == other.quantity.keys())
         return False
+
+    # @hybrid_property
+    # def times_borrowed(self):
+    #     count = User_Rec.query.filter_by(recipe_id=self.id, borrowed=True).count()
+    #     # print(count)
+    #     return count
+    #
+    # @times_borrowed.expression
+    # def times_borrowed(cls):  # this expression is used when querying the model
+    #     #     return (select([sa.func.count(User_Rec.recipe_id)])
+    #     #             .where(User_Rec.id == cls.id, User_Rec.borrowed==True))
+    #     #     return User_Rec.query.filter_by(recipe_id=cls.id, borrowed=True).count()
+    #     # print(User_Rec.query)
+    #     # times = (select([sa.func.count(db.session.query(User_Rec.borrowed).
+    #     #                                filter_by(recipe_id=cls.id, borrowed=True))]).
+    #     #          correlate(cls).as_scalar()).label('times')
+    #     # times = db.session.query(Recipes, Recipes.times_borrowed).filter(User_Rec.borrowed==True)
+    #     # times = select(sa.func.count(User_Rec.query.all())). \
+    #     #                where(User_Rec.user_id == cls.id). \
+    #     #                label('times')
+    #     times = sa.func.sum(User_Rec.borrowed).label('total_balance')
+    #     # print(times)
+    #     return times
+    #
+    # @hybrid_property
+    # def trend_index(self):
+    #     times_eaten = self.times_eaten
+    #     time_dif = (datetime.utcnow() - self.date_created).days
+    #     # print(time_dif)
+    #     index = (times_eaten / time_dif) if times_eaten != 0 else 0
+    #     return index
+    #
+    # @trend_index.expression
+    # def trend_index(cls):  # this expression is used when querying the model
+    #     times_eaten = cls.times_eaten
+    #     time_dif = sa.extract('epoch', sa.func.current_timestamp()) - sa.extract('epoch', cls.date_created)
+    #     # print(time_dif)
+    #     index = (times_eaten / time_dif)
+    #     # print(index)
+    #     return index
+    #     # return sa.case([(times_eaten > 0),  (times_eaten/time_dif)],  else_=0)
 
 
 class Aisles(db.Model):
@@ -160,6 +221,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=True, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
+
     # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}
     # switches =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
 
@@ -182,7 +244,7 @@ class User_Act(db.Model):  # For comments and likes on other's actions
 
 
 class Pub_Rec(db.Model):
-    p_id = db.Column(db.Integer, primary_key=True)  # todo why is this not regular id?
+    p_id = db.Column(db.Integer, primary_key=True)
     origin_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ogusername = db.Column(db.String(64), nullable=False)  # Username at time of creation
@@ -219,4 +281,3 @@ class User_PubRec(db.Model):  # For borrowed recipes
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
-

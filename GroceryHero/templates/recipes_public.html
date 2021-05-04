@@ -10,7 +10,7 @@
 
   <!--Search bar with button-->
   <div class="mt-4" style="margin-bottom: 15px;">
-    <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
+    <form action="{{ url_for('recipes.recipes_page', view=view, sort=sort, types=types) }}" method="POST">
       <div class="input-group flex-nowrap">
         <input type="text" class="form-control" placeholder="Recipe Name" name="search">
         <div class="input-group-prepend">
@@ -35,23 +35,24 @@
      Sort By</button>
       {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=page) }}">Trending</a>
-      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=page) }}">Most Recent</a>
-      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=page) }}">Most Eaten</a>
-      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='borrow', types=types, page=page) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
+      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
+      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=1) }}">Most Recent</a>
+      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=1) }}">Most Eaten</a>
+      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='borrow', types=types, page=1) }}">Most Borrowed</a>
     </div>
   </div>
 <div class="d-inline">
   <button type="button" class="px-3 mr-2 btn btn-sm btn-outline-success dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='all', page=page) }}">All</a>
-      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Breakfast', page=page) }}">Breakfast</a>
-      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Lunch', page=page) }}">Lunch</a>
-      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Dinner', page=page) }}">Dinner</a>
-      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Snack', page=page) }}">Snack</a>
-      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Dessert', page=page) }}">Dessert</a>
-      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Other', page=page) }}">Other</a>
+      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='all', page=1) }}">All</a>
+      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Breakfast', page=1) }}">Breakfast</a>
+      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Lunch', page=1) }}">Lunch</a>
+      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Dinner', page=1) }}">Dinner</a>
+      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Snack', page=1) }}">Snack</a>
+      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Dessert', page=1) }}">Dessert</a>
+      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Other', page=1) }}">Other</a>
     </div>
   </div>
 </div>
@@ -63,23 +64,24 @@
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=page) }}">Trending</a>
-      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=page) }}">Most Recent</a>
-      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=page) }}">Most Eaten</a>
-      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='borrow', types=types, page=page) }}">Most Borrowed</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
+      <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
+      <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=1) }}">Most Recent</a>
+      <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=1) }}">Most Eaten</a>
+      <a class="dropdown-item" style="{% if sort == 'borrow' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='borrow', types=types, page=1) }}">Most Borrowed</a>
     </div>
   </div>
   <div class="col-4 px-0">
     <button type="button" class="px-2 btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='all', page=page) }}">All</a>
-      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Breakfast', page=page) }}">Breakfast</a>
-      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Lunch', page=page) }}">Lunch</a>
-      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Dinner', page=page) }}">Dinner</a>
-      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Snack', page=page) }}">Snack</a>
-      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Dessert', page=page) }}">Dessert</a>
-      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Other', page=page) }}">Other</a>
+      <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='all', page=1) }}">All</a>
+      <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Breakfast', page=1) }}">Breakfast</a>
+      <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Lunch', page=1) }}">Lunch</a>
+      <a class="dropdown-item" style="{% if types == 'Dinner' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Dinner', page=1) }}">Dinner</a>
+      <a class="dropdown-item" style="{% if types == 'Snack' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Snack', page=1) }}">Snack</a>
+      <a class="dropdown-item" style="{% if types == 'Dessert' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Dessert', page=1) }}">Dessert</a>
+      <a class="dropdown-item" style="{% if types == 'Other' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Other', page=1) }}">Other</a>
     </div>
   </div>
 <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} public recipes</p>
