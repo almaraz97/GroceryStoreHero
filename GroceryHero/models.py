@@ -119,17 +119,17 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
     options = db.Column(db.JSON, nullable=False, default={})
-    copies = db.relationship('User_Rec', backref='author', lazy=True)
+    copies = db.relationship('User_Rec', backref='author', lazy=True)  # Not true copies but borrows
 
-    # prep_time = db.Column(db.JSON, nullable=False, default={})  # cook time, prep time
-    # nutrition = db.Column(db.JSON, nullable=False, default={})
+    # prep_time = db.Column(db.JSON, nullable=False, default={})  # prep time, cook time, etc
+    # nutrition = db.Column(db.JSON, nullable=False, default={})  # Vitamin A: 100mcg
     # glycemic = db.Column(db.Float, nullable=True)
-    # description = db.Column(db.String(512), nullable=True)
+    # description = db.Column(db.String(512), nullable=True)  # Where users can write about their life & recipe
     # private = db.Column(db.Boolean, nullable=False, default=False)  # Only ?friends can see
-    # credit = db.Column(db.Boolean, nullable=False, default=False)
+    # credit = db.Column(db.Boolean, nullable=False, default=False)  # If they want to be credited..?
 
     def __repr__(self):
-        return f"Recipes('{self.title}', '{list(self.quantity.keys())}')"
+        return f"Recipes('{self.title}', '{list(self.quantity.keys())[:5]}...')"
 
     def __eq__(self, other):
         if isinstance(other, Recipes):
@@ -222,8 +222,8 @@ class User_Rec(db.Model):  # For borrowed recipes
     times_eaten = db.Column(db.Integer, nullable=True, default=0)
     hidden = db.Column(db.Boolean, nullable=False, default=False)
 
-    # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}
-    # switches =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}  # If person comments on recipe_id
+    # mods =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"

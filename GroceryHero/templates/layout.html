@@ -98,8 +98,8 @@
           <h4>Consider Donating</h4>
           <a href="https://venmo.com/Alejandro-Almaraz">Venmo</a><br>
           <a href="https://paypal.me/Almaraz103">Paypal</a><br>
-          <a href="#">Bitcoin Address: </a><br><p style="font-size:14px;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicba<br>RdTUycL</p>
-          <a href="#">Ethereum Address:</a><br><p style="font-size:14px;">0x907156AF1ba3461eC4B8702C<br>c9cB27818615aA5b</p>
+          <a href="#">Bitcoin Address: </a><br><p style="font-size:14px; word-wrap: break-word;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicbaRdTUycL</p>
+          <a href="#">Ethereum Address:</a><br><p style="font-size:14px; word-wrap: break-word;">0x907156AF1ba3461eC4B8702Cc9cB27818615aA5b</p>
         {% elif account is defined %}
 {#          {% if current_user.pro %}#}
 {#              <h3 class='border-bottom pb-2'>Your Files</h3>#}
@@ -445,7 +445,7 @@
           {% for group in recommended %}
           <!--                                <article class="media content-section m-0 p-0">-->
           <div class="media-body">
-            <p class="mb-0 ml-2" style="float:inline; text-decoration:underline;">Recommendation {{ index.value }} -> {{ recommended[group] }}%</p>
+            <p class="mb-0 ml-2" style="text-decoration:underline;">Recommendation {{ index.value }} -> {{ recommended[group] }}%</p>
             {% set index.value = index.value + 1 %}
             <ul class="mb-0">
               {% for recipe in group %}

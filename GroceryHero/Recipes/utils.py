@@ -149,7 +149,7 @@ def parse_ingredients(ingredients):
                 '⅕': '1/5', '⅖': '2/5', '⅗': '3/6', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8',
                 '⅝': '5/8', '⅞': '7/8'}
     measures = Measurements.Measures
-    extras = ['cup', 'tablespoon', 'teaspoon', 'fluid ounce', 'tsp', 'tbsp', 'oz', 'lb', 'mg', 'fl oz', 'ml', 'g']
+    extras = ['cup', 'tablespoon', 'teaspoon', 'fluid ounce', 'tsp', 'tbsp', 'oz', 'lb', 'mg', 'fl oz', 'ml', 'g'] # todo Make sure that a space is after the measurement
     convert = {'Unit': 'Unit', 'Package': 'Package', 'Can': 'Can', 'Bottle': 'Bottle', 'Jar': 'Jar', 'US Cup': 'US Cup',
                'US Tablespoon': 'US Tablespoon', 'US Teaspoon': 'US Teaspoon', 'US Fluid Ounce': 'US Fluid Ounce',
                'Ounce': 'Ounce', 'Pound': 'Pound', 'Milligram': 'Milligram', 'Gram': 'Gram', 'Kilogram': 'Kilogram',
@@ -163,7 +163,7 @@ def parse_ingredients(ingredients):
     quantity = []
     ings = []
     temp = []
-    for ingredient in ingredients:
+    for ingredient in ingredients:  # Switch special characters to regular ones
         temp1 = ''
         for char in ingredient:
             char = specials[char] if char in specials else char
@@ -171,6 +171,7 @@ def parse_ingredients(ingredients):
         temp.append(temp1)
     ingredients = temp
     for i, ingredient in enumerate(ingredients):
+        # print(ingredient)
         temp = ''  # New string for ingredient in ingredients list, gets chars appended as it goes through
         nums = ''  # String for holding quantity value
         cons = 0  # For remembering if last character was a number (consecutive, counts which index has the last number)
@@ -212,43 +213,46 @@ def parse_ingredients(ingredients):
                 quantity[i][0] = int(numbers[0]) * float(numbers[1])
         else:
             quantity[i].append('1')  # Might want to flag to user that this value defaulted
-
+        # The string of text loaded into the form for the user to see, concat each ingredient
         ings.append(' '.join([x.strip() for x in temp.split(' ') if x != ' ' and x != '']))
         found = False  # todo find '1 15 ounce can' and include only one of the units
         for measure in measures:
+            # print(ings[i])
             length = len(measure)  # In case unit is the first part of the string
-            if ' ' + measure.lower() + 's ' in ings[i]:
+            if ' ' + measure.lower() + 's ' in ings[i]:  # Surrounded by space and plural
                 ings[i] = ings[i].replace(' ' + measure.lower() + 's ', '')
                 quantity[i].append(convert[measure])
                 found = True
                 break
-            elif ' ' + measure.lower() + ' ' in ings[i]:
+            elif ' ' + measure.lower() + ' ' in ings[i]:  # Surrounded by space
                 ings[i] = ings[i].replace(' ' + measure.lower() + ' ', '')
                 quantity[i].append(convert[measure])
                 found = True
                 break
             # Search at the start of the string
-            elif ings[i][:length + 2] == measure.lower() + 's ':
+            elif ings[i][:length + 2] == measure.lower() + 's ':  # First word and plural with space at end
                 ings[i] = ings[i].replace(measure.lower() + 's ', '')
                 quantity[i].append(convert[measure])
                 found = True
                 break
-            elif ings[i][:length + 1] == measure.lower() + ' ':
+            elif ings[i][:length + 1] == measure.lower() + ' ':  # First word with space at end
                 ings[i] = ings[i].replace(measure.lower() + ' ', '')
                 quantity[i].append(convert[measure])
                 found = True
                 break
             # At the end
-            elif ' ' + measure.lower() + 's' in ings[i]:
-                ings[i] = ings[i].replace(' ' + measure.lower() + 's', '')
-                quantity[i].append(convert[measure])
-                found = True
-                break
-            elif ' ' + measure.lower() in ings[i]:
-                ings[i] = ings[i].replace(' ' + measure.lower(), '')
-                quantity[i].append(convert[measure])
-                found = True
-                break
+            elif ' '+measure.lower()+'s' in ings[i]:  # Space before measurement unit
+                if ings[i][-len(' '+measure+'s'):] == ' '+measure.lower()+'s':   # If measurement at end of string
+                    ings[i] = ings[i].replace(' ' + measure.lower() + 's', '')
+                    quantity[i].append(convert[measure])
+                    found = True
+                    break
+            elif ' '+measure.lower() in ings[i]:  # Space before measurement unit
+                if ings[i][-len(' '+measure):] == ' '+measure.lower():  # If measurement at end of string
+                    ings[i] = ings[i].replace(' '+measure.lower(), '')
+                    quantity[i].append(convert[measure])
+                    found = True
+                    break
 
         if not found:  # Didnt find a unit
             quantity[i].append('Unit')
@@ -362,6 +366,7 @@ def load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex):
     form.similarity.choices = [(x, x) for x in range(0, 60, 10)] + [(float('inf'), 'No Limit')] if modifier == 'True' \
         else [(x, x) for x in range(50, 105, 5)] + [(float('inf'), 'No Limit')]
     form.similarity.default = [50, 50]
+    # all_recipes =
     excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_ex)]
     form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
 
@@ -482,19 +487,21 @@ class Pagination(object):
                 last = num
 
 
-def paginate_sort(view='', sort='alpha', types='all', search=None, friend_choice=None, per=15,  # todo add asc or desc
+def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice=None, per=15,  # todo add asc or desc
                   page=1):  # Sorts, filters and paginates, returning a paginate object
-    in_menu, recipe_ids = None, {}  # todo Move away from pagination and do generator instead?
+    in_menu, recipe_ids = None, {}  # todo Generators instead?
     borrows = {x.recipe_id: x.in_menu for x in
-               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}  # {Borrowed_id: in_menu}
+               User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}  # {Borrowed_id: bool(in_menu)}
     view_dict = {'friends': Recipes.user_id.in_(friend_choice),
                  'public': Recipes.user_id.isnot(None),
                  # and_(Recipes.public.is_(True), Recipes.user_id.isnot(None)) exclude self?
                  'self': Recipes.user_id.is_(current_user.id)}
     sort_dict = {'date': Recipes.date_created.desc(), 'eaten': Recipes.times_eaten.desc(),
                  'alpha': Recipes.title.asc(), 'none': Recipes.title.asc()}
-    search_q = Recipes.title.isnot(None) if search is None else Recipes.title.contains(search)
-    types_q = Recipes.recipe_type.isnot(None) if (types == 'all') else Recipes.recipe_type.is_(types)
+
+    search_q = Recipes.title.isnot(None) if search is None else \
+        and_(Recipes.title.contains(search), Recipes.recipe_genre.contains(search))
+    types_q = Recipes.recipe_type.isnot(None) if (type_ == 'all') else Recipes.recipe_type.is_(type_)
     view_q, sort_q = view_dict[view], sort_dict.get(sort, None)  # hot/borrow sorting may need separate
 
     if sort in sort_dict:
@@ -504,7 +511,7 @@ def paginate_sort(view='', sort='alpha', types='all', search=None, friend_choice
         recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q, view_q)).all()
         sorting = borrow_sort if sort == 'borrow' else trend_sort
         recipe_list = sorted(recipe_list, key=lambda x: sorting(x), reverse=True)
-        recipe_list = Pagination(page, per, recipe_list)  # Custom pagination object for python sorting
+        recipe_list = Pagination(page=page, per_page=per, all_items=recipe_list)  # Custom pagination object
 
     if (sort == 'none') and (view == 'self'):  # User didnt want to sort, keep in_menu on top
         in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).all()

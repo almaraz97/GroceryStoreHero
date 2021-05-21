@@ -30,11 +30,8 @@ def recipes_page(view='self'):
     possible, recommended, form, about, colors, friends, title = 0, None, HarmonyForm(), True, Colors.rec_colors, None, 'Recipes'
     search, page, sort, types, friend = search, page, sort, types, friend_choice = get_requests(all_friends)
     per = 100 if view != 'friends' else 50
-    # print(sorted([[x.times_borrowed, x.title] for x in Recipes.query.all()], key=lambda y: y[0], reverse=True))
-    # print(sorted([[x.trend_index, x.title, x.author.username]
-    #               for x in Recipes.query.all() if x.user_id != current_user.id], key=lambda y: y[0], reverse=True))
     recipe_list, count, in_menu, borrows, recipe_ids = paginate_sort(friend_choice=friend_choice,
-                                                                     search=search, page=page, sort=sort, types=types,
+                                                                     search=search, page=page, sort=sort, type_=types,
                                                                      view=view, per=per)
     cards = recipe_list.items
     if friend != all_friends:  # Friend is [id] unless one wasn't chosen so its the friend dict
@@ -54,12 +51,14 @@ def recipes_page(view='self'):
                                                                       recipe_ex)
         if request.method == "POST":
             if form.validate_on_submit():  # Harmony or search button was pressed
-                harmony_recipes = Recipes.query.filter_by(author=current_user).all()  # todo include borrowed recipes
+                harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(Recipes.title.asc()).all()  # todo include borrowed recipes
+                num_in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).count()
+                form.groups.data = num_in_menu if (num_in_menu > 0) else 2
                 recommended, possible = recipe_stack_w_args(harmony_recipes, preferences, form, in_menu, recipe_ex,
                                                             recipe_hist)
                 recommended = remove_menu_items(in_menu, recommended)
                 update_user_preferences(current_user, form, recommended, possible)
-                form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex)
+                form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, harmony_recipes, recipe_ex)
     else:  # Friend recipes
         about, title, recipe_ids, view, friends = None, 'Friend Recipes', None, 'friends', True
     return render_template('recipes.html', title=title, cards=cards, sidebar=True, colors=colors,
@@ -77,7 +76,7 @@ def public_recipes():  # todo add user credit dynamic
     colors, rankings = Colors.rec_colors, {}
     followees, all_friends = get_friends(current_user)
     search, page, sort, types, friend_choice = get_requests(all_friends)
-    recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, types=types, search=None, view='public',
+    recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, type_=types, search=None, view='public',
                                                       friend_choice=all_friends)
     cards = recipe_list.items
     form = SvdForm()
@@ -179,7 +178,7 @@ def recipe_single(recipe_id):
 
 @login_required
 @recipes.route('/recipes/new', methods=['GET', 'POST'])
-def new_recipe():
+def new_recipe():  # gGiving recipe's title, ingredient list, instructions and etc
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     if len(current_user.recipes) > 80:  # User recipe limit
@@ -188,7 +187,7 @@ def new_recipe():
     if form.validate_on_submit():  # Send data to quantity page
         ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
         ingredients = {ingredient: [1, 'Unit'] for ingredient in ingredients}
-        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,
+        session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,  # Dict(ing:[unit,typ])
                              'notes': form.notes.data, 'type': form.type_.data, 'public': form.public.data}
         return redirect(url_for('recipes.new_recipe_quantity'))
     return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe', link=True)
@@ -196,15 +195,16 @@ def new_recipe():
 
 @login_required
 @recipes.route('/recipes/new/quantity', methods=['GET', 'POST'])
-def new_recipe_quantity():
+def new_recipe_quantity():  # Show default/loaded ingredient quantity and measurement info, add to db on submit
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     recipe = session['recipe']  # {RecipeName: string, Quantity: {ingredient: [value,type]}}
     form = load_quantityform(recipe)
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # form.ingredient_forms.data- List(Ingredient_form(Dict())
         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
+
         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
         pic_fn = pic_fn if pic_fn is not None else 'default.png'
         public = False if recipe.get('public') == 'False' else True
@@ -241,6 +241,9 @@ def recipe_from_link():  # page where user enters url
                 return redirect(url_for('recipes.recipe_from_link'))
         ingredients = [x.lower() for x in scraper.ingredients()]
         ings, quantity = parse_ingredients(ingredients)
+        # print(ingredients)
+        # print(ings)
+        # print(quantity)
         im_path = scraper.image()
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
                                  'measures': quantity, 'link': form.link.data if len(form.link.data) <= 64 else '',
@@ -692,7 +695,7 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
 #     sort = sort if sort in ['hot', 'borrow', 'date', 'eaten'] else 'hot'
 #     types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
 #     followees, all_friends = get_friends(current_user)
-#     recipe_list, count, _, borrows, _ = paginate_sort(all_friends, friend_choice, page, sort, types, view='friends')
+#     recipe_list, count, _, borrows, _ = paginate_sort(all_friends, friend_choice, page, sort, type_, view='friends')
 #     cards = recipe_list.items
 #     if friend_choice is not None:
 #         followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend_choice).first()
@@ -702,3 +705,6 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
 #                            borrows=borrows, count=count, friend_dict=all_friends, recipe_list=recipe_list,
 #                            recipe_ids=None, friend=friend_choice, about=None, combos=None,
 #                            all_friends=all_friends, friends=True, page=page, sort=sort, types=types, view='friends')
+   # print(sorted([[x.times_borrowed, x.title] for x in Recipes.query.all()], key=lambda y: y[0], reverse=True))
+    # print(sorted([[x.trend_index, x.title, x.author.username]
+    #               for x in Recipes.query.all() if x.user_id != current_user.id], key=lambda y: y[0], reverse=True))

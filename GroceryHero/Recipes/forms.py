@@ -24,16 +24,18 @@ class RecipeLinkForm(FlaskForm):
 
 
 class QuantityForm(FlaskForm):
+    ingredient_name = StringField('Ingredient', default='Default ingredient')
     ingredient_quantity = StringField('Quantity', default=1.0, validators=[InputRequired()])  # , dec_frac()
     ingredient_type = SelectField("Measurement", choices=[(x, x) for x in Measurements.Measures], default='Unit')
+    ingredient_descriptor = StringField('Descriptor', default=1.0)
 
     @staticmethod
-    def validate_ingredient_quantity(self, field):
+    def validate_ingredient_quantity(self, field):  # Make sure quantity is either a decimal or valid fraction
         try:
             float(field.data)
         except ValueError:
             try:  # May be correct format for division
-                if '/' not in field.data or field.data.count('/') > 1:  # No division or too many
+                if '/' not in field.data or field.data.count('/') > 1:  # No division or too many division symbols
                     raise ValidationError('Enter a number or a fraction')
                 else:  # See if other values are floats
                     temp = [float(x) for x in field.data.split('/')]
@@ -42,7 +44,7 @@ class QuantityForm(FlaskForm):
 
 
 class FullQuantityForm(FlaskForm):
-    ingredients = []
+    ingredients = []  # This should be editable
     ingredient_forms = FieldList(FormField(QuantityForm), min_entries=1)
     notes = ''
     submit = SubmitField('Submit')

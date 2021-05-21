@@ -35,7 +35,7 @@
      Sort By</button>
       {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
       <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=1) }}">Most Recent</a>
       <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=1) }}">Most Eaten</a>
@@ -64,7 +64,7 @@
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
     <div class="dropdown-menu">
-      <a class="dropdown-item" style="{% if sort == 'alpha' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
+      <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
       <a class="dropdown-item" style="{% if sort == 'date' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='date', types=types, page=1) }}">Most Recent</a>
       <a class="dropdown-item" style="{% if sort == 'eaten' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='eaten', types=types, page=1) }}">Most Eaten</a>
