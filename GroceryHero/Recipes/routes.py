@@ -34,7 +34,8 @@ def recipes_page(view='self'):
                                                                      search=search, page=page, sort=sort, type_=types,
                                                                      view=view, per=per)
     cards = recipe_list.items
-    if friend != all_friends:  # Friend is [id] unless one wasn't chosen so its the friend dict
+    # friend is [id] unless one wasn't chosen, then it is just the whole friend dict
+    if friend and (friend != all_friends):  # If a friend choice was made
         followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend[0]).first()
         if followee is None or followee.status != 1:  # Don't allow looking at recipes from people you don't follow
             return redirect(url_for('recipes.recipes_page', view='self'))
@@ -178,7 +179,7 @@ def recipe_single(recipe_id):
 
 @login_required
 @recipes.route('/recipes/new', methods=['GET', 'POST'])
-def new_recipe():  # gGiving recipe's title, ingredient list, instructions and etc
+def new_recipe():  # Giving recipe's title, ingredient list, instructions and etc
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     if len(current_user.recipes) > 80:  # User recipe limit
@@ -190,7 +191,7 @@ def new_recipe():  # gGiving recipe's title, ingredient list, instructions and e
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,  # Dict(ing:[unit,typ])
                              'notes': form.notes.data, 'type': form.type_.data, 'public': form.public.data}
         return redirect(url_for('recipes.new_recipe_quantity'))
-    return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe', link=True)
+    return render_template('create_recipe.html', title='New Recipe', form=form, legend='Recipe Details', link=True)
 
 
 @login_required
@@ -220,7 +221,7 @@ def new_recipe_quantity():  # Show default/loaded ingredient quantity and measur
         db.session.commit()
         flash('Your recipe has been created!', 'success')
         return redirect(url_for('recipes.recipes_page'))
-    return render_template('recipe_quantity.html', title='New Recipe', form=form, legend='Recipe Quantities',
+    return render_template('recipe_quantity.html', title='New Recipe', form=form, legend='Recipe Ingredients',
                            recipe=recipe)
 
 
@@ -241,15 +242,13 @@ def recipe_from_link():  # page where user enters url
                 return redirect(url_for('recipes.recipe_from_link'))
         ingredients = [x.lower() for x in scraper.ingredients()]
         ings, quantity = parse_ingredients(ingredients)
-        # print(ingredients)
-        # print(ings)
-        # print(quantity)
         im_path = scraper.image()
         session['recipe_raw'] = {'title': scraper.title(), 'notes': scraper.instructions(), 'ingredients': ings,
                                  'measures': quantity, 'link': form.link.data if len(form.link.data) <= 64 else '',
                                  'im_path': im_path}
         return redirect(url_for('recipes.new_recipe_link'))  # todo change link string limit
-    return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form)
+    return render_template('recipe_link.html', title='New Recipe', legend='Recipe From Link', form=form,
+                           recipe_link=True, sidebar=True)
 
 
 @login_required
@@ -263,24 +262,24 @@ def new_recipe_link():  # Filling out the form data from link page
             return redirect(url_for('main.account'))
         recipe = session['recipe_raw']
         form.title.data = recipe['title']
-        form.content.data = ', '.join([x.replace(',', '') for x in recipe['ingredients']])
+        form.content.data = ', '.join([x.replace(',', '') for x in recipe['ingredients']])  # todo not necessary?
         form.notes.data = recipe['notes']
     if form.validate_on_submit():  # Send data to quantity page
         ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
-        ings = {}
-        for i, ing in enumerate(ingredients):
+        ings = {}  # todo dictionary comp
+        for i, ing in enumerate(ingredients): #session['recipe_raw']['ingredients']):  #
             # todo figure out how to link quantity with ingredients, despite deletion and modification
             ings[ing] = session['recipe_raw']['measures'][i]  # except IndexError: ings[ing] = [1, 'Unit']
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ings,
                              'notes': form.notes.data, 'type': form.type_.data, 'link': session['recipe_raw']['link'],
                              'im_path': session['recipe_raw']['im_path'], 'originator': None}
         return redirect(url_for('recipes.new_recipe_quantity'))
-    return render_template('create_recipe.html', title='New Recipe', form=form, legend='New Recipe')
+    return render_template('create_recipe.html', title='Recipe Details', form=form, legend='Recipe Details')
 
 
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/update', methods=['GET', 'POST'])
-def update_recipe(recipe_id):
+def update_recipe(recipe_id):  # Update recipe attributes
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     recipe = Recipes.query.get_or_404(recipe_id)
@@ -300,12 +299,12 @@ def update_recipe(recipe_id):
         form.content.data = ', '.join(recipe.quantity.keys())
         form.notes.data = recipe.notes
         form.type_.data = recipe.recipe_type
-    return render_template('create_recipe.html', title='Update Recipe', form=form, legend='Update Recipe')  # todo
+    return render_template('create_recipe.html', title='Update Recipe Details', form=form, legend='Update Recipe Details')
 
 
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/update_quantity', methods=['GET', 'POST'])
-def update_recipe_quantity(recipe_id):
+def update_recipe_quantity(recipe_id):  # Update recipe quantity/measurement
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     rec = Recipes.query.get_or_404(recipe_id)
@@ -333,7 +332,7 @@ def update_recipe_quantity(recipe_id):
 
 
 @login_required
-@recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])
+@recipes.route('/recipes/<int:recipe_id>/download', methods=['GET', 'POST'])  # Makes a copy of someone else's recipe
 def recipe_download(recipe_id):
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
