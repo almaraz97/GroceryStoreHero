@@ -83,6 +83,7 @@ class User(db.Model, UserMixin):
     subscription = db.Column(db.JSON, nullable=False, default={})
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
+    # last_stat_gen = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
@@ -118,7 +119,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     servings = db.Column(db.Integer, nullable=True, default=0)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
-    options = db.Column(db.JSON, nullable=False, default={})
+    options = db.Column(db.JSON, nullable=False, default={})  # If something is optional or can be replaced
     copies = db.relationship('User_Rec', backref='author', lazy=True)  # Not true copies but borrows
 
     # prep_time = db.Column(db.JSON, nullable=False, default={})  # prep time, cook time, etc

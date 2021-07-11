@@ -6,6 +6,7 @@ from apyori import apriori
 import matplotlib.pyplot as plt
 from flask import current_app
 from sklearn.manifold import TSNE
+import umap
 from GroceryHero import db
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
@@ -100,9 +101,9 @@ def aisle_grocery_sort(menu_list, aisles):
 
 def update_grocery_list(user):
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=user).order_by(Recipes.title).all()
-                 if recipe.in_menu]
-    borrowed = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]
-    menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()
+                 if recipe.in_menu]  # Recipes in menu
+    borrowed = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]  # Borrowed in menu
+    menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()  # Combine own and borrowed
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
     entries = user.extras if user.extras is not None else []
@@ -307,7 +308,8 @@ def stats_graph(user, all_recipes):
     recipe_vec = np.array(
         [np.array([1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_vec])
          for recipe in all_recipes])
-    algo = 'tsne'
+    algo = 'umap' #'tsne'
+    dim = 2
     if algo == 'pca':
         pca = sklearn.decomposition.PCA(n_components=2)
         model = pca.fit_transform(recipe_vec)
@@ -317,7 +319,6 @@ def stats_graph(user, all_recipes):
     elif algo == 'svd':
         u, s, v = np.linalg.svd(recipe_vec)
         s = np.concatenate([np.diag(s), np.zeros((162 - 41, 41))], axis=0).T
-        dim = 2
         u = u[:, :dim]
         s = s[:dim]
         v = v[:, :dim]
@@ -339,9 +340,9 @@ def stats_graph(user, all_recipes):
         #
         # coordinates = almaraz_algorithm(25, recipe_vec)
         # labels = [x for x in all_recipes.keys()]
-        # reducer = umap.UMAP(n_components=dim, metric='manhattan')
-        # embedding = reducer.fit_transform(coordinates)
-        model = []
+        reducer = umap.UMAP(n_components=dim, metric='manhattan')
+        model = reducer.fit_transform(recipe_vec)
+        # model = []
     x, y = [x[0] for x in model], [x[1] for x in model]
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(x, y)

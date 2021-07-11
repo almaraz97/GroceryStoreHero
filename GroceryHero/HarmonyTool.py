@@ -1,9 +1,8 @@
 import itertools
 import math
 import random
-
 from apyori import apriori
-
+from difflib import SequenceMatcher
 from GroceryHero.models import Recipes
 
 
@@ -68,6 +67,7 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
     recipe_ingredients = {item for sublist in input_recipe_dict.values()
                                      for item in sublist if item not in ingredient_excludes} # sorted(set([
+    # Todo add similarity argument to filter ingredients that are basically the same
     # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
     recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe]
                            else 0

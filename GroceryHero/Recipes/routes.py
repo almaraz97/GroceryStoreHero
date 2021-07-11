@@ -54,7 +54,7 @@ def recipes_page(view='self'):
             if form.validate_on_submit():  # Harmony or search button was pressed
                 harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(Recipes.title.asc()).all()  # todo include borrowed recipes
                 num_in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).count()
-                form.groups.data = num_in_menu if (num_in_menu > 0) else 2
+                form.groups.data = form.groups.data if (num_in_menu > 0) else 2  # Can't harmonize groups of 1
                 recommended, possible = recipe_stack_w_args(harmony_recipes, preferences, form, in_menu, recipe_ex,
                                                             recipe_hist)
                 recommended = remove_menu_items(in_menu, recommended)
