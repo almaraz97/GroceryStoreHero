@@ -224,7 +224,8 @@ class User_Rec(db.Model):  # For borrowed recipes
     hidden = db.Column(db.Boolean, nullable=False, default=False)
 
     # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}  # If person comments on recipe_id
-    # mods =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # diff =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # todo cant change more than 50% of it? Maybe someone who eat a modified one contributes eatens?
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"

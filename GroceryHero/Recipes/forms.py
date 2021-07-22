@@ -24,10 +24,10 @@ class RecipeLinkForm(FlaskForm):
 
 
 class QuantityForm(FlaskForm):
-    ingredient_name = StringField('Ingredient', default='Default ingredient')
+    ingredient_name = StringField('Ingredient', default='Default ingredient')  # For editing on quantity page
     ingredient_quantity = StringField('Quantity', default=1.0, validators=[InputRequired()])  # , dec_frac()
     ingredient_type = SelectField("Measurement", choices=[(x, x) for x in Measurements.Measures], default='Unit')
-    ingredient_descriptor = StringField('Descriptor', default=1.0)
+    ingredient_descriptor = StringField('Descriptor', default=1.0)  # For accompanying text
 
     @staticmethod
     def validate_ingredient_quantity(self, field):  # Make sure quantity is either a decimal or valid fraction
@@ -44,7 +44,7 @@ class QuantityForm(FlaskForm):
 
 
 class FullQuantityForm(FlaskForm):
-    ingredients = []  # This should be editable
+    ingredients = []  # This should be editable todo is this being used?
     ingredient_forms = FieldList(FormField(QuantityForm), min_entries=1)
     notes = ''
     submit = SubmitField('Submit')
