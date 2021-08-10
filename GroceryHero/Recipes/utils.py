@@ -23,7 +23,8 @@ class Measurements:
     Metric_Weights = ['Kilogram', 'Gram', 'Milligram']
 
     Convert = {'US Gallon': 768, 'US Quart': 192, 'US Pint': 96, 'US Cup': 48.6922, 'US Fluid Ounce': 6,
-               'US Tablespoon': 3, 'US Teaspoon': 1, 'Liter': 1000, 'Milliliter': 1, 'Pound': 16, 'Ounce': 1,
+               'US Tablespoon': 3, 'US Teaspoon': 1, 'Liter': 1000, 'Milliliter': 1,
+               'Pound': 16, 'Ounce': 1,
                'Kilogram': 1e+6, 'Gram': 1000, 'Milligram': 1}  # To lowest [teaspoon, ounce, milligram]
     Dict_func = (lambda V=Volumes, W=Weights, G=Generic, MV=Metric_Volumes, M=Measures:  # Given str return its type
                  {x: ('Volume' if x in V else
@@ -36,22 +37,22 @@ class Measurements:
         if unit not in self.Measures:
             raise AssertionError("Must be in Measurement types: Volumes, Weights, Generic.")
         self.unit = unit
-        self.metric = True if unit in self.Metric_Volumes + self.Metric_Weights else False
+        self.metric_system = True if unit in self.Metric_Volumes + self.Metric_Weights else False
         self.value = value
         self.name = name
         if self.unit in self.Generic:
             self.type = 'Generic'
         else:
-            if self.metric:  # Should I do both volumes/weight & metric or Volume_metric/Weight_metric
+            if self.metric_system:  # Should I do both volumes/weight & metric or Volume_metric/Weight_metric
                 self.type = 'Volume' if self.unit in self.Metric_Volumes else 'Weight'
             else:
                 self.type = 'Volume' if self.unit in self.Volumes else 'Weight'
 
-    def compatibility(self, other, error=False):
+    def compatible(self, other, error=False):
         if error:
             if not isinstance(other, Measurements):
                 raise AssertionError('Must be of class Measurements')
-            if not self.metric == other.metric:
+            if not self.metric_system == other.metric_system:
                 raise AssertionError('Must agree in measurement system')
             if self.type != other.type:
                 AssertionError('Cannot merge objects of different measure type')
@@ -60,7 +61,7 @@ class Measurements:
         else:
             if not isinstance(other, Measurements):
                 return False  # raise AssertionError('Must be of class Measurements')
-            if self.metric != other.metric:
+            if self.metric_system != other.metric_system:
                 return False
             if self.type != other.type:
                 return False
@@ -69,7 +70,7 @@ class Measurements:
             return True
 
     @staticmethod
-    def str_compatibility(str1, str2):
+    def str_compatible(str1, str2):
         if str1 in Measurements.Measure_dict:
             str1 = Measurements.Measure_dict[str1]
         else:
@@ -80,6 +81,16 @@ class Measurements:
             raise AssertionError('Not a valid unit Measurement unit')
         return str1 == str2
 
+    def convert_to_str(self, system=False, type_=False):
+        if (not system) and (not type_):
+            return [self.name, self.value, self.unit]
+        elif not system:
+            return [self.name, self.value, self.unit, self.type]
+        elif not type_:
+            return [self.name, self.value, self.unit, self.metric_system]
+        else:
+            return [self.name, self.value, self.unit, self.type, self.metric_system]
+
     # @staticmethod
     # def convert_to_lowest_total(self, other):  # todo add this to __add__ and __sub__
     #     self.value = self.Convert[self.unit] * self.value  # convert to lowest
@@ -89,7 +100,7 @@ class Measurements:
 
     # todo combine adding and subtracting
     def __add__(self, other, rounding=2, sub=False):  # todo this changes the unit since it is changing the self. stuff
-        self.compatibility(other, error=True)
+        self.compatible(other, error=True)
         if self.type == 'Generic':
             total = self.value + other.value
             return Measurements(round(total, rounding), unit=self.unit)
@@ -97,14 +108,14 @@ class Measurements:
         value2 = other.Convert[other.unit] * other.value  # convert to lowest
         total = value1 + value2
         if self.type == 'Volume':
-            volumes = self.Metric_Volumes if self.metric else self.Volumes
+            volumes = self.Metric_Volumes if self.metric_system else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     self.unit = volume
                     return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
-            weights = self.Metric_Weights if self.metric else self.Weights
+            weights = self.Metric_Weights if self.metric_system else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
@@ -113,7 +124,7 @@ class Measurements:
         return Measurements(round(total, 2), unit=self.unit)  # todo does this unit always work?
 
     def __sub__(self, other, rounding=2):
-        self.compatibility(other, error=True)
+        self.compatible(other, error=True)
         if self.type == 'Generic':
             total = self.value + other.value
             return Measurements(round(total, rounding), unit=self.unit)
@@ -121,14 +132,14 @@ class Measurements:
         value2 = other.Convert[other.unit] * other.value  # convert to lowest
         total = value1 - value2
         if self.type == 'Volume':
-            volumes = self.Metric_Volumes if self.metric else self.Volumes
+            volumes = self.Metric_Volumes if self.metric_system else self.Volumes
             for volume in volumes:  # Go up through conversion until whole number
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     self.unit = volume
                     return Measurements(round(total, 2), unit=volume)
         elif self.type == 'Weight':
-            weights = self.Metric_Weights if self.metric else self.Weights
+            weights = self.Metric_Weights if self.metric_system else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
@@ -289,10 +300,10 @@ def generate_feed_contents(cards):
     for act in cards:
         titles = act.titles  # Get titles of recipe in action from when that action was recorded
         rec_titles = {r.title: r.id for r in Recipes.query.filter(Recipes.id.in_(act.recipe_ids)).all()}
-        for t1 in rec_titles:  # If recipe title changed or no longer exists handle it here
-            for t2 in titles:
-                if SequenceMatcher(a=t1, b=t2).ratio() > .8:  # New title is similar to old one
-                    titles.remove(t1)
+        for title1 in rec_titles:  # If recipe title changed or no longer exists handle it here
+            for title2 in titles:
+                if SequenceMatcher(a=title1, b=title2).ratio() > .8:  # New title is similar to old one
+                    titles.remove(title1)
         for title in titles:  # If recipe got deleted use its old title and dont link
             rec_titles[title] = None
         content = ''
@@ -367,6 +378,9 @@ def load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex):
         else [(x, x) for x in range(50, 105, 5)] + [(float('inf'), 'No Limit')]
     form.similarity.default = [50, 50]
     # all_recipes =
+    # print(recipe_list)
+    # print(type(recipe_list))
+    # recipe_list = recipe_list.items if isinstance(recipe_list, Pagination) else recipe_list
     excludes = [recipe.title for recipe in recipe_list if recipe.title not in (in_menu + recipe_ex)]
     form.excludes.choices = [x for x in zip([0] + excludes, ['-- select options (clt+click) --'] + excludes)]
 
@@ -386,7 +400,8 @@ def load_harmonyform(current_user, form, in_menu, recipe_list, recipe_ex):
 
 def load_quantityform(recipe):
     data = {'ingredient_forms': [{'ingredient_quantity': recipe['quantity'][ingredient][0],
-                                  'ingredient_type': recipe['quantity'][ingredient][1]}
+                                  'ingredient_type': recipe['quantity'][ingredient][1],
+                                  'ingredient_name': ingredient}
                                  for ingredient in recipe['quantity'].keys()]}
     form = FullQuantityForm(data=data)
     form.ingredients = [x for x in recipe['quantity'].keys()]

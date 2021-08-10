@@ -118,7 +118,7 @@ def friend_feed():
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     colors = Colors.act_colors
-    cards, friend_dict, friend_acts, page = [], {}, [], 1
+    cards, friend_dict, friend_acts, page, count = [], {}, [], 1, 0
     friend = request.args.get('friend', None, type=int)
     all_followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
     followees = all_followees if friend is None else [friend]
@@ -138,7 +138,7 @@ def friend_feed():
 
 @login_required
 @recipes.route('/recipes/<int:recipe_id>', methods=['GET', 'POST'])
-def recipe_single(recipe_id):
+def recipe_single(recipe_id):  # TODO Minting recipe must be public
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     recipe_post = Recipes.query.get_or_404(recipe_id)
@@ -162,7 +162,7 @@ def recipe_single(recipe_id):
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
         borrowed = False if borrow is None else borrow.borrowed
-    if request.method == 'POST':  # Download recipe
+    if request.method == 'POST':  # Download recipe  # todo mint recipe
         if form.validate_on_submit():
             if form.picture.data:
                 picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
@@ -266,8 +266,9 @@ def new_recipe_link():  # Filling out the form data from link page
         form.notes.data = recipe['notes']
     if form.validate_on_submit():  # Send data to quantity page
         ingredients = [string.capwords(x.strip()) for x in form.content.data.split(',') if x.strip() != '']
+        # ings = {ing: session['recipe_raw']['measures'][i] for i, ing in enumerate(ingredients)}
         ings = {}  # todo dictionary comp
-        for i, ing in enumerate(ingredients): #session['recipe_raw']['ingredients']):  #
+        for i, ing in enumerate(ingredients):  # session['recipe_raw']['ingredients']):  #
             # todo figure out how to link quantity with ingredients, despite deletion and modification
             ings[ing] = session['recipe_raw']['measures'][i]  # except IndexError: ings[ing] = [1, 'Unit']
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ings,

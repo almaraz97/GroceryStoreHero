@@ -106,7 +106,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    quantity = db.Column(db.JSON, nullable=False, default={})  # Format: {ingredient: [value, unit]}
+    quantity = db.Column(db.JSON, nullable=False, default={})  # Format: {ingredient: [value, 'description', unit]}
     in_menu = db.Column(db.Boolean, nullable=False, default=False)
     eaten = db.Column(db.Boolean, nullable=False, default=False)
     notes = db.Column(db.Text, nullable=True)
@@ -116,12 +116,14 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     times_eaten = db.Column(db.Integer, nullable=False, default=0)
     recipe_genre = db.Column(db.String(32), nullable=True)  # Asian, Hispanic, Southern
     public = db.Column(db.Boolean, nullable=False, default=False)  # Public recipe
-    servings = db.Column(db.Integer, nullable=True, default=0)
+    servings = db.Column(db.Integer, nullable=False, default=1)
     originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
-    options = db.Column(db.JSON, nullable=False, default={})  # If something is optional or can be replaced
-    copies = db.relationship('User_Rec', backref='author', lazy=True)  # Not true copies but borrows
+    borrows = db.relationship('User_Rec', backref='author', lazy=True)  # Borrowed versions of the recipe
 
+    options = db.Column(db.JSON, nullable=False, default={})  # Optional/replacement ingredient {ing: ['opt', 'rep']}
+    # specialty = db.Column(db.String(64), nullable=True)  # Gluten-free,
+    # nft_id = db.Column(db.Integer, nullable=True)  # ID of the minted nft corresponding to this recipe
     # prep_time = db.Column(db.JSON, nullable=False, default={})  # prep time, cook time, etc
     # nutrition = db.Column(db.JSON, nullable=False, default={})  # Vitamin A: 100mcg
     # glycemic = db.Column(db.Float, nullable=True)
@@ -224,7 +226,7 @@ class User_Rec(db.Model):  # For borrowed recipes
     hidden = db.Column(db.Boolean, nullable=False, default=False)
 
     # comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}  # If person comments on recipe_id
-    # diff =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # diffs =  db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
     # todo cant change more than 50% of it? Maybe someone who eat a modified one contributes eatens?
 
     def __repr__(self):

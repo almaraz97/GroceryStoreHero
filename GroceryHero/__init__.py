@@ -34,6 +34,7 @@ def create_app(config_class=Config):
     )
     app.auth0 = auth0
     app.auth0_urls = auth0_urls
+    # app.RECIPE_LIMIT = 80
 
     db.init_app(app)
     login_manager.init_app(app)

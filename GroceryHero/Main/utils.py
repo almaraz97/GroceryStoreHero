@@ -12,91 +12,74 @@ from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
 
 
-def aisle_grocery_sort(menu_list, aisles):
-    ingredients = [recipe.quantity for recipe in menu_list]
-    ingredients = sorted([item for sublist in ingredients for item in sublist])  # Flattens
-    overlap = len(ingredients)
+def aisle_grocery_sort(recipe_menu_list: list, aisles: dict):
+    # Recipe_menu_list = [Model.Recipe,...], aisles = [{aisle_name: [ingredient_name,...]},...]
+    all_ing_names = [recipe.quantity for recipe in recipe_menu_list]  # Format: [{ingredient: [value, unit]},...]
+    all_ing_names = sorted([item for sublist in all_ing_names for item in sublist])
     # todo extras might not need aisle information in the first place
-    quantities = [menu_item.quantity for menu_item in menu_list]
-    # quantities.append({x[0]: x[1:-1] for x in [aisle_obj[1] for aisle_obj in extras]})
-    merged = {}  # Merged quantities dictionaries. Ingredient[str] as Key, list of Measurement Objects as Value
-    for dictionary in quantities:
-        for key in dictionary:
-            try:  # Add ingredient to existing to merge quantity later
-                merged[key].append(Measurements(value=convert_frac(dictionary[key][0]), unit=dictionary[key][1]))
-            except KeyError:  # Ingredient doesnt have a entry yet
-                merged[key] = [Measurements(value=convert_frac(dictionary[key][0]), unit=dictionary[key][1])]
-            # except ValueError:  # Ingredient quantity is a fraction
-            #     quantity = dictionary[key][0][0]/dictionary[key][0][2]
-            #     merged[key] = [Measurements(value=quantity, unit=dictionary[key][1])]
-    sorted_ingredients = {}  # AisleName as Key, list of ingredients as Value
+    quantities = [recipe.quantity for recipe in recipe_menu_list]  # Format: [{ingredient: [value, unit]},...]
+    # quantities.append({x[0]: x[1:-1] for x in [aisle_obj[1] for aisle_obj in extras]})  # Add extras?
+
+    # 1. Set up ingredients for summing ie: rice 1 cup + rice 2 cups = rice 3 cups
+    ing_merger = {}  # {ing_name: [Measurements(v=1, u=cup), ...], ...}
+    for dictionary in quantities:  # dictionary = {str(ingredient): [float(value), str(unit)]}
+        for ing in dictionary:
+            value = convert_frac(dictionary[ing][0])
+            unit = dictionary[ing][1]
+            if ing in ing_merger:
+                ing_merger[ing].append(Measurements(value=value, unit=unit))
+            else:
+                ing_merger[ing] = [Measurements(value=value, unit=unit)]
+
+    # 2. Put recipe ingredients into their respective aisles
+    sorted_ingredients = {}  # {aisle_name: [ingredient_name,...]}
     for aisle in aisles:
         if aisles[aisle] is None:  # If aisle doesn't have ingredients, make empty list
             aisles[aisle] = []
         if aisle not in sorted_ingredients:  # If aisle isn't in sorted_ingredients dictionary yet, add it
             sorted_ingredients[aisle] = []
-        for ingredient in ingredients:
+        for ingredient in all_ing_names:
             if ingredient in aisles[aisle]:
                 sorted_ingredients[aisle] = sorted_ingredients[aisle] + [ingredient]
-    missing = [ingredient for ingredient in ingredients if ingredient not in
-               [item for sublist in sorted_ingredients.values() for item in sublist]]
-    sorted_ingredients['Other (unsorted)'] = missing
-    for entry in list(merged.keys()):  # Combines merged dictionary Measurement Objects if they are same type
-        if len(merged[entry]) > 1:
-            temp, index, first = [], 0, True
-            while len(merged[entry]) > 0:
-                removals, i = [], 0
-                while i < len(merged[entry]):  # ###Might be easier to test by object type and append each to a list
-                    if first:
-                        temp.append(merged[entry][i])  # Append first pair to compare with
-                        removals.append(i)  # Remove that one later
-                        i += 1  # Move to next one
-                        first = False
-                        if i == len(merged[entry]):  # Break if final list item is appended to temp
-                            break
-                    # if temp[index].type == merged[entry][i].type:  # If both same measurement type (Gen,Mass,Vol)
-                    #     if temp[index].unit in Measurements.Generic:  # If they're in generic, both must match
-                    #         if temp[index].unit == merged[entry][i].unit:
-                    #             temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
-                    #             removals.append(i)  # Remove it later
-                    #             i += 1  # Move on to next one
-                    #         else:  # Append to temp list
-                    #             first = True
-                    #     else:  # Measurement Objects are both Weight or Volume
-                    #         temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
-                    #         removals.append(i)  # Remove it later
-                    #         i += 1  # Move on to next one
-                    # else:  # Append to temp list
-                    #     first = True
-                    if temp[index].compatibility(merged[entry][i]):  # Are type/unit compatible
-                        temp[index] = temp[index] + merged[entry][i]  # Add it to last temp element
-                        removals.append(i)  # Remove it later
-                        i += 1  # Move on to next one
-                    else:  # Append to temp list
-                        first = True
-                for remove in sorted(removals, reverse=True):  # Remove list items from dictionary entry
-                    del merged[entry][remove]
-                first = True
-                index += 1
-            merged[entry] = temp
+    missing = [ingredient for ingredient in all_ing_names if ingredient not in
+               [item for sublist in sorted_ingredients.values() for item in sublist]]  # todo do this in aisle sort loop
+    sorted_ingredients['Other (unsorted)'] = missing  # Add ingredients to unsorted aisle
+
+    # 3. Combine ingredients if they are same ingredient and measurement type
+    ing_merged = {}
+    for ing, overlaps in list(ing_merger.items()):  # {rice: [1 cup, 3 ounces, 2 cups, 1 ounce, 2 grams, 5 grams]}
+        unit_merged = []  # Units that have been merged together
+        compared = []  # Items that have already been added from same unit
+        for i, item1 in enumerate(overlaps):
+            for j, item2 in enumerate(overlaps):
+                if not any([i == j, i >= j, i in compared, j in compared]):  # Not self-comp and not reversed comp
+                    if item1.compatible(item2):
+                        item1 += item2
+                        compared.append(j)
+            if i not in compared:
+                unit_merged.append(item1)  # 3 cup
+        ing_merged[ing] = unit_merged  # [3 cup, 4 ounces, 7 grams]
+
     for key in sorted_ingredients:  # Combines ingredient key and its measurement object into a list
         aisle_items = sorted(set(sorted_ingredients[key]))
         temp = []
-        for index in range(len(aisle_items)):
-            unit_objs = merged[aisle_items[index]]
+        for ing_i in range(len(aisle_items)):
+            unit_objs = ing_merged[aisle_items[ing_i]]
             if len(unit_objs) > 1:  # If its a list of objects
                 for unit_obj in unit_objs:  # For Measurement Object in list
                     unit_obj.value = int(unit_obj.value) if float(unit_obj.value).is_integer() else unit_obj.value
-                    temp.append([str(aisle_items[index]), unit_obj])
+                    temp.append([str(aisle_items[ing_i]), unit_obj])
             else:
                 unit_obj = unit_objs[0]
                 unit_obj.value = int(unit_obj.value) if float(unit_obj.value).is_integer() else unit_obj.value
-                temp.append([str(aisle_items[index]), unit_obj])
-            del merged[aisle_items[index]][0]
+                temp.append([str(aisle_items[ing_i]), unit_obj])
+            del ing_merged[aisle_items[ing_i]][0]
         sorted_ingredients[key] = temp
-    for aisle in sorted_ingredients:  # Remove measurement unit, not JSON serializable
-        sorted_ingredients[aisle] = [[item[0], item[1].value, item[1].unit, 0] for item in sorted_ingredients[aisle]]
-    return sorted_ingredients, (overlap - len([item for sublist in sorted_ingredients.values() for item in sublist]))
+
+    sorted_ingredients = {aisle: [[M[0], M[1].value, M[1].unit, 0] for M in ing] for
+                          aisle, ing in sorted_ingredients.items()}
+    return sorted_ingredients, (
+                len(all_ing_names) - len([item for sublist in sorted_ingredients.values() for item in sublist]))
 
 
 def update_grocery_list(user):
@@ -120,7 +103,7 @@ def update_grocery_list(user):
             old_item_obj = Measurements(value=old_item_obj[1], unit=old_item_obj[2])
             new_item_obj = aisle_obj[1]
             new_item_obj = Measurements(value=new_item_obj[1], unit=new_item_obj[2])
-            if new_item_obj.type == old_item_obj.type and new_item_obj.metric == old_item_obj.metric:
+            if (new_item_obj.type == old_item_obj.type) and (new_item_obj.metric_system == old_item_obj.metric_system):
                 if new_item_obj.type == 'Generic':  # If they're both Generic
                     if new_item_obj.unit == old_item_obj.unit:
                         combined = old_item_obj + new_item_obj
@@ -268,7 +251,7 @@ def getUserRecipeHistory(user):
 
 def apriori_test(user, min_support=None, harmony=False, includes=None):
     recipes = getUserRecipeHistory(user)
-    min_support = 2/len(recipes) if min_support is None else min_support
+    min_support = 2 / len(recipes) if min_support is None else min_support
     if harmony:
         aprioris = apriori(recipes, min_support=1e-8, min_lift=1e-8)
         if includes is not None:
@@ -287,7 +270,7 @@ def convert_frac(num):  # form validator already checked for float or fraction
             num = num.split('/')
             return float(num[0]) / float(num[1])
         except ValueError:  # Fraction is mixed
-            num = (int(num[0])*int(num[4]) + int(num[2]))/ int(num[4])
+            num = (int(num[0]) * int(num[4]) + int(num[2])) / int(num[4])
             return num
 
 
@@ -308,7 +291,7 @@ def stats_graph(user, all_recipes):
     recipe_vec = np.array(
         [np.array([1 if ingredient in all_recipes[recipe] else 0 for ingredient in recipe_vec])
          for recipe in all_recipes])
-    algo = 'umap' #'tsne'
+    algo = 'umap'  # 'tsne'
     dim = 2
     if algo == 'pca':
         pca = sklearn.decomposition.PCA(n_components=2)
@@ -322,7 +305,7 @@ def stats_graph(user, all_recipes):
         u = u[:, :dim]
         s = s[:dim]
         v = v[:, :dim]
-        model = u@s@v
+        model = u @ s @ v
     else:  # UMAP
         # def almaraz_algorithm(n, recipes, norm=1):
         #     # Split recipes into n groups
@@ -353,6 +336,3 @@ def stats_graph(user, all_recipes):
     filepath = str(user.id) + '.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
     plt.savefig(picture_path)
-
-
-
