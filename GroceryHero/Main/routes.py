@@ -297,8 +297,8 @@ def change_to_eaten():
 @main.route('/extras_clear', methods=['GET', 'POST'])
 def clear_extras():
     current_user.extras = []
-    update_grocery_list(current_user)
     db.session.commit()
+    update_grocery_list(current_user)
     return redirect(url_for('main.home'))
 
     # data = {'aisle_forms': [{'content': [(item, item) for item in aisle.content.split(', ')]} for aisle in aisles]}
