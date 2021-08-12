@@ -81,7 +81,8 @@ class Measurements:
             raise AssertionError('Not a valid unit Measurement unit')
         return str1 == str2
 
-    def convert_to_str(self, system=False, type_=False):
+    def to_str(self, system=False, type_=False, to_int=True):
+        self.value = int(self.value) if float(self.value).is_integer() else self.value
         if (not system) and (not type_):
             return [self.name, self.value, self.unit]
         elif not system:
@@ -101,9 +102,10 @@ class Measurements:
     # todo combine adding and subtracting
     def __add__(self, other, rounding=2, sub=False):  # todo this changes the unit since it is changing the self. stuff
         self.compatible(other, error=True)
+        name = self.name if self.name == other.name else None
         if self.type == 'Generic':
             total = self.value + other.value
-            return Measurements(round(total, rounding), unit=self.unit)
+            return Measurements(name=name, value=round(total, rounding), unit=self.unit)
         value1 = self.Convert[self.unit] * self.value  # convert to lowest
         value2 = other.Convert[other.unit] * other.value  # convert to lowest
         total = value1 + value2
@@ -113,21 +115,22 @@ class Measurements:
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     self.unit = volume
-                    return Measurements(round(total, 2), unit=volume)
+                    return Measurements(name=name, value=round(total, 2), unit=volume)
         elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric_system else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
                     self.unit = weight
-                    return Measurements(round(total, 2), unit=weight)
-        return Measurements(round(total, 2), unit=self.unit)  # todo does this unit always work?
+                    return Measurements(name=name, value=round(total, 2), unit=weight)
+        return Measurements(name=name, value=round(total, 2), unit=self.unit)  # todo does this unit always work?
 
     def __sub__(self, other, rounding=2):
         self.compatible(other, error=True)
+        name = self.name if self.name == other.name else None
         if self.type == 'Generic':
             total = self.value + other.value
-            return Measurements(round(total, rounding), unit=self.unit)
+            return  Measurements(name=name, value=round(total, 2), unit=self.unit)
         value1 = self.Convert[self.unit] * self.value  # convert to lowest
         value2 = other.Convert[other.unit] * other.value  # convert to lowest
         total = value1 - value2
@@ -137,15 +140,15 @@ class Measurements:
                 if int(total / self.Convert[volume]) >= 1:
                     total = total / self.Convert[volume]
                     self.unit = volume
-                    return Measurements(round(total, 2), unit=volume)
+                    return  Measurements(name=name, value=round(total, 2), unit=volume)
         elif self.type == 'Weight':
             weights = self.Metric_Weights if self.metric_system else self.Weights
             for weight in weights:
                 if int(total / self.Convert[weight]) >= 1:
                     total = total / self.Convert[weight]
                     self.unit = weight
-                    return Measurements(round(total, 2), unit=weight)
-        return Measurements(round(total, 2), unit=self.unit)
+                    return  Measurements(name=name, value=round(total, 2), unit=weight)
+        return Measurements(name=name, value=round(total, 2), unit=self.unit)
 
     def __repr__(self):
         unit = self.unit + 's' if self.value != 1 else self.unit
