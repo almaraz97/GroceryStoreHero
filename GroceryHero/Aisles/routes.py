@@ -10,7 +10,7 @@ from GroceryHero.Aisles.forms import AisleForm, AisleBarForm
 
 aisles = Blueprint('aisles', __name__)
 
-# TODO have aisle order affect grocery list
+
 @aisles.route('/aisles', methods=['GET', 'POST'])
 def aisles_page():
     aisle_list = []

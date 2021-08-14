@@ -39,12 +39,17 @@ def home():
                  if recipe.in_menu]
     borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
-    aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
+
+    aisles = {(aisle.order, aisle.title): aisle.content.split(', ')
+              for aisle in Aisles.query.filter_by(author=current_user)}
+    aisles_order_dict = {num: name for num, name in aisles.keys()}  # + {aisles.keys():'Other (unsorted)'}
+    aisles_order_dict[max(aisles_order_dict.keys())+1] = 'Other (unsorted)'
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
-    for aisle in groceries:  # Turns ingredients into Measurement objects  # TODO GENERATE THIS IN MEMORY INSTEAD OF db?
+
+    for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
         groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
                             for item in groceries[aisle]]
-    aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None
+
     menu_list = sorted(menu_list, key=lambda x: x.eaten)
     if len(menu_list) > 1:
         preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
@@ -54,8 +59,8 @@ def home():
     username = current_user.username.capitalize()
     statistics = get_history_stats(current_user)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
-                           sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-                           overlap=overlap, statistics=statistics, borrowed=borrowed)
+                           sidebar=True, home=True, username=username, harmony_score=harmony, aisles=len(aisles),
+                           overlap=overlap, statistics=statistics, borrowed=borrowed, order_dict=aisles_order_dict)
 
 
 @login_required
@@ -329,6 +334,3 @@ def clear_extras():
 #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
 #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
 #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
-
-
-
