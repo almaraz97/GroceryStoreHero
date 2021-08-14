@@ -39,11 +39,11 @@ def home():
                  if recipe.in_menu]
     borrowed = {x.recipe_id: x.eaten for x in User_Rec.query.filter_by(user_id=current_user.id, in_menu=True).all()}
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
-
     aisles = {(aisle.order, aisle.title): aisle.content.split(', ')
               for aisle in Aisles.query.filter_by(author=current_user)}
-    aisles_order_dict = {num: name for num, name in aisles.keys()}  # + {aisles.keys():'Other (unsorted)'}
-    aisles_order_dict[max(aisles_order_dict.keys())+1] = 'Other (unsorted)'
+
+    aisles_order_dict = {i: name for i, (_, name) in enumerate(sorted(aisles.keys(), key=lambda x: x[0]))}
+    aisles_order_dict[max(aisles_order_dict.keys())+1] = 'Other (unsorted)'  # Todo make this global variable
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
 
     for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
@@ -334,3 +334,17 @@ def clear_extras():
 #     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
 #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
 #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
+
+    # [(1,'a'), (1, 'b'), (2, 'c'), (5,'d'), (3, 'e'), (5,'f'), (2,'g')] -->
+    # [(1,'a'), (2, 'b'), (3, 'c'), (4,'d'), (5, 'e'), (6,'f'), (7,'g')]
+    # print(aisles)
+    # index = 0
+    # aisles_order_dict = {}
+    # numbers = sorted([x[0] for x in aisles.keys()])
+    # for number in numbers:
+    #     same_nums = [x for x in aisles.keys() if x[0] == number]  # Get aisles with same numbers
+    #     for j in range(len(same_nums)):  # Give them each the index in ascending
+    #         aisles_order_dict[index] = same_nums[j][1]
+    #         index += 1
+    # print(len(aisles_order_dict), aisles_order_dict)
+    # aisles_order_dict[len(aisles_order_dict.keys())] = 'Other (unsorted)'
