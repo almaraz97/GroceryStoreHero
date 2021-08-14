@@ -48,9 +48,12 @@ def aisles_page():
 @login_required
 def new_aisle():
     form = AisleForm()
+    if request.method == 'GET':
+        choices = get_unique_order_choices(current_user)
+        form.order.choices = choices
     if form.validate_on_submit():
         store = form.store.data if form.store.data != '' else None
-        order = int(form.order.data) if form.order.data != '' else None
+        order = int(form.order.data) if form.order.data != '' else 0
         form = Aisles(title=string.capwords(form.title.data.strip()), order=order,
                       content=', '.join([word.strip().capitalize() for word in form.content.data.split(',')]),
                       store=store, author=current_user)
@@ -85,6 +88,8 @@ def update_aisle(aisle_id):
         flash('Your aisle has been updated!', 'success')
         return redirect(url_for('aisles.aisle_single', aisle_id=aisle.id))
     elif request.method == 'GET':
+        choices = get_unique_order_choices(current_user)
+        form.order.choices = [(aisle.order, str(aisle.order))] + choices
         form.order.default = aisle.order
         form.process()
         form.title.data = aisle.title
@@ -105,3 +110,12 @@ def delete_aisle(aisle_id):
     flash('Your aisle has been deleted!', 'success')
     return redirect(url_for('aisles.aisles_page'))
 
+
+def get_unique_order_choices(user):
+    aisle_numbers = [x.order for x in Aisles.query.filter_by(user_id=user.id).all()]
+    new_numbers, index = [], 1
+    while len(new_numbers) < 5:
+        if index not in aisle_numbers:
+            new_numbers.append(index)
+        index += 1
+    return [(0, 'No Order')]+[(x, x) for x in new_numbers]
