@@ -4,12 +4,13 @@ from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint)
 from flask_login import current_user, login_required
 from GroceryHero import db
+from GroceryHero.Main.utils import update_grocery_list
 from GroceryHero.models import Aisles, Recipes
 from GroceryHero.Aisles.forms import AisleForm, AisleBarForm
 
 aisles = Blueprint('aisles', __name__)
 
-
+# TODO have aisle order affect grocery list
 @aisles.route('/aisles', methods=['GET', 'POST'])
 def aisles_page():
     aisle_list = []
@@ -55,6 +56,7 @@ def new_aisle():
                       store=store, author=current_user)
         db.session.add(form)
         db.session.commit()
+        update_grocery_list(current_user)
         flash('Your aisle has been created!', 'success')
         return redirect(url_for('aisles.aisles_page'))
     return render_template('create_aisle.html', title='New Aisle', form=form, legend='New Aisle')
@@ -79,6 +81,7 @@ def update_aisle(aisle_id):
         aisle.store = ' '.join([word.strip().capitalize() for word in form.store.data.split(' ')])
         aisle.order = int(form.order.data) if form.order.data != '' else 0
         db.session.commit()  # Don't need to do db.add since we are changing an existing entry
+        update_grocery_list(current_user)
         flash('Your aisle has been updated!', 'success')
         return redirect(url_for('aisles.aisle_single', aisle_id=aisle.id))
     elif request.method == 'GET':
@@ -98,6 +101,7 @@ def delete_aisle(aisle_id):
         abort(403)
     db.session.delete(aisle)
     db.session.commit()
+    update_grocery_list(current_user)
     flash('Your aisle has been deleted!', 'success')
     return redirect(url_for('aisles.aisles_page'))
 

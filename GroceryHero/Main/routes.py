@@ -41,7 +41,7 @@ def home():
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
     aisles = {aisle.title: aisle.content.split(', ') for aisle in Aisles.query.filter_by(author=current_user)}
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
-    for aisle in groceries:  # Turns ingredients into Measurement objects
+    for aisle in groceries:  # Turns ingredients into Measurement objects  # TODO GENERATE THIS IN MEMORY INSTEAD OF db?
         groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
                             for item in groceries[aisle]]
     aisles = None if len(aisles) < 1 else aisles  # If user has no aisles, set aisles to None

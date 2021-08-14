@@ -22,8 +22,10 @@ def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list):
     extras = [x[1] for x in extras]
     all_ing_names = [recipe.quantity for recipe in recipe_menu_list]  # Format: [{ingredient: [value, unit]},...]
     all_ing_names = sorted([item for sublist in all_ing_names for item in sublist])  # [ingredient,...]
+
     missing_ing = [ing for ing in all_ing_names if ing not in [item for sublist in aisles.values() for item in sublist]]
     aisles['Other (unsorted)'] = missing_ing   # Add items that have no assigned aisle
+
     quantities = [recipe.quantity for recipe in recipe_menu_list]  # Format: [{ingredient: [value, unit],...},...]
     extras_dict = {measure[0]: [measure[1], measure[2]] for measure in extras}
     quantities.append(extras_dict)
@@ -55,13 +57,16 @@ def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list):
 
 
 def update_grocery_list(user):  # Get selected recipes, extra ingredients, and user aisles. Sort and store them
+    # TODO Look at difference between old grocery list and new one, combine if necessary (save strike status)
+    #  happens for clear_menu, add_extras, clear_extras, update_recipe_quantity, delete_recipe, change_to_menu
+    #  clear_menu, add_to_menu, multi_add_to_menu and multi_add_to_menu2
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=user).order_by(Recipes.title).all()
                  if recipe.in_menu]  # Recipes in menu
     borrowed = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]  # Borrowed in menu
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()  # Combine own and borrowed
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
-    entries = user.extras if user.extras is not None else []  # TODO REFORMAT EXTRAS - [ingredient, value, unit, strike]
+    entries = user.extras if user.extras is not None else []  # TODO REFORMAT no aisle [ingredient, value, unit, strike]
 
     grocery_list, overlap = aisle_grocery_sort(menu_list, aisles, entries)
     user.grocery_list = []

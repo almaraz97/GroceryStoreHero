@@ -115,7 +115,7 @@
         {% endif %}
       </div>
         {% if aisles %} <!-- User has aisles -->
-          {% set index = namespace(value=groceries|length) %}
+          {% set index = namespace(value=groceries|length) %}  <!-- Number of aisles -->
           {% for key in groceries %}
             {% if index.value == 1 and groceries[key]|length < 1 %} <!-- If all aisles don't have grocery items -->
               <ul class="mt-3 mb-4 pb-2">
