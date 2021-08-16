@@ -31,7 +31,7 @@ class Measurements:
                       ('Weight' if x in W else
                        ('Generic' if x in G else
                         ('Metric_Volumes' if x in MV else 'Metric_Weights')))) for x in M})
-    Measure_dict = Dict_func()
+    Measure_dict = Dict_func()  # from unit to type
 
     def __init__(self, value, unit, name=None):
         if unit not in self.Measures:
@@ -511,26 +511,24 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
     borrows = {x.recipe_id: x.in_menu for x in
                User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}  # {Borrowed_id: bool(in_menu)}
     view_dict = {'friends': Recipes.user_id.in_(friend_choice),
-                 'public': Recipes.user_id.isnot(None),
-                 # and_(Recipes.public.is_(True), Recipes.user_id.isnot(None)) exclude self?
+                 'public': Recipes.user_id.isnot(None),  # todo Recipes.public.is_(True)?
                  'self': Recipes.user_id.is_(current_user.id)}
     sort_dict = {'date': Recipes.date_created.desc(), 'eaten': Recipes.times_eaten.desc(),
                  'alpha': Recipes.title.asc(), 'none': Recipes.title.asc()}
-
     search_q = Recipes.title.isnot(None) if search is None else \
-        and_(Recipes.title.contains(search), Recipes.recipe_genre.contains(search))
+        or_(Recipes.title.contains(search), Recipes.recipe_genre.contains(search))
     types_q = Recipes.recipe_type.isnot(None) if (type_ == 'all') else Recipes.recipe_type.is_(type_)
     view_q, sort_q = view_dict[view], sort_dict.get(sort, None)  # hot/borrow sorting may need separate
 
     if sort in sort_dict:
-        recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q, view_q)). \
-            order_by(sort_q).paginate(page=page, per_page=per)
+        recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q)).order_by(sort_q).\
+            paginate(page=page, per_page=per)
+
     else:
         recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q, view_q)).all()
         sorting = borrow_sort if sort == 'borrow' else trend_sort
         recipe_list = sorted(recipe_list, key=lambda x: sorting(x), reverse=True)
         recipe_list = Pagination(page=page, per_page=per, all_items=recipe_list)  # Custom pagination object
-
     if (sort == 'none') and (view == 'self'):  # User didnt want to sort, keep in_menu on top
         in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).all()
         in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()

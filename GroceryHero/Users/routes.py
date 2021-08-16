@@ -5,7 +5,7 @@ from flask import current_app
 from flask import render_template, url_for, flash, redirect, request, Blueprint, Response, session
 from flask_login import login_user, current_user, logout_user, login_required
 from GroceryHero import db
-from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_PubRec, User_Rec, User_Act
+from GroceryHero.models import User, Recipes, Aisles, Followers, Actions, User_Rec, User_Act
 from GroceryHero.Users.forms import UpdateAccountForm, DeleteAccountForm, AdvancedHarmonyForm, FriendForm
 from GroceryHero.Main.forms import ImportForm
 from GroceryHero.Users.utils import save_picture, import_files, update_harmony_preferences, load_harmony_form, \
@@ -137,7 +137,7 @@ def delete_account():
     form4 = DeleteAccountForm()
     # delete account
     if form4.validate_on_submit():
-        for x in [Recipes, Aisles, Followers, Actions, User_Rec, User_PubRec, User_Act]:
+        for x in [Recipes, Aisles, Followers, Actions, User_Rec, User_Act]: #User_PubRec
             try:  # Deletes all user info from each table
                 z = x.query.filter_by(author=current_user).all()
                 for i in z:

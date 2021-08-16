@@ -10,7 +10,7 @@
 
   <!--Search bar with button-->
   <div class="mt-4" style="margin-bottom: 15px;">
-    <form action="{{ url_for('recipes.recipes_page', view=view, sort=sort, types=types) }}" method="POST">
+    <form action="{{ url_for('recipes.public_recipes', view=view, sort=sort, types=types, page=1) }}" method="POST">
       <div class="input-group flex-nowrap">
         <input type="text" class="form-control" placeholder="Recipe Name" name="search">
         <div class="input-group-prepend">

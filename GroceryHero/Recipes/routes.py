@@ -77,7 +77,7 @@ def public_recipes():  # todo add user credit dynamic
     colors, rankings = Colors.rec_colors, {}
     followees, all_friends = get_friends(current_user)
     search, page, sort, types, friend_choice = get_requests(all_friends)
-    recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, type_=types, search=None, view='public',
+    recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, type_=types, search=search, view='public',
                                                       friend_choice=all_friends)
     cards = recipe_list.items
     form = SvdForm()
@@ -708,3 +708,89 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
    # print(sorted([[x.times_borrowed, x.title] for x in Recipes.query.all()], key=lambda y: y[0], reverse=True))
     # print(sorted([[x.trend_index, x.title, x.author.username]
     #               for x in Recipes.query.all() if x.user_id != current_user.id], key=lambda y: y[0], reverse=True))
+# def new_recipe_quantity(recipe):  # Show default/loaded ingredient quantity and measurement info, add to db on submit
+# #     form = load_quantityform(recipe)
+# #     if form.validate_on_submit():  # form.ingredient_forms.data- List(Ingredient_form(Dict())
+# #         quantity = [data['ingredient_quantity'] for data in form.ingredient_forms.data]
+# #         measure = [data['ingredient_type'] for data in form.ingredient_forms.data]
+# #         formatted = {ingredient: [Q, M] for ingredient, Q, M in zip(form.ingredients, quantity, measure)}
+# #
+# #         pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
+# #         pic_fn = pic_fn if pic_fn is not None else 'default.png'
+# #         public = False if recipe.get('public') == 'False' else True
+# #         recipe = Recipes(title=(recipe['title']), quantity=formatted, user_id=current_user.id,
+# #                          notes=recipe['notes'], recipe_type=recipe['type'], link=recipe.get('link', ''),
+# #                          picture=pic_fn, public=public)
+# #         db.session.add(recipe)
+# #         db.session.commit()
+# #         recipe.originator = recipe.id
+# #         db.session.commit()
+
+
+import string
+from GroceryHero.Recipes.utils import parse_ingredients
+from GroceryHero.models import Recipes
+from GroceryHero import db, create_app
+from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+# db.app = create_app()
+
+
+def recipe_from_link(link):  # page where user enters url
+    try:
+        scraper = scrape_me(link)
+    except WebsiteNotImplementedError:
+        try:
+            scraper = scrape_me(link, wild_mode=True)
+        except NoSchemaFoundInWildMode:
+            return {}
+    ingredients = [x.lower() for x in scraper.ingredients()]
+    ings, quantity = parse_ingredients(ingredients)
+    ings = [string.capwords(x.strip()) for x in ings if x.strip() != '']
+    im_path = scraper.image()
+    quantity = {ingredient: [Q, M] for ingredient, (Q, M) in zip(ings, quantity)}
+    # servings = scraper.yields()
+    prep_time = scraper.total_time()
+    recipe_dict = {'title': scraper.title(), 'notes': scraper.instructions(),
+                   'quantity': quantity, 'link': link, 'im_path': im_path, 'prep_time': prep_time}
+    return recipe_dict
+
+
+def zuck(recipe):  # If recipe is not empty
+    title = recipe['title']
+    quantity = recipe['quantity']
+    notes = recipe['notes']
+    prep_time = float(recipe['prep_time']) if recipe['prep_time'] != 0 else None
+    prep_time = {'total': int(prep_time)} if ((prep_time is not None) and prep_time.is_integer()) else prep_time
+    rtype = 'Dinner'
+    link = recipe.get('link', '')
+    pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
+    pic_fn = pic_fn if pic_fn is not None else 'default.png'
+
+    recipe = Recipes(title=title, quantity=quantity, user_id=14,
+                     notes=notes, recipe_type=rtype, link=link,
+                     picture=pic_fn, public=True, prep_time=prep_time)
+    return recipe
+
+
+def zuckRecipes(start=6_663, end=26_894):
+    site = 'https://www.allrecipes.com/recipe/'
+    start = 13884
+    for i in range(start, end):
+        try:
+            recipe = recipe_from_link(site+str(i)+'/')  # Returns dict
+            if recipe:  #
+                recipe = zuck(recipe)
+                db.session.add(recipe)
+            else:
+                print(i)
+            if (i % 10) == 0:
+                db.session.commit()
+                # recipe.originator = recipe.id
+                # db.session.commit()
+        except Exception as e:
+            print(e)
+
+# with db.app.app_context():
+#     zuckRecipes()
+
+# 500 for now

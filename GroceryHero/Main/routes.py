@@ -18,6 +18,8 @@ from GroceryHero import db
 
 main = Blueprint('main', __name__)
 
+# allrecipes start: 6_663, end: 26_893
+
 
 @main.route('/', methods=['GET', 'POST'])
 def landing():
@@ -48,7 +50,7 @@ def home():
 
     for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
         groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
-                            for item in groceries[aisle]]
+                            for item in groceries[aisle]]  # Change to dictionary {'ingredient':M, 'strike':0,...}
 
     menu_list = sorted(menu_list, key=lambda x: x.eaten)
     if len(menu_list) > 1:
