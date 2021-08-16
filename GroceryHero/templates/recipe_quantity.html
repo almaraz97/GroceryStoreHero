@@ -4,7 +4,12 @@
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
-            <legend class="border-bottom mb-4">{{ legend }}</legend>
+            <h3 class="border-bottom mb-4">{{ legend }}</h3>
+            <div class="form-inline form-row mb-3">
+              <div class="col">Ingredient Name</div>
+              <div class="col">Quantity</div>
+              <div class="col">Measurement</div>
+            </div>
             {% set index = namespace(value=0) %}
             {% for input_form in form.ingredient_forms %}
                 {% if input_form.ingredient_quantity.errors %}
@@ -14,6 +19,7 @@
                 {%endif%}
                 <div class="form-inline form-row mb-3">
                     <h5 class="col" style="{{error[2]}}">{{ form.ingredients[index.value] }}</h5>
+{#                  <div class="col" style="{{error[2]}}">{{ input_form.ingredient_name(class="form-control") }}</div>#}
                     {# Instead of an h5 have this the ingredient name from prev page but allow edits, take this as name #}
 {#                  <div class="col">#}
 {#                      {{ input_form.ingredient_name(class="form-control") }}#}
