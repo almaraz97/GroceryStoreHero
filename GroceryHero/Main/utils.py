@@ -10,6 +10,7 @@ import umap
 from GroceryHero import db
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
+from datetime import datetime
 
 
 def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list):
@@ -222,7 +223,7 @@ def rem_trail_zero(num):
         return num
 
 
-def stats_graph(user, all_recipes):
+def stats_graph(user, all_recipes, now):
     all_recipes = all_recipes if all_recipes is not None else Recipes.query.filter_by(author=user).all()
     all_recipes = {k.title: k.quantity for k in all_recipes}
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
@@ -271,9 +272,9 @@ def stats_graph(user, all_recipes):
     ax.scatter(x, y)
     for i, txt in enumerate(all_recipes.keys()):
         ax.annotate(txt, (x[i], y[i]), fontsize=8)
-    plt.title(f'{algo}')
-    # plt.show()
-    filepath = str(user.id) + '.jpg'
+    plt.title(f'{algo.upper()}')
+    plt.xlabel('Closer Recipes Are More Similar')
+    filepath = f'{user.id}_{now}.jpg'
     picture_path = os.path.join(current_app.root_path, 'static/visualizations', filepath)
-    plt.savefig(picture_path)
+    plt.savefig(picture_path, dpi=500)
 

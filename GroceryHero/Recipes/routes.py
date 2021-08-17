@@ -17,6 +17,9 @@ from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFound
 
 recipes = Blueprint('recipes', __name__)
 
+# todo add colors to selected filter for non-public
+#
+
 
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
@@ -69,7 +72,7 @@ def recipes_page(view='self'):
 
 @login_required
 @recipes.route('/public_recipes', methods=['GET', 'POST'])
-def public_recipes():  # todo add user credit dynamic
+def public_recipes():  # view for public may be redundant
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     colors, rankings = Colors.rec_colors, {}
@@ -88,7 +91,9 @@ def public_recipes():  # todo add user credit dynamic
             rankings = recipe_svd(all_users)[u_id]
             rankings = [[x[0], round(x[1] ** (1 / 4) * 5, 2)] for x in rankings if
                         (x[0] is not None) and (x[0].user_id != u_id) and (x[0].id not in borrows)]
-            rankings = [x for x in rankings if x[0].recipe_type == types][:5] if types != 'all' else rankings[:5]
+            rankings = [x for x in rankings if ((x[0].recipe_type == types) and
+                                                (x[0].public or x[0].user_id in all_friends.keys()))][:5] \
+                if types != 'all' else rankings[:5]  # Filter types and viewing privileges
     elif not current_user.history:
         flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
     template = 'recipes_public.html'
@@ -140,6 +145,14 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     recipe_post = Recipes.query.get_or_404(recipe_id)
+    author_id = recipe_post.author.id
+    if author_id != current_user.id:
+        following = Followers.query.filter_by(user_id=author_id, follow_id=current_user.id).first()
+        status = following.getStatus() if following is not None else 'None'
+        if (not recipe_post.public) and (status != 1):  # User is trying to look at nonpublic recipe (not friend either)
+            return redirect(url_for('recipes.recipes_page', view='public'))
+    else:
+        status = 'Followed'
     form = UploadRecipeImage()
     quantity = {ingredient: [rem_trail_zero(recipe_post.quantity[ingredient][0]), recipe_post.quantity[ingredient][1]]
                 for ingredient in recipe_post.quantity}  # todo is this still necessary?
@@ -151,15 +164,11 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
     others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
     borrowed = True
-    author_id = recipe_post.author.id
-    if author_id != current_user.id:
-        following = Followers.query.filter_by(user_id=author_id, follow_id=current_user.id).first()
-        status = following.getStatus() if following is not None else 'None'
-    else:
-        status = 'Followed'
+
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
         borrowed = False if borrow is None else borrow.borrowed
+
     if request.method == 'POST':  # Download recipe  # todo mint recipe
         if form.validate_on_submit():
             if form.picture.data:
@@ -594,8 +603,9 @@ import string
 from GroceryHero.Recipes.utils import parse_ingredients
 from GroceryHero.models import Recipes
 from GroceryHero import db, create_app
+from GroceryHero.Users.utils import save_picture
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
-# db.app = create_app()
+db.app = create_app()
 
 
 def recipe_from_link(link):  # page where user enters url
@@ -628,10 +638,9 @@ def zuck(recipe):  # If recipe is not empty
     link = recipe.get('link', '')
     pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
     pic_fn = pic_fn if pic_fn is not None else 'default.png'
-
     recipe = Recipes(title=title, quantity=quantity, user_id=14,
                      notes=notes, recipe_type=rtype, link=link,
-                     picture=pic_fn, public=True, prep_time=prep_time)
+                     picture=pic_fn, public=True, prep_time=prep_time, credit=False)
     return recipe
 
 
@@ -655,5 +664,10 @@ def zuckRecipes(start=6_663, end=26_894):
 
 with db.app.app_context():
     zuckRecipes()
+    
+    
+for recipe in db.session.query(Recipes).all():
+    recipe.public = True
+db.session.commit()
 
 """

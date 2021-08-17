@@ -511,7 +511,7 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
     borrows = {x.recipe_id: x.in_menu for x in
                User_Rec.query.filter_by(user_id=current_user.id).all() if x.borrowed}  # {Borrowed_id: bool(in_menu)}
     view_dict = {'friends': Recipes.user_id.in_(friend_choice),
-                 'public': Recipes.user_id.isnot(None),  # todo Recipes.public.is_(True)?
+                 'public': and_(Recipes.user_id.isnot(None), Recipes.public.is_(True)),
                  'self': Recipes.user_id.is_(current_user.id)}
     sort_dict = {'date': Recipes.date_created.desc(), 'eaten': Recipes.times_eaten.desc(),
                  'alpha': Recipes.title.asc(), 'none': Recipes.title.asc()}

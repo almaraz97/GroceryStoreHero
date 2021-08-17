@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from glob import glob
 import json
 import string
 from flask import render_template, url_for, redirect, Blueprint, request, session
@@ -15,10 +16,7 @@ from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, g
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 
-
 main = Blueprint('main', __name__)
-
-# allrecipes start: 6_663, end: 26_893
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -45,7 +43,8 @@ def home():
               for aisle in Aisles.query.filter_by(author=current_user)}
 
     aisles_order_dict = {i: name for i, (_, name) in enumerate(sorted(aisles.keys(), key=lambda x: x[0]))}
-    aisles_order_dict[max(aisles_order_dict.keys())+1] = 'Other (unsorted)'  # Todo make this global variable
+    if aisles_order_dict:
+        aisles_order_dict[max(aisles_order_dict.keys()) + 1] = 'Other (unsorted)'  # Todo make this global variable
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
 
     for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
@@ -57,7 +56,7 @@ def home():
         preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
         recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
         modifier = 1 / (len(recipes) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
-        harmony = round((norm_stack(recipes, **preferences)**modifier*100), 2)
+        harmony = round((norm_stack(recipes, **preferences) ** modifier * 100), 2)
     username = current_user.username.capitalize()
     statistics = get_history_stats(current_user)
     return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
@@ -154,13 +153,12 @@ def harmony_tool():
 @login_required
 @main.route('/stats', methods=['GET', 'POST'])  # todo include borrowed recipes
 def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe UMAP
-    all_recipes, graph, timeline = None, '', {}
+    history_count_names, ingredient_history, ingredient_count, harmony, avg_harmony, average_menu_len, rules, timeline,\
+        all_recipes, graph, timeline = None, None, None, 0, 0, 0, None, {}, None, '', {}
     history = current_user.history
     clears = len(history)
     if len(history) > 0:
-        rules = apriori_test(current_user)
-        # for rule in rules:
-        #     print(rule)
+        # rules = apriori_test(current_user)
         # listRules = [list(rules[i][0]) for i in range(0, len(rules))]
         timeline = sorted([[datetime.strptime(date, '%Y-%m-%d %H:%M:%S'),
                             [r.title for r in Recipes.query.filter(Recipes.id.in_(rec_list)).all()]]
@@ -200,16 +198,22 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 h = (norm_stack(recs) ** modifier) * 100
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5)
-    else:
-        history_count_names, ingredient_history, ingredient_count, \
-        harmony, avg_harmony, average_menu_len, rules, timeline = None, None, None, 0, 0, 0, None, {}
     if len(current_user.recipes) > 1:
-        if not os.path.isfile(f'GroceryHero/static/visualizations/{str(current_user.id)}.jpg'):
-            stats_graph(current_user, all_recipes)
-        graph = url_for('static', filename='visualizations/' + str(current_user.id) + '.jpg')
+        time_format = '%Y-%m-%d'
+        now = datetime.now()
+        now_str = now.strftime(time_format)
+        user_graphs = glob(f'GroceryHero/static/visualizations/{current_user.id}*')
+        last_graph = user_graphs[-1].split('_')[-1][:-4]  # Remove path and jpeg, leaving datetime
+        last_graph = datetime.strptime(last_graph, time_format) if user_graphs else None
+        if (last_graph is None) or ((now-last_graph).days >= 7):
+            stats_graph(current_user, all_recipes, now=now_str)
+            graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
+        else:
+            graph = url_for('static', filename=f'visualizations/{current_user.id}_{last_graph.strftime(time_format)}.jpg')
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True, clears=clears, graph=graph,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
-                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules, timeline=timeline)
+                           avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
+                           timeline=timeline)
 
 
 @login_required
@@ -337,16 +341,16 @@ def clear_extras():
 #                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
 #                            overlap=overlap, statistics=statistics, borrowed=borrowed)
 
-    # [(1,'a'), (1, 'b'), (2, 'c'), (5,'d'), (3, 'e'), (5,'f'), (2,'g')] -->
-    # [(1,'a'), (2, 'b'), (3, 'c'), (4,'d'), (5, 'e'), (6,'f'), (7,'g')]
-    # print(aisles)
-    # index = 0
-    # aisles_order_dict = {}
-    # numbers = sorted([x[0] for x in aisles.keys()])
-    # for number in numbers:
-    #     same_nums = [x for x in aisles.keys() if x[0] == number]  # Get aisles with same numbers
-    #     for j in range(len(same_nums)):  # Give them each the index in ascending
-    #         aisles_order_dict[index] = same_nums[j][1]
-    #         index += 1
-    # print(len(aisles_order_dict), aisles_order_dict)
-    # aisles_order_dict[len(aisles_order_dict.keys())] = 'Other (unsorted)'
+# [(1,'a'), (1, 'b'), (2, 'c'), (5,'d'), (3, 'e'), (5,'f'), (2,'g')] -->
+# [(1,'a'), (2, 'b'), (3, 'c'), (4,'d'), (5, 'e'), (6,'f'), (7,'g')]
+# print(aisles)
+# index = 0
+# aisles_order_dict = {}
+# numbers = sorted([x[0] for x in aisles.keys()])
+# for number in numbers:
+#     same_nums = [x for x in aisles.keys() if x[0] == number]  # Get aisles with same numbers
+#     for j in range(len(same_nums)):  # Give them each the index in ascending
+#         aisles_order_dict[index] = same_nums[j][1]
+#         index += 1
+# print(len(aisles_order_dict), aisles_order_dict)
+# aisles_order_dict[len(aisles_order_dict.keys())] = 'Other (unsorted)'

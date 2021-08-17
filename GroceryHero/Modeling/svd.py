@@ -4,7 +4,7 @@ import pandas as pd
 # from GroceryHero import db, create_app
 
 
-def recipe_svd(all_users):
+def recipe_svd(all_users):  # Make sure only recommend public or friend recipes
     all_history = [[item for sublist in user.history.values() for item in sublist] for user in all_users if
                    len(user.history.values())>0]  # Transaction history
     all_user_ids = [user.id for user in all_users if len(user.history.values())>0]  # Users ids

@@ -9,7 +9,7 @@ from authlib.integrations.flask_client import OAuth
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-login_manager.login_view = 'users.login'
+login_manager.login_view = 'users.auth_login'
 login_manager.login_message_category = 'info'
 mail = Mail()
 

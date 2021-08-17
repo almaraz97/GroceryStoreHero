@@ -92,35 +92,36 @@
        {% endif %}
     </table>
     </div>
-
-    <h4 class="mx-1 pb-1">Recipe Pair Frequency</h4>
-    <div style="max-height:200px; overflow-y: auto; overflow-x:hidden;" class="mb-3">
-    <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
-      <tr class="bg-success">
-        <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Recipe Combination</th>
-        <th style="color:white; position:sticky; top:-1px;background:#5cb85c; width:20%;">Frequency</th>
-      </tr>
-      {% if frequency_pairs %}
-        {% for item in frequency_pairs %}
-          <tr>
-            {% set group = [] %}
-            {% for recipe in item[0] %}
-              {% set group = group.append(recipe) %}
-            {% endfor %}
-            {% set group = group|join(' + ') %}
-            <td>{{ group }}</td>
-            <td>{{ item[1]|round(3) }}</td>
+    {% if frequency_pairs %}
+      <h4 class="mx-1 pb-1">Recipe Pair Frequency</h4>
+      <div style="max-height:200px; overflow-y: auto; overflow-x:hidden;" class="mb-3">
+        <table class="table table-border table-hover table-striped table-sm ml-2" style="max-width: 100%">
+          <tr class="bg-success">
+            <th style="color:white; position:sticky; top:-1px;background:#5cb85c;">Recipe Combination</th>
+            <th style="color:white; position:sticky; top:-1px;background:#5cb85c; width:20%;">Frequency</th>
           </tr>
-        {% endfor %}
-      {% else %}
-        <tr>
-           <td>None</td>
-           <td>None</td>
-        </tr>
-      {% endif %}
-    </table>
-    </div>
-    <h4 class="mx-1 mb-2">Recipe Clustering (TSNE)</h4>
+          {% if frequency_pairs %}
+            {% for item in frequency_pairs %}
+              <tr>
+                {% set group = [] %}
+                {% for recipe in item[0] %}
+                  {% set group = group.append(recipe) %}
+                {% endfor %}
+                {% set group = group|join(' + ') %}
+                <td>{{ group }}</td>
+                <td>{{ item[1]|round(3) }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+               <td>None</td>
+               <td>None</td>
+            </tr>
+          {% endif %}
+        </table>
+      </div>
+    {% endif %}
+    <h4 class="mx-1 mb-2">Recipe Clustering</h4>
       <img src="{{ graph }}" style="max-width: 100%"/>
   </div>
 </article>

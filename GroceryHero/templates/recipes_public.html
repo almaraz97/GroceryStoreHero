@@ -12,7 +12,7 @@
   <div class="mt-4" style="margin-bottom: 15px;">
     <form action="{{ url_for('recipes.public_recipes', view=view, sort=sort, types=types, page=1) }}" method="POST">
       <div class="input-group flex-nowrap">
-        <input type="text" class="form-control" placeholder="Recipe Name" name="search">
+        <input type="text" class="form-control" placeholder="Enter Recipe Name or Genre" name="search">
         <div class="input-group-prepend">
           <button class="input-group-text" id="addon-wrapping">Search</button>
         </div>
@@ -20,10 +20,10 @@
     </form>
   </div>
   <!-- Recipe Pages Bar -->
-  <div class="row p-0 mt-4 mx-0 mb-1">
-    <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
-    <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
-    <a class="col-4 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+  <div class="row mt-4 mx-0 mb-1">
+    <a class="col-4 p-0 btn btn-success" style="border-radius: 3px 0 0 3px;" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
+    <a class="col-4 p-0 btn btn-success" style="border-radius: 0 0 0 0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+    <a class="col-4 p-0 btn btn-success" style="border-radius: 0 3px 3px 0;" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
   </div>
 
 <!-- Sort By Button -->
@@ -33,7 +33,7 @@
     <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">There are {{ count }} public recipes</p>
     <button type="button" class="px-3 btn btn-sm btn-outline-info dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
-      {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
+      {% set select = 'color: #fff; text-decoration: none; background-color: #17a2b8;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
@@ -46,6 +46,7 @@
   <button type="button" class="px-3 mr-2 btn btn-sm btn-outline-success dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
     <div class="dropdown-menu">
+    {% set select = 'color: #fff; text-decoration: none; background-color: #28a745;' %}
       <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='all', page=1) }}">All</a>
       <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Breakfast', page=1) }}">Breakfast</a>
       <a class="dropdown-item" style="{% if types == 'Lunch' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort=sort, types='Lunch', page=1) }}">Lunch</a>
@@ -63,6 +64,7 @@
   <div class="col-4 px-2">
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
+    {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='alpha', types=types,  page=1) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', sort='hot', types=types,  page=1) }}">Trending</a>
@@ -74,6 +76,7 @@
   <div class="col-4 px-0">
     <button type="button" class="px-2 btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
+    {% set select = 'color: #fff; text-decoration: none; background-color: #28a745;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='all', page=1) }}">All</a>
       <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.public_recipes', types='Breakfast', page=1) }}">Breakfast</a>
@@ -124,7 +127,9 @@
       {% endif %}
       <div class="media-body ml-4">
         <div class="article-metadata">  <!--article-metadata-->
+          {% if recipe.credit %}
             <div class="text-muted" style="float: right">@{{ recipe.author.username }}</div>
+          {% endif %}
           <a style="font-size: 18px;" class="mr-2" href="{{ url_for('recipes.recipe_single', recipe_id=recipe.id) }}">{{ recipe.title }}</a>
         </div>
         <p class="article-content mt-2 mb-2">{{ recipe.quantity|join(', ') }}</p>

@@ -15,7 +15,7 @@
 <div style="margin-bottom: 15px;">
   <form action="{{ url_for('recipes.recipes_page', sort=sort, types=types, view=view, page=1) }}" method="POST">
     <div class="input-group flex-nowrap">
-        {% if friends is defined %}{% set search_str = "Recipe Name" %}{% else %}{% set search_str = "Recipe Name" %}{% endif %}
+        {% if friends is defined %}{% set search_str = "Enter Recipe Name or Genre" %}{% else %}{% set search_str = "Enter Recipe Name or Genre" %}{% endif %}
         <input type="text" class="form-control" placeholder="{{ search_str }}" name="search">
       <div class="input-group-prepend">
         <button class="input-group-text" id="addon-wrapping">Search</button>
@@ -52,6 +52,7 @@
 <div class="d-inline">
   <button type="button" class="px-3 mr-2 btn btn-sm btn-outline-success dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
+    {% set select = 'color: #fff; text-decoration: none; background-color: #28a745;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='all', page=1, view=view) }}">All</a>
       <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Breakfast', page=1, view=view) }}">Breakfast</a>
@@ -70,6 +71,7 @@
   <div class="col-4 px-2">
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
+    {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
@@ -81,6 +83,7 @@
   <div class="col-4 px-0">
     <button type="button" class="btn btn-block btn-sm btn-outline-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Recipe Type</button>
+    {% set select = 'color: #fff; text-decoration: none; background-color: #28a745;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if types == 'all' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='all', page=page, view=view) }}">All</a>
       <a class="dropdown-item" style="{% if types == 'Breakfast' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort=sort, types='Breakfast', page=1, view=view) }}">Breakfast</a>
