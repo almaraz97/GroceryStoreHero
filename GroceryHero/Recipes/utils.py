@@ -523,7 +523,6 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
     if sort in sort_dict:
         recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q)).order_by(sort_q).\
             paginate(page=page, per_page=per)
-
     else:
         recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q, view_q)).all()
         sorting = borrow_sort if sort == 'borrow' else trend_sort
@@ -532,9 +531,14 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
     if (sort == 'none') and (view == 'self'):  # User didnt want to sort, keep in_menu on top
         in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).all()
         in_menu = in_menu + Recipes.query.filter(Recipes.id.in_([x for x in borrows.keys() if borrows[x]])).all()
-        for i, recipe in enumerate(in_menu):  # Puts menu items first in recipe_list
-            recipe_list.items.remove(recipe)
+        i = 0
+        for recipe in in_menu:  # Puts menu items first in recipe_list
+            try:
+                recipe_list.items.remove(recipe)
+            except ValueError:  # Flask Paginate object: can't remove recipe (& put on top) if not on first page
+                continue
             recipe_list.items.insert(i, recipe)
+            i += 1
         recipe_ids = {recipe.title: recipe.id for recipe in recipe_list.items}
     count = recipe_list.total
     return recipe_list, count, in_menu, borrows, recipe_ids
