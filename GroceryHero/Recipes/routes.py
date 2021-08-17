@@ -17,9 +17,6 @@ from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFound
 
 recipes = Blueprint('recipes', __name__)
 
-# todo add colors to selected filter for non-public
-#
-
 
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])

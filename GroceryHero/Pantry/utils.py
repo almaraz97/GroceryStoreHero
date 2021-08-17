@@ -3,48 +3,48 @@ from GroceryHero.Main.utils import convert_frac
 from GroceryHero.Recipes.utils import Measurements
 
 
+# Todo need to add Other (unsorted) shelf. When adding recipes, have button on page to add their ingredients to pantry
+#  after shopping for them. Make it easy to add/modify what you bought
+# todo store ingredients to a shelf so user doesnt have to keep specifying their shelf. Don't allow double shelfing?
+# todo on menu clear add questions about what was consumed or remaining in pantry. Use this to recommend next recipes
+
 def update_pantry(user, recipes):  # From the clear menu using recipes
-    pantry = user.pantry
-    if pantry:
-        recipe_ingredients = []
-        for recipe in recipes:
-            for ing, M in recipe.quantity.items():
-                quantity = convert_frac(M[0])  # Returns a float of some kind
-                unit = M[1]
-                recipe_ingredients.append([ing, quantity, unit])
+    pantry = user.pantry  # {"Grains": {"Rice": [2, "Pound"], "Bread Crumbs": [1.0, "US Cup"]}}
+    if not pantry:  # User's pantry is empty
+        return None
 
-        for ing in recipe_ingredients:  # See what's being used
-            item = ing[0]
-            ing_value = ing[1]
-            ing_unit = ing[2]
-            for shelf in pantry:  # Look for it in each shelf
-                if item in pantry[shelf]:
-                    pantry_unit = pantry[shelf][item][1]
-                    if Measurements.str_compatibility(ing_unit, pantry[shelf][item][1]):
-                        pantry_value = float(pantry[shelf][item][0])
-                        # print(ing_value, ing_unit)
-                        # print(type(ing_value), type(ing_unit))
-                        # print(pantry_value, pantry_unit)
-                        # print(type(pantry_value), type(pantry_unit))
-                        recipe_ing = Measurements(value=ing_value, unit=ing_unit)  # Get recipe ing that is being used
-                        pantry_ing = Measurements(value=pantry_value, unit=pantry_unit)
-                        remaining = pantry_ing - recipe_ing  # Subtract the two (creates new object)
-                        # print(recipe_ing)
-                        # print(pantry_ing)
-                        # print(remaining)
-                        if remaining.value > 0:  # If there is anything remaining
-                            pantry[shelf][item] = [remaining.value, remaining.unit]  # Make whats left the new value
-                        else:
-                            del pantry[shelf][item]  # Ingredient is gone
-                        break
-        # print(pantry)
-        # user.pantry = {}
-        # db.session.commit()  # todo why does it need 2 commits to update value?
-        # user.pantry = pantry
-        # db.session.commit()
+    quantities = [recipe.quantity for recipe in recipes]
+    ing_measures = []  # Turn recipe ingredients into measurement objects
+    for recipe in quantities:  # dictionary = {str(ingredient): [float(value), str(unit)]}
+        for ing_name, measure in recipe.items():
+            value = convert_frac(measure[0])
+            unit = measure[1]
+            ing_measures.append(Measurements(name=ing_name, value=value, unit=unit))
+
+    for recipe_ing in ing_measures:  # Subtract ingredient from pantry
+        for shelf in pantry:
+            shelf_ingredients = pantry[shelf]
+            if recipe_ing.name in shelf_ingredients:
+                ing = recipe_ing.name
+                value = float(shelf_ingredients[ing][0])
+                unit = shelf_ingredients[ing][1]
+                shelf_ing = Measurements(name=ing, value=value, unit=unit)
+                if shelf_ing.compatible(recipe_ing):
+                    remaining = shelf_ing - recipe_ing
+                    remaining.value = int(remaining.value) if remaining.value.is_integer() else remaining.value
+                    if remaining.value:  # Not 0
+                        pantry[shelf][ing] = [remaining.value, remaining.unit]
+                    else:
+                        del pantry[shelf][ing]  # Remove empty ingredient from shelf
+                    break  # Ingredient was subtracted, don't remove it from another shelf
+
+    user.pantry = {}
+    db.session.commit()  # todo why does it need 2 commits to update value?
+    user.pantry = pantry
+    db.session.commit()
 
 
-def add_pantry(user, ingredients, shelf, add):
+def add_pantry(user, ingredients, shelf, add):  # Manually adding or removing ingredients from pantry
     pantry = user.pantry
     for ing in ingredients:
         if ing in pantry[shelf]:
@@ -56,11 +56,10 @@ def add_pantry(user, ingredients, shelf, add):
             else:
                 pantry[shelf][ing] = [total.value, total.unit]
         else:  # Ingredient does not exist
-            if not add:  # is being removed
-                pass
-            else:
+            if add:  # Add it to pantry
                 pantry[shelf][ing] = ingredients[ing]
     user.pantry = {}
     db.session.commit()  # todo why does it need 2 commits to update value?
     user.pantry = pantry
     db.session.commit()
+

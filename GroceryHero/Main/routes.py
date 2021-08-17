@@ -67,7 +67,7 @@ def home():
 @login_required
 @main.route('/home/clear', methods=['GET', 'POST'])
 def clear_menu():
-    menu_recipes = Recipes.query.filter_by(author=current_user, in_menu=True, eaten=True).all()
+    menu_recipes = Recipes.query.filter_by(author=current_user, in_menu=True, eaten=True).all()  # Only eaten ones
     borrowed_recipes = User_Rec.query.filter_by(user_id=current_user.id, in_menu=True, eaten=True).all()
     menu_recipes = menu_recipes + borrowed_recipes
     if len(menu_recipes) > 0:
