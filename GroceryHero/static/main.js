@@ -63,20 +63,23 @@ $(document).ready(function() {
     });
 });
 
-// Strike-through on grocery-list items // todo not working
+// Strike-through on grocery-list items
 $(document).ready(function() {
     $('.groceries').on("click", function () {
         let strike = $(this).attr('strike');
         let item_id = $(this).attr('itemid');
+        const ul = this.parentElement;
 
         if (this.style.textDecoration==='line-through') {  // If there is an <s> ?higher up DOM
             this.style.textDecoration = "none";
             this.style.opacity = '1';
             strike = 0;
+            ul.insertBefore(this, ul.firstChild);
         } else {  // Not struck out, strike it
             this.style.textDecoration = "line-through";
             this.style.opacity = '0.5';
             strike = 1;
+            ul.appendChild(this);
         }
 
         req = $.ajax({
@@ -85,7 +88,30 @@ $(document).ready(function() {
             data: {strike: strike, item_id: item_id}
         });
     });
+    // // todo order each aisle alphabetically
+    // let aisles = document.getElementsByClassName();
+    // let grocery_aisles = document.getElementsByClassName('aisle');  // should be list
+    // for (let i=0; i<grocery_aisles; i++){
+    //     grocery_aisles
+    // }
 });
+
+        // if(element.type === "checkbox") {
+        //     if( element.checked ){
+        //         element.parentNode.style.textDecoration = "line-through";
+        //         element.parentNode.style.opacity = 0.5;
+        //
+        //         const parent = element.parentElement.parentElement;
+        //         parent.appendChild(element.parentElement);
+        //     }else{
+        //         element.parentNode.style.textDecoration = "none";
+        //         element.parentNode.style.opacity = 1;
+        //
+        //         const parent = element.parentElement.parentElement;
+        //         parent.insertBefore(element.parentElement, parent.firstChild);
+        //     }
+        // }
+    // }
 
 // Change menu button color and remove from menu in landing page
 $(document).ready(function() {
