@@ -65,28 +65,24 @@ $(document).ready(function() {
 
 // Strike-through on grocery-list items // todo not working
 $(document).ready(function() {
-    $('.groceries').on("click", function(){
-    // let strike = $(this).attr('strike')
-    let item_id = $(this).attr('itemid')
-    $(this).css("text-decoration-color","text-muted");  // Not sure what this is doing
+    $('.groceries').on("click", function () {
+        let strike = $(this).attr('strike');
+        let item_id = $(this).attr('itemid');
 
-    if($(this).closest("s").length) {  // If there is an s =>1 else s=>0 ///Not sure what .closest does
-        $(this).removeClass('text-muted')
-        Content = $(this).parent("s").html();  // Why user .parent?
-        $curParent = $(this).closest("s");
-        $(Content).insertAfter($curParent);
-        $(this).closest("s").remove();
-        strike = 0
-    }
-    else {
-        $(this).addClass('text-muted')
-        $(this).wrapAll("<s />");
-        strike = 1
-    }
-    req = $.ajax({
-        url : '/home/change_grocerylist',
-        type: 'POST',
-        data: {strike: strike, item_id:item_id}
+        if (this.style.textDecoration==='line-through') {  // If there is an <s> ?higher up DOM
+            this.style.textDecoration = "none";
+            this.style.opacity = '1';
+            strike = 0;
+        } else {  // Not struck out, strike it
+            this.style.textDecoration = "line-through";
+            this.style.opacity = '0.5';
+            strike = 1;
+        }
+
+        req = $.ajax({
+            url: '/home/change_grocerylist',
+            type: 'POST',
+            data: {strike: strike, item_id: item_id}
         });
     });
 });

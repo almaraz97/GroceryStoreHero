@@ -159,11 +159,11 @@
               <ul class="mt-2 mb-4 ml-1" style="line-height: 25px;">
                 {% for item in groceries[key] %}
                   {% if item[-1] == 1 %}
-                    <s><li class="groceries text-muted" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                    <li style="text-decoration: line-through; opacity: 0.5;" class="groceries" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                       <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
-                    </li></s>
+                    </li>
                   {% else %}
-                    <li class="groceries" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                    <li style="text-decoration: none; opacity: 1;" class="groceries" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                       <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                     </li>
                   {% endif %}
