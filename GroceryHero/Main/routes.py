@@ -1,20 +1,19 @@
-import os
-from datetime import datetime, timedelta
-from glob import glob
-import json
-import string
-from flask import render_template, url_for, redirect, Blueprint, request, session
 from GroceryHero.HarmonyTool import norm_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import FullQuantityForm
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
-from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User
-from flask_login import current_user, login_required
+from GroceryHero.models import Recipes, Aisles, Actions, User_Rec
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, apriori_test, convert_frac, stats_graph)
+                                    show_harmony_weights, convert_frac, stats_graph, change_extras)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
+from flask import render_template, url_for, redirect, Blueprint, request, session
+from flask_login import current_user, login_required
+from datetime import datetime
+from glob import glob
+import json
+import string
 
 main = Blueprint('main', __name__)
 
@@ -45,6 +44,8 @@ def home():
     aisles_order_dict = {i: name for i, (_, name) in enumerate(sorted(aisles.keys(), key=lambda x: x[0]))}
     if aisles_order_dict:
         aisles_order_dict[max(aisles_order_dict.keys()) + 1] = 'Other (unsorted)'  # Todo make this global variable
+    else:
+        aisles_order_dict[0] = 'Other (unsorted)'
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
 
     for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
@@ -303,54 +304,3 @@ def change_to_eaten():
     db.session.commit()
     return json.dumps({'result': 'success'})
 
-
-@login_required
-@main.route('/extras_clear', methods=['GET', 'POST'])
-def clear_extras():
-    current_user.extras = []
-    db.session.commit()
-    update_grocery_list(current_user)
-    return redirect(url_for('main.home'))
-
-    # data = {'aisle_forms': [{'content': [(item, item) for item in aisle.content.split(', ')]} for aisle in aisles]}
-    # form = AddExtrasForm(data=data)
-    # form = ExtrasForm()
-    # form.content.choices = [(x, x) for x in sorted(aisles.content.split(', '))]
-    # form = []
-    # for aisle in aisles:
-    #     entry = ExtrasForm()
-    #     entry.content.choices = [('', 'Select Options (ctrl+click)')] + \
-    #                             [(x, x) for x in sorted(aisle.content.split(', '))]
-    #     form.append([aisle.title, entry])
-    # entry.content.choices = [(x, x) for x in sorted(aisle.content.split(', '))]
-    # print(entry.content.choices)
-    # form.aisle_forms.append_entry(entry)
-    # form.aisle_forms.entries
-    # print(form.aisle_forms.entries)
-    # for entry in form.aisle_forms:
-    #     print(entry)
-    #     aisle = [aisle for aisle in aisles if aisle.title == entry.name]
-    #     print(aisle)
-    #     entry.content.choices = aisle.contents.split(', ')
-    #     print()
-    # print(form.data)
-    # print(form.aisle_forms.data)
-
-# if current_user.id == 9 and current_user.username == 'Andrea':
-#     return render_template('FOODSLIMEHOME.html', title='👏Home👏', menu_recipes=menu_list, groceries=groceries,
-#                            sidebar=True, home=True, username=username, harmony_score=harmony, aisles=aisles,
-#                            overlap=overlap, statistics=statistics, borrowed=borrowed)
-
-# [(1,'a'), (1, 'b'), (2, 'c'), (5,'d'), (3, 'e'), (5,'f'), (2,'g')] -->
-# [(1,'a'), (2, 'b'), (3, 'c'), (4,'d'), (5, 'e'), (6,'f'), (7,'g')]
-# print(aisles)
-# index = 0
-# aisles_order_dict = {}
-# numbers = sorted([x[0] for x in aisles.keys()])
-# for number in numbers:
-#     same_nums = [x for x in aisles.keys() if x[0] == number]  # Get aisles with same numbers
-#     for j in range(len(same_nums)):  # Give them each the index in ascending
-#         aisles_order_dict[index] = same_nums[j][1]
-#         index += 1
-# print(len(aisles_order_dict), aisles_order_dict)
-# aisles_order_dict[len(aisles_order_dict.keys())] = 'Other (unsorted)'
