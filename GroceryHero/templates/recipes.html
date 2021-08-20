@@ -23,14 +23,14 @@
     </div>
   </form>
 </div>
-<div class="row p-0 mx-0 mb-1 mt-4">
+<div class="row  mx-0 mb-1 mt-4">
   {% if title == 'Friend Recipes' %}
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+    <a class="col-4 p-0 btn btn-success" style="border-radius: 3px 0 0 3px;" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
   {% else %}
-    <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
+    <a class="col-4 p-0 btn btn-success" style="border-radius: 3px 0 0 3px;" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
   {% endif %}
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
+  <a class="col-4 p-0 btn btn-success" style="border-radius: 0 0 0 0;" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
+  <a class="col-4 p-0 btn btn-success" style="border-radius: 0 3px 3px 0;" href="{{ url_for('recipes.friend_feed') }}">Friend Feed</a>
 </div>
 <!-- Sort By Buttons -->
 <div class="d-none d-sm-none d-md-flex d-lg-flex">
