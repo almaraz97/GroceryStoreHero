@@ -88,12 +88,39 @@ $(document).ready(function() {
             data: {strike: strike, item_id: item_id}
         });
     });
-    // // todo order each aisle alphabetically
-    // let aisles = document.getElementsByClassName();
-    // let grocery_aisles = document.getElementsByClassName('aisle');  // should be list
-    // for (let i=0; i<grocery_aisles; i++){
-    //     grocery_aisles
-    // }
+  // // todo order each aisle alphabetically
+  let grocery_aisles = document.getElementsByClassName('aisle');  // should be list of uls
+
+  for (let i=0; i<grocery_aisles.length; i++){  // for each ul
+      let not_crossed = [];
+      let not_crossed_items = [];
+      let crossed = [];
+      let crossed_items = [];
+      let ul = grocery_aisles[i];
+      let lis = ul.getElementsByTagName("li");
+
+      for (let j=0; j<lis.length; j++){  // for each li
+          let item = lis[j]; console.log(item);
+          if (item.style.textDecoration==='line-through'){
+              crossed.push(j); //console.log('struck')
+              // ul.appendChild(item);
+          }else{
+              not_crossed.push(j)
+          }
+      }
+      for (let i=0; i<not_crossed.length; i++){  // get not crossed items
+        console.log(not_crossed[i])
+        not_crossed_items.push(lis[not_crossed[i]]);
+      }
+      for (let i=0; i<crossed.length; i++){  // get crossed items
+        crossed_items.push(lis[crossed[i]]);
+      }
+
+      lis = not_crossed_items;  // set ul list to have not crossed items
+      for (let i=0; i<crossed_items.length; i++){  // append crossed items to bottom of ul list
+        ul.appendChild(crossed_items[i]);
+      }
+  }
 });
 
         // if(element.type === "checkbox") {

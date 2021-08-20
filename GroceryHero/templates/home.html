@@ -128,16 +128,14 @@
               {% endif %}
               {% if groceries[key] %}  <!-- If aisle has grocery ingredients -->
                 <h5 class="m-0">{{ key }}</h5>  <!-- Aisle name -->
-                <ul class="mt-2 mb-3 ml-1" style="line-height: 25px;">
+                <ul class="mt-2 mb-3 ml-1 aisle" style="line-height: 25px;">
                   {% for item in groceries[key] %}
                     {% if item[-1] == 1 %} <!--Are they struck out or not-->
-                      <s>
-                        <li class="groceries text-muted" style="text-decorator-color: text-muted; cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                        <li style="text-decoration: line-through; opacity: 0.5;" class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                           <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                         </li>
-                      </s>
                     {% else %}
-                      <li class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
+                      <li style="text-decoration: none; opacity: 1;" class="groceries" style="cursor: pointer;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
                          <i style="font-size: 14px;">{{ item[1].value }} {{ item[1].unit.lower() }}{% if item[1].value != 1 %}s{% endif %}</i>
                       </li>
                     {% endif %}
@@ -156,7 +154,7 @@
               {% if groceries[key]|length < 1 %}
                 {% set index.value = index.value - 1 %}
               {% endif %}
-              <ul class="mt-2 mb-4 ml-1" style="line-height: 25px;">
+              <ul class="mt-2 mb-4 ml-1 aisle" style="line-height: 25px;">
                 {% for item in groceries[key] %}
                   {% if item[-1] == 1 %}
                     <li style="text-decoration: line-through; opacity: 0.5;" class="groceries" style="text-decorator-color: text-muted;" strike="{{ item[-1] }}" itemid="{{ item[0] }}, {{ item[1].unit }}">{{ item[0] }}
@@ -223,4 +221,22 @@
     </div>
   </div>
   </div>
+<script>
+  {#// todo order each aisle alphabetically#}
+  {#// let aisles = document.getElementsByClassName();#}
+  {#let grocery_aisles = document.getElementsByClassName('aisle');  // should be list of uls#}
+  {#console.log(grocery_aisles)#}
+  {#for (let i=0; i<grocery_aisles.length; i++){#}
+  {#    let lis = grocery_aisles[i];#}
+  {#    console.log(lis.length)#}
+  {#    for (let j=0; j<lis.length; j++){#}
+  {#        let item = lis[j];#}
+  {#        console.log(item)#}
+  {#        if (item.strike){#}
+  {#            console.log('item struck')#}
+  {#            lis.appendChild(item);#}
+  {#        }#}
+  {#    }#}
+  {#}#}
+</script>
 {% endblock content %}
