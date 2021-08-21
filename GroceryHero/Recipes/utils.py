@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 import pytz
 from flask import url_for
 from flask_login import current_user
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_
 from math import ceil
 from GroceryHero import db
 from GroceryHero.HarmonyTool import recipe_stack
@@ -524,7 +524,7 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
                  'self': Recipes.user_id.is_(current_user.id)}
     sort_dict = {'date': Recipes.date_created.desc(), 'eaten': Recipes.times_eaten.desc(),
                  'alpha': Recipes.title.asc(), 'none': Recipes.title.asc(),
-                 'hot': (Recipes.times_eaten/(datetime.now()-Recipes.date_created)).desc()}
+                 'hot': (Recipes.times_eaten / (datetime.now()-Recipes.date_created)).desc()}
     search_q = Recipes.title.isnot(None) if search is None else \
         or_(Recipes.title.contains(search), Recipes.recipe_genre.contains(search))
     types_q = Recipes.recipe_type.isnot(None) if (type_ == 'all') else Recipes.recipe_type.is_(type_)
@@ -627,136 +627,10 @@ def convert_history():
 #                                    for ingredient in aisle.content.split(', ')])
 #         aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
 #         aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])
-
-
-# for recipe in Recipes.query.all():
-#     recipe.quantity = {' '.join([word.capitalize() for word in ingredient.split(' ')]): [1, 'Unit']
-#                        for ingredient in recipe.content.split(', ')}
-#     recipe.title = ' '.join([word.capitalize() for word in recipe.title.split(' ')])
-# for user in User.query.all():
-#     user.harmony_preferences = {'excludes': [], 'similarity': 50, 'groups': 3, 'possible': 0, 'recommended': {},
-#                                 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {}, 'sticky_weights': {},
-#                                 'recipe_ids': {}, 'menu_weight': 1}
-#     user.extras = []
-# for aisle in Aisles.query.all():
-#     aisle.content = ', '.join([' '.join([word.capitalize() for word in ingredient.split(' ')])
-#                                for ingredient in aisle.content.split(', ')])
-#     aisle.title = ' '.join([word.capitalize() for word in aisle.title.split(' ')])
-#     aisle.store = ' '.join([word.capitalize() for word in aisle.store.split(' ')])
-
-#     case_dict = {('friends', 'hot', 'all'): None, ('friends', 'date', 'all'): None,
-#                  ('friends', 'eaten', 'all'): None, ('friends', 'alpha', 'all'): None,
-#                  ('friends', 'borrow', 'all'): None,
-#                  ('self', 'hot', 'all'): None, ('self', 'date', 'all'): None,
-#                  ('self', 'eaten', 'all'): None, ('self', 'alpha', 'all'): None,
-#                  ('self', 'borrow', 'all'): None,
-#                  ('public', 'hot', 'all'): None, ('public', 'date', 'all'): None,
-#                  ('public', 'eaten', 'all'): None, ('public', 'alpha', 'all'): None,
-#                  ('public', 'borrow', 'all'): None,
 #
-#                  ('friends', 'hot'): None, ('friends', 'date'): None,
-#                  ('friends', 'eaten'): None, ('friends', 'alpha'): None,
-#                  ('friends', 'borrow'): None,
-#                  ('self', 'hot'): None, ('self', 'date'): None,
-#                  ('self', 'eaten'): None, ('self', 'alpha'): None,
-#                  ('self', 'borrow'): None,
-#                  ('public', 'hot'): None, ('public', 'date'): None,
-#                  ('public', 'eaten'): None, ('public', 'alpha'): None,
-#                  ('public', 'borrow'): None,
-#
-#                  ('friends', 'hot', 'all', True): None, ('friends', 'date', 'all', True): None,
-#                  ('friends', 'eaten', 'all', True): None, ('friends', 'alpha', 'all', True): None,
-#                  ('friends', 'borrow', 'all', True): None,
-#                  ('self', 'hot', 'all', True): None, ('self', 'date', 'all', True): None,
-#                  ('self', 'eaten', 'all', True): None, ('self', 'alpha', 'all', True): None,
-#                  ('self', 'borrow', 'all', True): None,
-#                  ('public', 'hot', 'all', True): None, ('public', 'date', 'all', True): None,
-#                  ('public', 'eaten', 'all', True): None, ('public', 'alpha', 'all', True): None,
-#                  ('public', 'borrow', 'all', True): None,
-#
-#                  ('friends', 'hot', True): None, ('friends', 'date', True): None,
-#                  ('friends', 'eaten', True): None, ('friends', 'alpha', True): None,
-#                  ('friends', 'borrow', True): None,
-#                  ('self', 'hot', True): None, ('self', 'date', True): None,
-#                  ('self', 'eaten', True): None, ('self', 'alpha', True): None,
-#                  ('self', 'borrow', True): None,
-#                  ('public', 'hot', True): None, ('public', 'date', True): None,
-#                  ('public', 'eaten', True): None, ('public', 'alpha', True): None,
-#                  ('public', 'borrow', True): None}
-# if sort in ['date', 'eaten']:
-#     sorting = Recipes.date_created.desc() if sort == 'date' else Recipes.times_eaten.desc()
-#     recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).order_by(sorting).paginate(
-#         page=page, per_page=per) if types != 'all' else \
-#         Recipes.query.order_by(sorting).paginate(page=page, per_page=per)
-# elif sort in ['hot', 'borrow']:
-#     recipe_list = Recipes.query.filter((Recipes.recipe_type.is_(types))).paginate(
-#         page=page, per_page=per) if types != 'all' else Recipes.query.paginate(page=page, per_page=per)
-#     if sort == 'hot':  # Eaten//date
-#         recipe_list.items = sorted(recipe_list.items, key=lambda x: date_sort(x), reverse=True)
-#     else:  # Most borrowed
-#         all_borrowed = User_Rec.query.filter_by(borrowed=True).all()  # currently borrowed
-#         all_borrowed = [x.recipe_id for x in all_borrowed]
-#         recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
-# else:  # Date
-#     sorting = Recipes.date_created.desc()
-#     recipe_list = Recipes.query.order_by(sorting).paginate(page=page, per_page=per)
+# cast(Recipes.times_eaten, FLOAT) /
+#                         cast(func.extract('epoch', datetime.now()) - func.extract('epoch', Recipes.date_created),
+#                              FLOAT).desc()
+# 1.0 * Recipes.times_eaten / ((func.extract('epoch', datetime.now()) -
+#                                                       func.extract('epoch', Recipes.date_created)) / 60.0).desc()
 
-# if (search is not None) and (search not in ['Recipe Options', '']):
-#     recipe_list.items = [recipe for recipe in recipe_list.items if search.lower() in recipe.title.lower()
-#                          or search.lower() in recipe.quantity.keys()]
-# if sort == 'hot':  # Eaten//date
-#     recipe_list.items = sorted(recipe_list.items, key=lambda x: date_sort(x), reverse=True)
-# else:  # Most borrowed
-#     recipe_list.items = sorted(recipe_list.items, key=lambda x: all_borrowed.count(x.id), reverse=True)
-# if view == 'friends':
-#     all_friends = list(friend_choice)  # Friend_choice is all friends if no specific friend was chosen
-#     friends_q = Recipes.user_id.in_(all_friends)
-#     if sort in sort_dict:
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q, friends_q)). \
-#             order_by(sort_dict[sort]).paginate(page=page, per_page=per)  # Get all recipes
-#     elif sort == 'borrow':  # Trending sort or Borrow sort
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q, friends_q)). \
-#             order_by(Recipes.times_borrowed).paginate(page=page, per_page=per)  # Get all recipes
-#         # recipe_list = recipe_list.paginate(page=page, per_page=per)
-#         # print(recipe_list.items)
-#         # print(len(recipe_list.items))
-#         # recipe_list.items = sort_dict[sort](recipe_list)  # Only sorts per page
-#         # print(recipe_list.items)
-#     else:  # todo hot
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q, friends_q)). \
-#             order_by(Recipes.trend_index).paginate(page=page, per_page=per)  # Get all recipes
-#     count = recipe_list.count()
-# elif view == 'public':
-#     count = Recipes.query.filter(Recipes.user_id.isnot(current_user.id)).count()  # todo and that are public
-#     if sort in sort_dict:
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q)). \
-#             order_by(sort_dict[sort]).paginate(page=page, per_page=per)  # Get all recipes
-#     elif sort == 'borrow':  # Borrow or Trending
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q)).\
-#             order_by(Recipes.times_borrowed).paginate(page=page, per_page=per)
-#         # recipe_list.items = sort_dict[sort](recipe_list)
-#     else:
-#         recipe_list = Recipes.query.filter(
-#             and_(Recipes.public.is_(True), search_q, types_q)). \
-#             order_by(Recipes.trend_index).paginate(page=page, per_page=per)
-# else:  # Your own recipes (including incorrect given view)
-#     if sort in sort_dict:
-#         # Own recipes, all types, with all borrows, with search term, and ordered
-#         recipe_list = Recipes.query.filter(
-#             and_(or_(Recipes.author == user, Recipes.id.in_(borrows.keys()))), search_q, types_q).\
-#             order_by(sort_dict[sort]).paginate(page=page, per_page=per)  # Get all recipes
-#     elif sort == 'borrow':  # todo Most borrowed
-#         print(3)
-#         recipe_list = Recipes.query.filter(
-#             and_(or_(Recipes.author == user, Recipes.id.in_(borrows.keys()))), search_q, types_q). \
-#             order_by(Recipes.times_borrowed).paginate(page=page, per_page=per)  # Get all recipes
-#     else:  # todo Hot/Trending
-#         print(4)
-#         recipe_list = Recipes.query.filter(
-#             and_(or_(Recipes.author == user, Recipes.id.in_(borrows.keys()))), search_q, types_q). \
-#             order_by(Recipes.trend_index).paginate(page=page, per_page=per)  # Get all recipes

@@ -343,15 +343,15 @@ def recipe_download(recipe_id):
         return redirect(url_for('main.landing'))
     all_recipes = Recipes.query.filter_by(author=current_user).all()
     recipe = Recipes.query.filter_by(id=recipe_id).first()
-    for r in all_recipes:
+    for r in all_recipes:  # Make sure user doesn't already have the recipe
         if recipe == r:
             flash(f'Recipe {recipe.title} already in recipe library', 'danger')
             return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
-    originator = recipe.originator
-    originator = originator if originator != recipe_id else recipe_id
+    original_id = recipe.originator  # Original recipe ID
+    original_id = original_id if original_id != recipe_id else recipe_id  # If downloading original recipe, take its ID
     new_rec = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
                       link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
-                      picture=recipe.picture, servings=recipe.servings, originator=originator,
+                      picture=recipe.picture, servings=recipe.servings, originator=original_id,
                       price=recipe.price, options=recipe.options)
     db.session.add(new_rec)
     db.session.commit()
@@ -598,10 +598,10 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
 """
 import string
 from GroceryHero.Recipes.utils import parse_ingredients
-from GroceryHero.models import Recipes
-from GroceryHero import db, create_app
 from GroceryHero.Users.utils import save_picture
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+from GroceryHero.models import Recipes
+from GroceryHero import db, create_app
 db.app = create_app()
 
 

@@ -51,7 +51,7 @@ class User(db.Model, UserMixin):
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
                                              'ingredient_excludes': [], 'algorithm': 'Balanced'})
     pro = db.Column(db.Boolean, nullable=False, default=False)  # Harmony Tool
-    grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False
+    grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False, make dict instead of [gl, overlap]
     # overlap = db.Column(db.Integer, nullable=False, default=0)  # todo
     extras = db.Column(db.JSON, nullable=False, default=[])  # todo False
     date_joined = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -94,9 +94,17 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     """ quantity column  # WIP
     {section title:  # If title is <"MAIN"> then don't display it as a section
         {ingredient:
-            [value, unit, descriptor(optional, chopped, dried)]
+            [value, unit, descriptor(optional, chopped, dried), brand?]
+            OR
+            {value: float, unit: str, descriptor: str, brand: str}
         }
     }
+    OR just
+    {ingredient:
+            [value, unit, descriptor(optional, chopped, dried), brand?]
+            or
+            {value: float, unit: str, descriptor: str, brand: str}
+        }
     """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -113,12 +121,13 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     recipe_genre = db.Column(db.String(32), nullable=True)  # Asian, Hispanic, Southern
     public = db.Column(db.Boolean, nullable=False, default=False)  # Public recipe
     servings = db.Column(db.Integer, nullable=False, default=1)
-    originator = db.Column(db.Integer, nullable=True)  # Original creator of the recipe, in spite of downloads
+    originator = db.Column(db.Integer, nullable=True)  # Original recipe ID, in spite of downloads
     price = db.Column(db.JSON, nullable=False, default={})  # Price per ingredient to total price
-    borrows = db.relationship('User_Rec', backref='author', lazy=True)  # Borrowed versions of the recipe
+    borrows = db.relationship('User_Rec', backref='source', lazy=True)  # Borrowed versions of the recipe
 
     options = db.Column(db.JSON, nullable=False, default={})  # Optional/replacement ingredient {ing: ['opt', 'rep']}
-    restrictions = db.Column(db.JSON, nullable=False, default=[])  # Gluten-free,
+    # sections = db.Column(db.JSON, nullable=False, default={})  # {'main': [ingredients], 'sauce':[ingredients]}, null?
+    restrictions = db.Column(db.JSON, nullable=False, default=[])
     # lactose-free
     # dairy-free
     # vegetarian
@@ -142,12 +151,32 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     credit = db.Column(db.Boolean, nullable=False, default=False)  # If they want their name shown to non-friends
 
     def __repr__(self):
-        return f"Recipes('{self.title}', '{list(self.quantity.keys())[:5]}...')"
+        return f"Recipes('{self.title}', 'ingredients: {len(self.quantity.keys())}', 'created: {self.date_created.strftime('%Y-%m-%d')}')"
 
     def __eq__(self, other):
         if isinstance(other, Recipes):
             return (self.title == other.title) and (self.quantity.keys() == other.quantity.keys())
         return False
+
+
+class User_Rec(db.Model):  # For borrowed recipes
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
+    borrowed = db.Column(db.Boolean, nullable=False, default=False)
+    borrowed_dates = db.Column(db.JSON, nullable=False, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
+    downloaded = db.Column(db.Boolean, nullable=False, default=False)
+    downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
+    in_menu = db.Column(db.Boolean, nullable=False, default=False)
+    eaten = db.Column(db.Boolean, nullable=False, default=False)
+    times_eaten = db.Column(db.Integer, nullable=True, default=0)
+    hidden = db.Column(db.Boolean, nullable=False, default=False)
+
+    comments = db.Column(db.JSON, nullable=False, default={})  # {Date: str}  # If person comments on recipe_id
+    diffs = db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # todo cant change more than 50% of it? Maybe someone who eat a modified one contributes eatens?
+
+    def __repr__(self):
+        return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
 
 
 class Aisles(db.Model):  # todo make shelf table?
@@ -180,26 +209,6 @@ class Actions(db.Model):  # Where friend feed stuff will be held
 
     def __repr__(self):
         return f"Actions(User {self.user_id} {self.type_}ed {self.recipe_ids} on {self.date_created})"
-
-
-class User_Rec(db.Model):  # For borrowed recipes
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
-    borrowed = db.Column(db.Boolean, nullable=False, default=False)
-    borrowed_dates = db.Column(db.JSON, nullable=False, default={})  # {'Borrowed':[datetime], 'Unborrowed':[datetime]}
-    downloaded = db.Column(db.Boolean, nullable=False, default=False)
-    downloaded_dates = db.Column(db.JSON, nullable=False, default=[])
-    in_menu = db.Column(db.Boolean, nullable=False, default=False)
-    eaten = db.Column(db.Boolean, nullable=False, default=False)
-    times_eaten = db.Column(db.Integer, nullable=True, default=0)
-    hidden = db.Column(db.Boolean, nullable=False, default=False)
-
-    comments = db.Column(db.JSON, nullable=False, default={})  #  # {Date: str}  # If person comments on recipe_id
-    diffs = db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
-    # todo cant change more than 50% of it? Maybe someone who eat a modified one contributes eatens?
-
-    def __repr__(self):
-        return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
 
 
 class User_Act(db.Model):  # For comments and likes on other's actions

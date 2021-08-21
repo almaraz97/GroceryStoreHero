@@ -123,22 +123,6 @@ $(document).ready(function() {
   }
 });
 
-        // if(element.type === "checkbox") {
-        //     if( element.checked ){
-        //         element.parentNode.style.textDecoration = "line-through";
-        //         element.parentNode.style.opacity = 0.5;
-        //
-        //         const parent = element.parentElement.parentElement;
-        //         parent.appendChild(element.parentElement);
-        //     }else{
-        //         element.parentNode.style.textDecoration = "none";
-        //         element.parentNode.style.opacity = 1;
-        //
-        //         const parent = element.parentElement.parentElement;
-        //         parent.insertBefore(element.parentElement, parent.firstChild);
-        //     }
-        // }
-    // }
 
 // Change menu button color and remove from menu in landing page
 $(document).ready(function() {

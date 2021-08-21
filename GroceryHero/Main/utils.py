@@ -10,17 +10,15 @@ import umap
 from GroceryHero import db
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
-from datetime import datetime
 
 
-def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list):
+def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list) -> (dict, int):
     """
     Recipe_menu_list = [Model.Recipe,...]
     aisles = [{aisle_name: [ingredient_name,...]},...]
     extras=[[aisle,[ings]]
     """
     aisles = {k: v if v is not None else [] for k, v in aisles.items()}  # Ensure aisle list not None (make db default)
-    extras = [x[1] for x in extras]
     all_ing_names = [recipe.quantity for recipe in recipe_menu_list]  # Format: [{ingredient: [value, unit]},...]
     all_ing_names = sorted([item for sublist in all_ing_names for item in sublist])  # [ingredient,...]
 
@@ -38,16 +36,7 @@ def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list):
             unit = dictionary[ing_name][1]
             measures_list.append(Measurements(name=ing_name, value=value, unit=unit))
     # Combine like ingredients
-    measures_set = []  # [Measurements(),...]
-    compared = []  # Items that have already been added from same unit
-    for i, M1 in enumerate(measures_list):
-        for j, M2 in enumerate(measures_list):
-            if not any([i == j, i >= j, i in compared, j in compared,
-                        M1.name != M2.name, not M1.compatible(M2)]):  # Not self-comp and not reversed comp
-                M1 += M2
-                compared.append(j)  # j merged with i, skip it next time
-        if i not in compared:
-            measures_set.append(M1)  # [3 cup, 4 ounces, 7 grams]
+    measures_set = combineMeasures(measures_list)
     # Sort ingredients into aisles, convert measurement objects to lists with a strike variable
     aisle_sorted_ings = {aisle: sorted([ingredient.to_str()+[0] for ingredient in measures_set
                                         if ingredient.name in ings], key=lambda x: x[0])
@@ -67,13 +56,81 @@ def update_grocery_list(user):  # Get selected recipes, extra ingredients, and u
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()  # Combine own and borrowed
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
-    entries = user.extras if user.extras is not None else []  # TODO REFORMAT no aisle [ingredient, value, unit, strike]
+    extras = user.extras if user.extras is not None else []
 
-    grocery_list, overlap = aisle_grocery_sort(menu_list, aisles, entries)
+    grocery_list, overlap = aisle_grocery_sort(menu_list, aisles, extras)  # list(dict), list
     user.grocery_list = []
     db.session.commit()
     user.grocery_list = [grocery_list, overlap]
     db.session.commit()
+
+
+def change_extras(old_extras, added_extras, grocery_list, aisles, remove=False):  # overlap, only track for recipes
+    grocery_list, overlap = grocery_list
+    grocery_list = {aisle: [[Measurements(name=ing[0], value=ing[1], unit=ing[2]), ing[3]] for ing in grocery_list[aisle]]
+                    for aisle in grocery_list}
+    aisles = {aisle.title: aisle.content.split(', ') for aisle in aisles}
+    aisles['Other (unsorted)'] = aisles['Other (unsorted)'] if 'Other (unsorted)' in aisles else ''
+
+    deletes, adds = [], []  # Track deleted ingredients from groceries and added extras to groceries
+    for i, extra_ing in enumerate(added_extras.copy()):
+        found = False
+        extra_ing = Measurements(name=extra_ing[0], value=extra_ing[1], unit=extra_ing[2])
+        for aisle in aisles:
+            if aisle in grocery_list:  # Could probably optimize this more
+                for j, aisle_ing in enumerate(grocery_list[aisle]):  # Check if extra has entry in grocery list aisle
+                    aisle_ing = aisle_ing[0]
+                    if extra_ing == aisle_ing:  # __eq__ checks name and unit compatibility
+                        found = True  # Should this be difference if the item is strike out already?
+                        total = (aisle_ing - extra_ing) if remove else (aisle_ing + extra_ing)
+                        if total.value > 0:
+                            grocery_list[aisle][j] = [total, 0]  # Keep strike
+                            adds.append(i)  # Track which extras found in aisle items, add them later if add & !match
+                        else:
+                            deletes.append(j)  # Track which grocery list items were removed, safe remove them after
+                        break  # Extra matched an aisle ingredient
+                if found:  # Go to next extra item
+                    break
+
+            # Extra ingredient does not have an entry in the grocery list, add it to correct aisle section
+            if (extra_ing.name in aisles[aisle]) and (aisle in grocery_list):
+                if extra_ing.value > 0:  # Only have positive ingredients in grocery list
+                    grocery_list[aisle] = sorted(grocery_list[aisle] + [[extra_ing, 0]], key=lambda x: x[0].name)
+                adds.append(i)
+                break
+            elif extra_ing.name in aisles[aisle]:  # Aisle has extra ing but theres no section for it in grocery list
+                grocery_list[aisle] = [extra_ing, 0]
+                adds.append(i)
+                break
+
+    extras = [*old_extras, *added_extras]  # combine old extras with new items
+    # if len(extras) > 1:
+    #     extras = combineMeasures([Measurements(name=x[0], value=x[1], unit=x[2])
+    #                               for x in extras])  # Combines whether adding or clearing extras, gets cleared in route
+    #     extras = [x.to_str() for x in extras] if extras else extras
+    # print(extras)
+    grocery_list = {aisle: [ing[0].to_str()+[ing[1]] for j, ing in enumerate(grocery_list[aisle]) if j not in deletes]
+                    for aisle in grocery_list}
+    return extras, [grocery_list, overlap]
+
+
+def combineMeasures(measures: list) -> list:  # Assert Measures objects?
+    """[['Cauliflower', 1.0, 'US Cup', 0], ['Cauliflower', -1.0, 'US Cup', 0],
+    ['Cauliflower', -1.0, 'US Cup', 0], ['Cauliflower', 1.0, 'US Cup', 0],
+    ['Cauliflower', -2.0, 'US Cup', 0], ['Cauliflower', 1.0, 'US Cup', 0]]"""
+    measures_set = []  # [Measurements(),...]
+    compared = []  # Items that have already been added from same unit
+    for i, M1 in enumerate(measures):
+        for j, M2 in enumerate(measures):
+            print(i, j, M1, M2)
+            if not any([i == j, i >= j, i in compared, j in compared,
+                        M1.name != M2.name, not M1.compatible(M2)]):  # Not self-comp and not reversed comp
+                M1 += M2
+                print()
+                compared.append(j)  # j merged with i, skip it next time
+        if i not in compared:
+            measures_set.append(M1)  # [3 cup, 4 ounces, 7 grams]
+    return measures_set
 
 
 def ensure_harmony_keys(user):

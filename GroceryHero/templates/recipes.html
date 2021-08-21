@@ -40,7 +40,7 @@
     <p class="text-muted float-left mb-0 pt-2" style="font-size: 16px">{% if label == 'friend' %}There are{% else %}You have{% endif %} {{ count }} {{ label }} recipes</p>
     <button type="button" class="px-3 btn btn-sm btn-outline-info dropdown-toggle float-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
-      {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
+      {% set select = 'color: #fff; text-decoration: none; background-color: #17a2b8;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>
@@ -71,7 +71,7 @@
   <div class="col-4 px-2">
     <button type="button" class="btn btn-sm btn-block btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
      Sort By</button>
-    {% set select = 'color: #fff; text-decoration: none; background-color: #007bff;' %}
+    {% set select = 'color: #fff; text-decoration: none; background-color: #17a2b8;' %}
     <div class="dropdown-menu">
       <a class="dropdown-item" style="{% if sort == 'alpha' or sort == 'none' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='alpha', types=types, page=1, view=view) }}">Alphabetical</a>
       <a class="dropdown-item" style="{% if sort == 'hot' %}{{ select }}{% endif %}" href="{{ url_for('recipes.recipes_page', sort='hot', types=types,  page=1, view=view) }}">Trending</a>

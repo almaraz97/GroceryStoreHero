@@ -219,7 +219,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
 
 @login_required
 @main.route('/extras', methods=['GET', 'POST'])
-def add_to_extras():
+def add_to_extras():  # Get ingredient names in form
     aisles = Aisles.query.filter_by(user_id=current_user.id).all()
     ingredients = [aisle.content.split(', ') for aisle in aisles]
     choices = sorted({item for sublist in ingredients for item in sublist if item})
@@ -229,7 +229,7 @@ def add_to_extras():
         choices = form.multi.data
         if form.other.data != '':
             choices = choices + [string.capwords(x.strip()) for x in form.other.data.split(', ') if x.strip() != '']
-        if choices == '':  # No selection  # todo add this to
+        if choices == '':  # No selection  # todo add this to form?
             return redirect(url_for('main.add_to_extras'))
         # if '' in choices:  # Default and maybe selections
         #     choices.remove('')  # Remove default
@@ -242,43 +242,68 @@ def add_to_extras():
 
 @login_required
 @main.route('/extras_add/<ingredients>', methods=['GET', 'POST'])
-def add_extras(ingredients):
+def add_extras(ingredients):  # Add ingredient units/values
     ingredients = json.loads(ingredients)
     data = {'ingredient_forms': [{f'ingredient_quantity': 1.0, f'ingredient_type': 'Unit'}
                                  for _ in ingredients]}
     form = FullQuantityForm(data=data)  # List of dictionaries
     form.ingredients = ingredients
     if form.validate_on_submit():
-        # user.grocery_list [{'Another Name': [['Bread Crumbs', 1, 'Unit', 0], ...], 'Alex': []}, overlap[int]]
+        # user.grocery_list [{'Another Name': [['Bread Crumbs', 1, 'Unit', 0], ...], 'Alex': []}, int(overlap)]
         # Extras list Format: [ [AisleName, [IngredientName, quantity, unit, BoolCheck]],...]
-        entries, unsorted = [], []
-        aisles = Aisles.query.filter_by(user_id=current_user.id).all()
-        for i, ingredient_form in enumerate(form.ingredient_forms):  # For item in user entered extras
-            for j, aisle in enumerate(aisles):  # For aisle in user aisles
-                if form.ingredients[i] in aisle.content.split(', ') and j <= len(aisles):  # If ingredient in that aisle
-                    entries.append([aisle.title, [form.ingredients[i],
-                                                  convert_frac(ingredient_form.ingredient_quantity.data),
-                                                  ingredient_form.ingredient_type.data, 0]])  # Add to extras
-                    break
-                else:  # All aisles have been searched, no matches
-                    unsorted.append([form.ingredients[i],  # todo verify this works
-                                     convert_frac(ingredient_form.ingredient_quantity.data),
-                                     ingredient_form.ingredient_type.data, 0])
-        for item in unsorted:
-            entries.append(['Other (unsorted)', item])  # Add to extras
-        e_copy = current_user.extras.copy()
-        for item in entries:  # Add new extras to old extras column
-            e_copy.append(item)
-            current_user.extras = e_copy
-        update_grocery_list(current_user)
+        added_extras = []
+        for i, ingredient_form in enumerate(form.ingredient_forms):
+            ing_name = form.ingredients[i]
+            value = convert_frac(ingredient_form.ingredient_quantity.data)
+            unit = ingredient_form.ingredient_type.data
+            added_extras.append([ing_name, value, unit, 0])
+
+        old_extras = current_user.extras.copy()
+        grocery_list = current_user.grocery_list.copy()
+        aisles = current_user.aisles
+        new_extras, new_grocery_list = change_extras(old_extras, added_extras,
+                                                     grocery_list, aisles, remove=False)
+        current_user.extras, current_user.grocery_list = [], []
+        db.session.commit()
+        current_user.extras = new_extras
+        current_user.grocery_list = new_grocery_list
         db.session.commit()
         return redirect(url_for('main.home'))
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
 
 
 @login_required
+@main.route('/extras_clear', methods=['POST'])
+def clear_extras():
+    old_extras = current_user.extras.copy()
+    grocery_list = current_user.grocery_list.copy()
+    aisles = current_user.aisles
+
+    _, new_grocery_list = change_extras(old_extras, old_extras, grocery_list, aisles, remove=True)
+    current_user.extras, current_user.grocery_list = [], []
+    db.session.commit()
+    current_user.grocery_list = new_grocery_list
+    db.session.commit()
+    return redirect(url_for('main.home'))
+
+
+# @login_required
+# @main.route('/remove_extra', methods=['POST'])
+# def remove_extra():
+#     # old_extras = current_user.extras.copy()
+#     # grocery_list = current_user.grocery_list.copy()
+#     #
+#     # new_extras, new_grocery_list = change_extras(old_extras, [], grocery_list, remove=True)
+#     # current_user.extras, current_user.grocery_list = [], []
+#     # db.session.commit()
+#     # current_user.grocery_list = new_grocery_list
+#     # db.session.commit()
+#     return redirect(url_for('main.home'))
+
+
+@login_required
 @main.route('/home/change_grocerylist', methods=['POST'])
-def change_to_grocerylist():
+def change_to_grocerylist():  # Change strike
     item_id = request.form['item_id'].split(', ')
     strike = int(request.form['strike'])
     temp, overlap = current_user.grocery_list.copy()
@@ -294,7 +319,7 @@ def change_to_grocerylist():
 
 
 @login_required
-@main.route('/home/change_eaten', methods=['POST'])  # todo might affect friends list menu stuff
+@main.route('/home/change_eaten', methods=['POST'])
 def change_to_eaten():
     recipe_id = request.form['recipe_id']
     recipe = Recipes.query.filter_by(id=recipe_id).first()
