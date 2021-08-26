@@ -24,7 +24,6 @@
     </div>
     {% for aisle in aisles %}
         <article class="media content-section">
-<!--            <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + aisle.author.image_file) }}">-->
             {% if aisle.order > 9 %}
                 <h4 class="text-muted mr-2">{{ aisle.order }}</h4>
             {% elif aisle.order != 0 %}
@@ -35,12 +34,10 @@
             <div class="media-body">
                 <div class="article-metadata">
                     <a style="font-size: 18px;" class="mr-2" href="{{ url_for('aisles.aisle_single', aisle_id=aisle.id) }}">{{ aisle.title }}</a>
-<!--                    <small class="text-muted">{{ aisle.date_created.strftime('%Y-%m-%d') }}</small>-->
                     {% if aisle.store %}
                         <small style="font-size:15px; float:right;">Store: {{ aisle.store }} </small>
                     {% endif %}
                 </div>
-                <!--<h2><a class="article-title" href="#">{{ aisle.content }}</a></h2>-->
                 <p class="article-content">{{ aisle.content }}</p>
 
             </div>

@@ -1,3 +1,4 @@
+from GroceryHero.Aisles.utils import GenericAisles
 from GroceryHero.HarmonyTool import norm_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import FullQuantityForm
@@ -40,12 +41,44 @@ def home():
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed.keys())).all()
     aisles = {(aisle.order, aisle.title): aisle.content.split(', ')
               for aisle in Aisles.query.filter_by(author=current_user)}
-
+    if not aisles:
+        aisles = {(aisle.order, aisle.title): aisle.content.split(', ')
+                  for aisle in GenericAisles().get_all()}
     aisles_order_dict = {i: name for i, (_, name) in enumerate(sorted(aisles.keys(), key=lambda x: x[0]))}
     if aisles_order_dict:
         aisles_order_dict[max(aisles_order_dict.keys()) + 1] = 'Other (unsorted)'  # Todo make this global variable
     else:
         aisles_order_dict[0] = 'Other (unsorted)'
+    groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
+
+    for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
+        groceries[aisle] = [[item[0], Measurements(value=item[1], unit=item[2]), item[-1]]
+                            for item in groceries[aisle]]  # Change to dictionary {'ingredient':M, 'strike':0,...}
+    menu_list = sorted(menu_list, key=lambda x: x.eaten)
+    if len(menu_list) > 1:
+        preferences = get_harmony_settings(current_user.harmony_preferences, holds=['max_sim', 'rec_limit', 'modifier'])
+        recipes = {recipe.title: [x for x in recipe.quantity] for recipe in menu_list}
+        modifier = 1 / (len(recipes) + 1) if current_user.harmony_preferences['modifier'] == 'Graded' else 1.0
+        harmony = round((norm_stack(recipes, **preferences) ** modifier * 100), 2)
+    username = current_user.username.capitalize()
+    statistics = get_history_stats(current_user)
+    return render_template('home.html', title='Home', menu_recipes=menu_list, groceries=groceries,
+                           sidebar=True, home=True, username=username, harmony_score=harmony, aisles=len(aisles),
+                           overlap=overlap, statistics=statistics, borrowed=borrowed, order_dict=aisles_order_dict)
+
+
+@main.route('/home/demo')
+def home_demo():
+    menu_list, groceries, username, harmony, overlap, aisles, most_eaten, least_eaten, statistics, borrowed = \
+        [], [], [], 0, 0, None, None, None, None, None
+
+    menu_list = []   # Get good public recipes for this
+    aisles = {(aisle.order, aisle.title): aisle.content.split(', ')
+              for aisle in Aisles.query.filter_by(author=current_user)}
+
+    aisles_order_dict = {i: name for i, (_, name) in enumerate(sorted(aisles.keys(), key=lambda x: x[0]))}
+    if aisles_order_dict:
+        aisles_order_dict[max(aisles_order_dict.keys()) + 1] = 'Other (unsorted)'  # Todo make this global variable
     groceries, overlap = current_user.grocery_list if len(current_user.grocery_list) > 1 else [{}, 0]
 
     for aisle in groceries:  # Ingredient to Measurement object  # Must be in db because of strike variable
@@ -204,8 +237,8 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         now = datetime.now()
         now_str = now.strftime(time_format)
         user_graphs = glob(f'GroceryHero/static/visualizations/{current_user.id}*')
-        last_graph = user_graphs[-1].split('_')[-1][:-4]  # Remove path and jpeg, leaving datetime
-        last_graph = datetime.strptime(last_graph, time_format) if user_graphs else None
+        last_graph = user_graphs[-1].split('_')[-1][:-4] if user_graphs else None  # Rem path and jpeg, leave datetime
+        last_graph = datetime.strptime(last_graph, time_format) if user_graphs is not None else None
         if (last_graph is None) or ((now-last_graph).days >= 7):
             stats_graph(current_user, all_recipes, now=now_str)
             graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
@@ -261,6 +294,8 @@ def add_extras(ingredients):  # Add ingredient units/values
         old_extras = current_user.extras.copy()
         grocery_list = current_user.grocery_list.copy()
         aisles = current_user.aisles
+        if not aisles:
+            aisles = GenericAisles().get_all()
         new_extras, new_grocery_list = change_extras(old_extras, added_extras,
                                                      grocery_list, aisles, remove=False)
         current_user.extras, current_user.grocery_list = [], []

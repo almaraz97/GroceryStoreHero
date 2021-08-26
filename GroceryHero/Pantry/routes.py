@@ -153,3 +153,25 @@ def shelf_add(ingredients):
         # db.session.commit()
         return redirect(url_for('pantry.pantry_page'))
     return render_template('add_extras.html', legend='Add Their Units', form=form, add=True)
+
+
+@pantry.route('/compatible_recipes', methods=['GET'])
+@login_required
+def compatible_recipes(ings, algo=1):
+    # algo_dict = {0: 'Charity', 1: 'Fairness', 2: 'Balanced', 3: 'Selfish', 4: 'Greedy'}
+    # algorithm = algo_dict[algo]
+    recipe_ids = {r.id: r for r in Recipes.query.all()}
+    recipes_dict = {r.id: [x.lower() for x in r.quantity.keys()] for r in recipe_ids.values()}
+
+    scores = [[recipe_ids[rid], sum(1 for ing in ings if ing in ingredients)]
+              for rid, ingredients in recipes_dict.items()]
+
+    # scores = [[recipe_ids[rid],
+    #            norm_stack({rid: ingredients, 0: ings}, algorithm=algorithm)]
+    #           for rid, ingredients in recipes_dict.items()]
+    if scores:
+        recommendations = sorted(scores, key=lambda x: x[1], reverse=True)
+        recommendations = [x for x in recommendations if x[1] > 0]
+        return recommendations
+    else:
+        return

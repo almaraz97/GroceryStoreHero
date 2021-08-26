@@ -7,6 +7,7 @@ from GroceryHero import db
 from GroceryHero.Main.utils import update_grocery_list
 from GroceryHero.models import Aisles, Recipes
 from GroceryHero.Aisles.forms import AisleForm, AisleBarForm
+from GroceryHero.Aisles.utils import GenericAisles
 
 aisles = Blueprint('aisles', __name__)
 
@@ -32,13 +33,14 @@ def aisles_page():
             else:
                 return redirect(url_for('aisles.aisles_page'))
         aisle_list = Aisles.query.filter_by(author=current_user).order_by(Aisles.order).all()
-        aisle_list = [a for a in aisle_list if a.order > 0]+[a for a in aisle_list if a.order < 1]
+        aisle_list = [a for a in aisle_list if a.order > 0] + [a for a in aisle_list if a.order < 1]
+        # Ingredients for form that adds unadded ingredients
         aisle_ingredients = set([item for sublist in aisle_list for item in sublist.content.split(', ')])
         if len(aisle_list) > 0:
             form.aisles.choices = [aisle.title for aisle in aisle_list]
         ingredients = [set(recipe.quantity.keys()) for recipe in Recipes.query.filter_by(author=current_user).all()]
         choices = sorted(set([item for sublist in ingredients for item in sublist if item not in aisle_ingredients]))
-        form.unadded.choices = [x for x in zip([0]+choices, ['-- select options (clt+click) --']+choices)]
+        form.unadded.choices = [x for x in zip([0] + choices, ['-- select options (clt+click) --'] + choices)]
         if len(form.unadded.choices) < 1:
             form.unadded.choices = zip(['All Items Sorted!'], ['All Items Sorted!'])
     return render_template('aisles.html', aisles=aisle_list, title='Aisles', sidebar=True, form=form, aisle=True)
@@ -55,7 +57,7 @@ def new_aisle():
         store = form.store.data if form.store.data != '' else None
         order = int(form.order.data) if form.order.data != '' else 0
         form = Aisles(title=string.capwords(form.title.data.strip()), order=order,
-                      content=', '.join([word.strip().capitalize() for word in form.content.data.split(',')]),
+                      content=', '.join(set([word.strip().capitalize() for word in form.content.data.split(',')])),
                       store=store, author=current_user)
         db.session.add(form)
         db.session.commit()
@@ -80,7 +82,7 @@ def update_aisle(aisle_id):
     form = AisleForm()
     if form.validate_on_submit():
         aisle.title = string.capwords(form.title.data)
-        aisle.content = ', '.join([string.capwords(word.strip()) for word in form.content.data.split(',')])
+        aisle.content = ', '.join(set([string.capwords(word.strip()) for word in form.content.data.split(',')]))
         aisle.store = ' '.join([word.strip().capitalize() for word in form.store.data.split(' ')])
         aisle.order = int(form.order.data) if form.order.data != '' else 0
         db.session.commit()  # Don't need to do db.add since we are changing an existing entry
@@ -111,6 +113,12 @@ def delete_aisle(aisle_id):
     return redirect(url_for('aisles.aisles_page'))
 
 
+@aisles.route('/aisles/download_generic', methods=['POST'])
+@login_required
+def download_generic():
+    pass
+
+
 def get_unique_order_choices(user):
     aisle_numbers = [x.order for x in Aisles.query.filter_by(user_id=user.id).all()]
     new_numbers, index = [], 1
@@ -118,4 +126,4 @@ def get_unique_order_choices(user):
         if index not in aisle_numbers:
             new_numbers.append(index)
         index += 1
-    return [(0, 'No Order')]+[(x, x) for x in new_numbers]
+    return [(0, 'No Order')] + [(x, x) for x in new_numbers]

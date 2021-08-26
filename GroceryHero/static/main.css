@@ -154,7 +154,30 @@ border-color: #28a745;
 /*    border-left-color: $color;*/
 /*  }*/
 /*}*/
-/*{'teal': '#20c997', 'yellow': '#ffc107', 'indigo': '#6610f2', 'red': '#dc3545', 'success': '#5cb85c',
-                  'pink': '#e83e8c', 'secondary': '#6c757d', 'info': '#17a2b8'}*/
+/*{'teal': '#20c997', 'yellow': '#ffc107', 'indigo': '#6610f2', 'red': '#dc3545', 'success': '#5cb85c',*/
+/*                  'pink': '#e83e8c', 'secondary': '#6c757d', 'info': '#17a2b8'}*/
 
+/*footer {*/
+/*background-color: #dc3545;*/
+/*background-color: #ff8200;*/
+/*background-color: #ffc107;*/
+/*background-color: #5cb85c;*/
+/*background-color: #17a2b8;*/
+/*background-color: #6610f2;*/
+/*background-color: #e83e8c;*/
+/*background-color: #000000;*/
+/*background-color: #6c757d;*/
 
+/*}  {*/
+/*'Side': '#dc3545',*/
+/*'Beverage': '#ff8200',*/
+/*'Snack': '#ffc107',*/
+/*'Breakfast': '#5cb85c',*/
+/*'Lunch': '#17a2b8',*/
+/*'Dinner': '#6610f2',*/
+/*'Dessert': '#e83e8c',*/
+/*'Drink': '#000000',*/
+/*'Other': '#6c757d'}*/
+
+/*'Lunch': '#17a2b8', 'Dinner': '#6610f2',*/
+/*                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'*/

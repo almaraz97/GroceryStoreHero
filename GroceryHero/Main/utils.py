@@ -8,6 +8,7 @@ from flask import current_app
 from sklearn.manifold import TSNE
 import umap
 from GroceryHero import db
+from GroceryHero.Aisles.utils import GenericAisles
 from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
 
@@ -47,15 +48,14 @@ def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list) -> (d
 
 
 def update_grocery_list(user):  # Get selected recipes, extra ingredients, and user aisles. Sort and store them
-    # TODO Look at difference between old grocery list and new one, combine if necessary (save strike status)
-    #  happens for clear_menu, add_extras, clear_extras, update_recipe_quantity, delete_recipe, change_to_menu
-    #  clear_menu, add_to_menu, multi_add_to_menu and multi_add_to_menu2
     menu_list = [recipe for recipe in Recipes.query.filter_by(author=user).order_by(Recipes.title).all()
                  if recipe.in_menu]  # Recipes in menu
     borrowed = [x.recipe_id for x in User_Rec.query.filter_by(user_id=user.id, in_menu=True).all()]  # Borrowed in menu
     menu_list = menu_list + Recipes.query.filter(Recipes.id.in_(borrowed)).all()  # Combine own and borrowed
     all_aisles = Aisles.query.filter_by(author=user)
     aisles = {aisle.title: aisle.content.split(', ') for aisle in all_aisles}
+    if not aisles:
+        aisles = {aisle.title: aisle.content.split(', ') for aisle in GenericAisles().get_all()}
     extras = user.extras if user.extras is not None else []
 
     grocery_list, overlap = aisle_grocery_sort(menu_list, aisles, extras)  # list(dict), list
@@ -104,11 +104,6 @@ def change_extras(old_extras, added_extras, grocery_list, aisles, remove=False):
                 break
 
     extras = [*old_extras, *added_extras]  # combine old extras with new items
-    # if len(extras) > 1:
-    #     extras = combineMeasures([Measurements(name=x[0], value=x[1], unit=x[2])
-    #                               for x in extras])  # Combines whether adding or clearing extras, gets cleared in route
-    #     extras = [x.to_str() for x in extras] if extras else extras
-    # print(extras)
     grocery_list = {aisle: [ing[0].to_str()+[ing[1]] for j, ing in enumerate(grocery_list[aisle]) if j not in deletes]
                     for aisle in grocery_list}
     return extras, [grocery_list, overlap]
@@ -122,11 +117,9 @@ def combineMeasures(measures: list) -> list:  # Assert Measures objects?
     compared = []  # Items that have already been added from same unit
     for i, M1 in enumerate(measures):
         for j, M2 in enumerate(measures):
-            print(i, j, M1, M2)
             if not any([i == j, i >= j, i in compared, j in compared,
                         M1.name != M2.name, not M1.compatible(M2)]):  # Not self-comp and not reversed comp
                 M1 += M2
-                print()
                 compared.append(j)  # j merged with i, skip it next time
         if i not in compared:
             measures_set.append(M1)  # [3 cup, 4 ounces, 7 grams]

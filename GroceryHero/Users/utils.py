@@ -16,10 +16,8 @@ from GroceryHero.models import Aisles, Recipes, Followers, User
 class Colors:
     # {'yellow': '#ffc107', 'pink': '#e83e8c', 'secondary': '#6c757d'}
     rec_colors = {'Breakfast': '#5cb85c', 'Lunch': '#17a2b8', 'Dinner': '#6610f2',
-                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Other': '#6c757d'}
-    # act_colors = {'Delete': '#dc3545', 'Add': '#5cb85c', 'Update': '#20c997',
-    #               'Clear': '#6610f2', 'Borrow': '#17a2b8', 'Unborrow': '#6c757d',
-    #               'Award': '#fffff', 'Milestone': '#00000'}
+                  'Dessert': '#e83e8c', 'Snack': '#ffc107', 'Side': '#dc3545',
+                  'Beverage': '#ff8200', 'Cocktail': '#000000', 'Other': '#6c757d'}
     act_colors = {'Delete': '#dc3545', 'Unborrow': '#dc3545',
                   'Add': '#5cb85c', 'Borrow': '#5cb85c', 'Download': '#5cb85c',
                   'Update': '#20c997', 'Clear': '#6610f2',

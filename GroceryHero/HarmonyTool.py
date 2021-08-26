@@ -55,7 +55,7 @@ def dot(v1, v2):
 #     return score/max_l
 
 
-def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None, tastes=None, sticky_weights=None,
+def norm_stack(input_recipe_dict: dict, algorithm='Balanced', ingredient_weights=None, tastes=None, sticky_weights=None,
                ingredient_excludes=None, p_score=1):
     """
     Input: Recipe dictionary {name:ingredient list}, the desired norm, and optional arguments
@@ -66,8 +66,9 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
         ingredient_excludes = []
     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
     recipe_ingredients = {item for sublist in input_recipe_dict.values()
-                                     for item in sublist if item not in ingredient_excludes} # sorted(set([
-    # Todo add similarity argument to filter ingredients that are basically the same
+                          for item in sublist if item not in ingredient_excludes}  # sorted(set([
+    # Todo add similarity argument to filter ingredients that are basically the same?
+    #
     # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
     recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe]
                            else 0
@@ -98,10 +99,10 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
     avg_vec = [avg_mag * x for x in avg_vec]
     # Maximum Magnitude (magnitude normalized with number of comparisons)
     perfect_mag = (math.factorial(len(comp_vec)) / (2 * math.factorial(len(comp_vec) - 2))) / 2
-    # Maximum Direction multiplied by Maximum Magnitude
+    # ### Maximum Direction multiplied by Maximum Magnitude ### #
     perfect_vec = [perfect_mag * (1.0 * len(avg_vec)) for _ in avg_vec]
     if algorithm == 'Charity':  # Zero norm
-        score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
+        score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)  # Sum?
         max_l = perfect_vec[0]
     elif algorithm == 'Fairness':  # One norm
         score = sum(avg_vec)
@@ -119,7 +120,7 @@ def norm_stack(input_recipe_dict, algorithm='Balanced', ingredient_weights=None,
         max_l = max(perfect_vec)
     else:
         score, max_l = 1, 1
-    # Average taste of recipe dict
+    # ### Average taste of recipe dict ### #
     avg_taste = 1
     if tastes is not None:
         taste_comparisons = list(itertools.combinations(input_recipe_dict, 2))  # All taste comparisons for in_rec_dict
@@ -190,6 +191,8 @@ def return_combo_score(recipes, combos, algo, weights, taste, sticky, ing_ex, mo
 def recipe_stack(recipes, count, max_sim=1.0, excludes=None, includes=None, tastes=None, modifier='Graded', rec_limit=5,
                  limit=500_000, ingredient_weights=None, algorithm='Balanced', ingredient_excludes=None,
                  sticky_weights=None, history=None):
+    algo_dict = {0: 'Charity', 1: 'Fairness', 2: 'Balanced', 3: 'Selfish', 4: 'Greedy'}
+    algorithm = algo_dict[algorithm] if isinstance(algorithm, int) else algorithm
     rec_limit = len(recipes) if count == 1 or rec_limit == 'No Limit' else rec_limit
     max_sim = None if max_sim == float('inf') else int(max_sim)/100
     excludes = [] if excludes is None else excludes  # Comes in as 0 or not

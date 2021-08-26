@@ -96,10 +96,10 @@
           <h3>GroceryStoreHero</h3>
           <p class='text-muted border-bottom pb-2'>By Alejandro Almaraz</p>
           <h4>Consider Donating</h4>
+          <a href="#">Bitcoin Address: </a><br><p style="font-size:14px; word-wrap: break-word;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicbaRdTUycL</p>
+          <a href="#">Ethereum Address:</a><br><p style="font-size:14px; word-wrap: break-word;" class="mb-0">GroceryHero.eth</p>
           <a href="https://venmo.com/Alejandro-Almaraz">Venmo</a><br>
           <a href="https://paypal.me/Almaraz103">Paypal</a><br>
-          <a href="#">Bitcoin Address: </a><br><p style="font-size:14px; word-wrap: break-word;" class="mb-0">38UaNkMKJY9UmVqMwy6beDNicbaRdTUycL</p>
-          <a href="#">Ethereum Address:</a><br><p style="font-size:14px; word-wrap: break-word;">0x907156AF1ba3461eC4B8702Cc9cB27818615aA5b</p>
         {% elif account is defined %}
 {#          {% if current_user.pro %}#}
 {#              <h3 class='border-bottom pb-2'>Your Files</h3>#}
@@ -161,6 +161,32 @@
           {% endif %}
           {{ form5.submit(class='btn btn-info btn-sm btn-block mt-2') }}
           </form>
+        {% elif new_recipe is defined %}
+          <h3>{% if update is not defined %}New {% endif %}Recipe Guidelines</h3>
+          <p class='text-muted border-bottom pb-2'>For a better GroceryHero experience please consider these guidelines:</p>
+          1. Omit Units of Measure
+            <ul>
+              <li>Adding 'rice' to a recipe is preferred to 'cup of rice'</li>
+            </ul>
+          2. Omit Preparation Details
+            <ul>
+              <li>Adding 'pineapple' is better than 'sliced pineapple' since both require buying a pineapple</li>
+              <li>Add 'sliced', 'minced', 'boiled', etc, in the next page</li>
+            </ul>
+          3. Keep Ingredients Singular
+            <ul>
+              <li>Adding 'peach' is better than 'peaches', but</li>
+              <li>If you don't eat or purchase just one per meal it is better plural (grapes or blueberries for example)</li>
+            </ul>
+{#          Use ingredient names that specify what to buy. For example: orange peel and orange would require purchasing the same#}
+{#          ingredient in a grocery store but orange would allow others to better find your recipe and producing a better grocery#}
+{#          list while 'orange peel' is a preparation detail you would add to the 'prep' section like 'minced' would for#}
+{#          'minced garlic'. Same for lemon vs lemon zest. However sugar is different than powdered sugar as is milk vs#}
+{#          evaporated milk or onion and red onion, pineapple vs pineapple rings, vegan parmesan cheese vs parmesan cheese.#}
+{##}
+{#          Foods that are considered a whole serving are generally singular such as a peach. Beans would be plural since one would#}
+{#          not generally eat one bean. A sausage link could be eaten as a single serving. If you are still unsure, whether you#}
+{#          can buy just one of an item can be another guide. Chocolate chips are numerous in a package so you would make it plural.#}
         {% elif public is defined %}
           <h3>Recipe Recommender</h3>  <!-- SVD -->
           <p class='text-muted border-bottom pb-2'>The more often you clear your menu, the more personalized the recommendations!</p>
@@ -255,164 +281,6 @@
           <h3>Compatible Websites</h3>
           <p class='text-muted border-bottom pb-2'>Scrape the world wide recipe web to take your heroism to the next level!</p> <!--Web scrapping is powered by the recipe scraper(s) listed below-->
           <div class="mb-3"><a href="https://github.com/hhursev/recipe-scrapers#scrapers-available-for">Current officially supported websites</a></div>
-{#          <div style="height:400px;width:100%;border;overflow:auto;border:1px solid #ccc;">#}
-{#          <ul>#}
-{#<li><a href="https://acouplecooks.com/" rel="nofollow">https://www.acouplecooks.com</a></li>#}
-{#<li><a href="https://claudia.abril.com.br" rel="nofollow">https://claudia.abril.com.br/</a></li>#}
-{#<li><a href="http://www.afghankitchenrecipes.com/" rel="nofollow">http://www.afghankitchenrecipes.com/</a></li>#}
-{#<li><a href="https://allrecipes.com/" rel="nofollow">https://allrecipes.com/</a></li>#}
-{#<li><a href="https://alltommat.se/" rel="nofollow">https://alltommat.se/</a></li>#}
-{#<li><a href="https://amazingribs.com/" rel="nofollow">https://amazingribs.com/</a></li>#}
-{#<li><a href="https://ambitiouskitchen.com" rel="nofollow">https://ambitiouskitchen.com/</a></li>#}
-{#<li><a href="https://archanaskitchen.com/" rel="nofollow">https://archanaskitchen.com/</a></li>#}
-{#<li><a href="https://www.atelierdeschefs.fr/" rel="nofollow">https://www.atelierdeschefs.fr/</a></li>#}
-{#<li><a href="https://www.averiecooks.com/" rel="nofollow">https://averiecooks.com/</a></li>#}
-{#<li><a href="https://bbc.com/food/recipes" rel="nofollow">https://bbc.com/</a></li>#}
-{#<li><a href="http://bbc.co.uk/food/recipes" rel="nofollow">https://bbc.co.uk/</a></li>#}
-{#<li><a href="https://bbcgoodfood.com" rel="nofollow">https://bbcgoodfood.com/</a></li>#}
-{#<li><a href="https://bakingmischief.com/" rel="nofollow">https://bakingmischief.com/</a></li>#}
-{#<li><a href="https://bettycrocker.com" rel="nofollow">https://bettycrocker.com/</a></li>#}
-{#<li><a href="https://bigoven.com" rel="nofollow">https://bigoven.com/</a></li>#}
-{#<li><a href="https://blueapron.com" rel="nofollow">https://blueapron.com/</a></li>#}
-{#<li><a href="https://bonappetit.com" rel="nofollow">https://bonappetit.com/</a></li>#}
-{#<li><a href="https://bowlofdelicious.com/" rel="nofollow">https://bowlofdelicious.com/</a></li>#}
-{#<li><a href="https://budgetbytes.com" rel="nofollow">https://budgetbytes.com/</a></li>#}
-{#<li><a href="https://castironketo.net/" rel="nofollow">https://castironketo.net/</a></li>#}
-{#<li><a href="https://cdkitchen.com/" rel="nofollow">https://cdkitchen.com/</a></li>#}
-{#<li><a href="https://chefkoch.de" rel="nofollow">https://chefkoch.de/</a></li>#}
-{#<li><a href="https://closetcooking.com" rel="nofollow">https://closetcooking.com/</a></li>#}
-{#<li><a href="https://cookeatshare.com/" rel="nofollow">https://cookeatshare.com/</a></li>#}
-{#<li><a href="https://cookpad.com/" rel="nofollow">https://cookpad.com/</a></li>#}
-{#<li><a href="https://cookieandkate.com/" rel="nofollow">https://cookieandkate.com/</a></li>#}
-{#<li><a href="https://cookinglight.com/" rel="nofollow">https://cookinglight.com/</a></li>#}
-{#<li><a href="https://cookstr.com" rel="nofollow">https://cookstr.com/</a></li>#}
-{#<li><a href="https://copykat.com" rel="nofollow">https://copykat.com/</a></li>#}
-{#<li><a href="https://countryliving.com" rel="nofollow">https://countryliving.com/</a></li>#}
-{#<li><a href="https://cucchiaio.it" rel="nofollow">https://cucchiaio.it/</a></li>#}
-{#<li><a href="https://cuisineaz.com" rel="nofollow">https://cuisineaz.com/</a></li>#}
-{#<li><a href="https://cybercook.com.br/" rel="nofollow">https://cybercook.com.br/</a></li>#}
-{#<li><a href="https://delish.com" rel="nofollow">https://delish.com/</a></li>#}
-{#<li><a href="https://domesticate-me.com/" rel="nofollow">https://domesticate-me.com/</a></li>#}
-{#<li><a href="https://downshiftology.com/" rel="nofollow">https://downshiftology.com/</a></li>#}
-{#<li><a href="https://www.dr.dk/" rel="nofollow">https://www.dr.dk/</a></li>#}
-{#<li><a href="https://eatwhattonight.com/" rel="nofollow">https://eatwhattonight.com/</a></li>#}
-{#<li><a href="https://www.eatingbirdfood.com" rel="nofollow">https://www.eatingbirdfood.com/</a></li>#}
-{#<li><a href="https://eatsmarter.com/" rel="nofollow">https://eatsmarter.com/</a></li>#}
-{#<li><a href="https://eatsmarter.de/" rel="nofollow">https://eatsmarter.de/</a></li>#}
-{#<li><a href="https://epicurious.com" rel="nofollow">https://epicurious.com/</a></li>#}
-{#<li><a href="https://recipes.farmhousedelivery.com/" rel="nofollow">https://recipes.farmhousedelivery.com/</a></li>#}
-{#<li><a href="https://www.fifteenspatulas.com/" rel="nofollow">https://fifteenspatulas.com/</a></li>#}
-{#<li><a href="https://www.finedininglovers.com" rel="nofollow">https://finedininglovers.com/</a></li>#}
-{#<li><a href="https://www.fitmencook.com" rel="nofollow">https://fitmencook.com/</a></li>#}
-{#<li><a href="https://www.food.com" rel="nofollow">https://food.com/</a></li>#}
-{#<li><a href="https://www.food52.com" rel="nofollow">https://food52.com/</a></li>#}
-{#<li><a href="https://www.foodandwine.com" rel="nofollow">https://foodandwine.com/</a></li>#}
-{#<li><a href="https://www.foodnetwork.com" rel="nofollow">https://foodnetwork.com/</a></li>#}
-{#<li><a href="https://foodrepublic.com" rel="nofollow">https://foodrepublic.com/</a></li>#}
-{#<li><a href="https://www.forksoverknives.com/" rel="nofollow">https://www.forksoverknives.com/</a></li>#}
-{#<li><a href="https://www.750g.com" rel="nofollow">https://www.750g.com</a></li>#}
-{#<li><a href="https://geniuskitchen.com" rel="nofollow">https://geniuskitchen.com/</a></li>#}
-{#<li><a href="https://giallozafferano.it" rel="nofollow">https://giallozafferano.it/</a></li>#}
-{#<li><a href="https://www.gimmesomeoven.com/" rel="nofollow">https://gimmesomeoven.com/</a></li>#}
-{#<li><a href="https://www.receitas.globo.com/" rel="nofollow">https://recietas.globo.com/</a></li>#}
-{#<li><a href="https://gonnawantseconds.com" rel="nofollow">https://gonnawantseconds.com/</a></li>#}
-{#<li><a href="https://gousto.co.uk" rel="nofollow">https://gousto.co.uk/</a></li>#}
-{#<li><a href="https://greatbritishchefs.com" rel="nofollow">https://greatbritishchefs.com/</a></li>#}
-{#<li><a href="https://www.heb.com/recipe/landing" rel="nofollow">https://www.heb.com/</a></li>#}
-{#<li><a href="https://www.halfbakedharvest.com/" rel="nofollow">https://halfbakedharvest.com/</a></li>#}
-{#<li><a href="https://www.hassanchef.com/" rel="nofollow">https://www.hassanchef.com/</a></li>#}
-{#<li><a href="https://heinzbrasil.com.br" rel="nofollow">https://heinzbrasil.com.br/</a></li>#}
-{#<li><a href="https://hellofresh.com" rel="nofollow">https://hellofresh.com/</a></li>#}
-{#<li><a href="https://hellofresh.co.uk" rel="nofollow">https://hellofresh.co.uk/</a></li>#}
-{#<li><a href="https://www.hellofresh.de/" rel="nofollow">https://www.hellofresh.de/</a></li>#}
-{#<li><a href="https://www.hellofresh.de/" rel="nofollow">https://www.hellofresh.fr/</a></li>#}
-{#<li><a href="https://hostthetoast.com/" rel="nofollow">https://hostthetoast.com/</a></li>#}
-{#<li><a href="https://101cookbooks.com/" rel="nofollow">https://101cookbooks.com/</a></li>#}
-{#<li><a href="https://receitas.ig.com.br" rel="nofollow">https://receitas.ig.com.br/</a></li>#}
-{#<li><a href="https://www.indianhealthyrecipes.com" rel="nofollow">https://indianhealthyrecipes.com</a></li>#}
-{#<li><a href="https://www.innit.com/" rel="nofollow">https://www.innit.com/</a></li>#}
-{#<li><a href="https://inspiralized.com" rel="nofollow">https://inspiralized.com/</a></li>#}
-{#<li><a href="https://jamieoliver.com" rel="nofollow">https://jamieoliver.com/</a></li>#}
-{#<li><a href="https://justbento.com" rel="nofollow">https://justbento.com/</a></li>#}
-{#<li><a href="https://kennymcgovern.com" rel="nofollow">https://kennymcgovern.com/</a></li>#}
-{#<li><a href="https://www.kingarthurbaking.com" rel="nofollow">https://www.kingarthurbaking.com</a></li>#}
-{#<li><a href="https://kochbar.de" rel="nofollow">https://kochbar.de/</a></li>#}
-{#<li><a href="https://www.kuchnia-domowa.pl/" rel="nofollow">https://kuchnia-domowa.pl/</a></li>#}
-{#<li><a href="https://lecremedelacrumb.com/" rel="nofollow">https://lecremedelacrumb.com/</a></li>#}
-{#<li><a href="https://littlespicejar.com" rel="nofollow">https://littlespicejar.com/</a></li>#}
-{#<li><a href="http://livelytable.com/" rel="nofollow">http://livelytable.com/</a></li>#}
-{#<li><a href="https://lovingitvegan.com/" rel="nofollow">https://lovingitvegan.com/</a></li>#}
-{#<li><a href="https://marmiton.org/" rel="nofollow">https://marmiton.org/</a></li>#}
-{#<li><a href="https://www.marthastewart.com/" rel="nofollow">https://www.marthastewart.com/</a></li>#}
-{#<li><a href="https://matprat.no/" rel="nofollow">https://matprat.no/</a></li>#}
-{#<li><a href="https://www.melskitchencafe.com/" rel="nofollow">https://www.melskitchencafe.com/</a></li>#}
-{#<li><a href="http://mindmegette.hu/" rel="nofollow">http://mindmegette.hu/</a></li>#}
-{#<li><a href="https://minimalistbaker.com/" rel="nofollow">https://minimalistbaker.com/</a></li>#}
-{#<li><a href="https://misya.info" rel="nofollow">https://misya.info/</a></li>#}
-{#<li><a href="https://momswithcrockpots.com" rel="nofollow">https://momswithcrockpots.com/</a></li>#}
-{#<li><a href="http://motherthyme.com/" rel="nofollow">http://motherthyme.com/</a></li>#}
-{#<li><a href="https://mybakingaddiction.com" rel="nofollow">https://mybakingaddiction.com/</a></li>#}
-{#<li><a href="https://myrecipes.com" rel="nofollow">https://myrecipes.com/</a></li>#}
-{#<li><a href="https://healthyeating.nhlbi.nih.gov" rel="nofollow">https://healthyeating.nhlbi.nih.gov/</a></li>#}
-{#<li><a href="https://cooking.nytimes.com" rel="nofollow">https://cooking.nytimes.com/</a></li>#}
-{#<li><a href="https://nourishedbynutrition.com/" rel="nofollow">https://nourishedbynutrition.com/</a></li>#}
-{#<li><a href="https://nutritionbynathalie.com/blog" rel="nofollow">https://nutritionbynathalie.com/blog</a></li>#}
-{#<li><a href="https://ohsheglows.com" rel="nofollow">https://ohsheglows.com/</a></li>#}
-{#<li><a href="https://101cookbooks.com/" rel="nofollow">https://101cookbooks.com/</a></li>#}
-{#<li><a href="https://www.paleorunningmomma.com" rel="nofollow">https://www.paleorunningmomma.com/</a></li>#}
-{#<li><a href="https://www.panelinha.com.br" rel="nofollow">https://www.panelinha.com.br/</a></li>#}
-{#<li><a href="https://paninihappy.com" rel="nofollow">https://paninihappy.com/</a></li>#}
-{#<li><a href="https://popsugar.com" rel="nofollow">https://popsugar.com/</a></li>#}
-{#<li><a href="https://przepisy.pl" rel="nofollow">https://przepisy.pl/</a></li>#}
-{#<li><a href="https://purelypope.com" rel="nofollow">https://purelypope.com/</a></li>#}
-{#<li><a href="https://purplecarrot.com" rel="nofollow">https://purplecarrot.com/</a></li>#}
-{#<li><a href="https://rachlmansfield.com" rel="nofollow">https://rachlmansfield.com/</a></li>#}
-{#<li><a href="https://www.realsimple.com" rel="nofollow">https://realsimple.com/</a></li>#}
-{#<li><a href="https://www.recipetineats.com/" rel="nofollow">https://recipietineats.com/</a></li>#}
-{#<li><a href="https://redhousespice.com/" rel="nofollow">https://redhousespice.com/</a></li>#}
-{#<li><a href="https://www.reishunger.de/" rel="nofollow">https://reishunger.de/</a></li>#}
-{#<li><a href="https://sallysbakingaddiction.com/" rel="nofollow">https://sallysbakingaddiction.com</a></li>#}
-{#<li><a href="https://www.saveur.com/" rel="nofollow">https://www.saveur.com/</a></li>#}
-{#<li><a href="https://seriouseats.com" rel="nofollow">https://seriouseats.com/</a></li>#}
-{#<li><a href="https://simplyquinoa.com" rel="nofollow">https://simplyquinoa.com/</a></li>#}
-{#<li><a href="https://simplyrecipes.co" rel="nofollow">https://simplyrecipes.com/</a></li>#}
-{#<li><a href="https://simplywhisked.com" rel="nofollow">https://simplywhisked.com/</a></li>#}
-{#<li><a href="https://www.skinnytaste.com" rel="nofollow">https://skinnytaste.com/</a></li>#}
-{#<li><a href="https://southernliving.com/" rel="nofollow">https://southernliving.com/</a></li>#}
-{#<li><a href="https://spendwithpennies.com/" rel="nofollow">https://spendwithpennies.com/</a></li>#}
-{#<li><a href="https://steamykitchen.com" rel="nofollow">https://steamykitchen.com/</a></li>#}
-{#<li><a href="https://streetkitchen.hu" rel="nofollow">https://streetkitchen.hu/</a></li>#}
-{#<li><a href="https://sunbasket.com" rel="nofollow">https://sunbasket.com/</a></li>#}
-{#<li><a href="https://www.sweetcsdesigns.com/" rel="nofollow">https://sweetcsdesigns.com/</a></li>#}
-{#<li><a href="https://sweetpeasandsaffron.com/" rel="nofollow">https://sweetpeasandsaffron.com/</a></li>#}
-{#<li><a href="https://tasteofhome.com" rel="nofollow">https://tasteofhome.com</a></li>#}
-{#<li><a href="https://tastesoflizzyt.com" rel="nofollow">https://tastesoflizzyt.com</a></li>#}
-{#<li><a href="https://tasty.co" rel="nofollow">https://tasty.co</a></li>#}
-{#<li><a href="https://tastykitchen.com" rel="nofollow">https://tastykitchen.com/</a></li>#}
-{#<li><a href="https://theclevercarrot.com" rel="nofollow">https://theclevercarrot.com/</a></li>#}
-{#<li><a href="https://thehappyfoodie.co.uk" rel="nofollow">https://thehappyfoodie.co.uk/</a></li>#}
-{#<li><a href="https://thekitchn.com/" rel="nofollow">https://thekitchn.com/</a></li>#}
-{#<li><a href="https://thenutritiouskitchen.co/" rel="nofollow">https://thenutritiouskitchen.co/</a></li>#}
-{#<li><a href="https://thepioneerwoman.com" rel="nofollow">https://thepioneerwoman.com/</a></li>#}
-{#<li><a href="https://thespruceeats.com/" rel="nofollow">https://thespruceeats.com/</a></li>#}
-{#<li><a href="https://thevintagemixer.com" rel="nofollow">https://thevintagemixer.com/</a></li>#}
-{#<li><a href="https://thewoksoflife.com/" rel="nofollow">https://thewoksoflife.com/</a></li>#}
-{#<li><a href="https://timesofindia.com/" rel="nofollow">https://timesofindia.com/</a></li>#}
-{#<li><a href="https://tine.no" rel="nofollow">https://tine.no/</a></li>#}
-{#<li><a href="https://www.tudogostoso.com.br/" rel="nofollow">https://tudogostoso.com.br/</a></li>#}
-{#<li><a href="http://twopeasandtheirpod.com" rel="nofollow">https://twopeasandtheirpod.com/</a></li>#}
-{#<li><a href="https://vanillaandbean.com" rel="nofollow">https://vanillaandbean.com/</a></li>#}
-{#<li><a href="https://www.vegrecipesofindia.com/" rel="nofollow">https://vegrecipesofindia.com/</a></li>#}
-{#<li><a href="https://vegolosi.it" rel="nofollow">https://vegolosi.it/</a></li>#}
-{#<li><a href="https://watchwhatueat.com/" rel="nofollow">https://watchwhatueat.com/</a></li>#}
-{#<li><a href="https://whatsgabycooking.com" rel="nofollow">https://whatsgabycooking.com/</a></li>#}
-{#<li><a href="https://www.wholefoodsmarket.com/" rel="nofollow">https://www.wholefoodsmarket.com/</a></li>#}
-{#<li><a href="https://www.wholefoodsmarket.co.uk/" rel="nofollow">https://www.wholefoodsmarket.co.uk/</a></li>#}
-{#<li><a href="https://en.wikibooks.org" rel="nofollow">https://en.wikibooks.org/</a></li>#}
-{#<li><a href="https://yemek.com" rel="nofollow">https://yemek.com/</a></li>#}
-{#<li><a href="https://yummly.com" rel="nofollow">https://yummly.com/</a></li>#}
-{#</ul>#}
-          </div>
         {% elif recipe_single is defined %}
           <h3>Recipe Information</h3>
           <p class='text-muted border-bottom pb-2'>Info and statistics based on you and other people's activity with this recipe.</p>
@@ -429,9 +297,9 @@
               <button class="btn btn-sm btn-block btn-outline-info" data-toggle="modal" data-target="#pictureModal">Upload</button>
             </div>
           {% endif %}
-          {% if recipe.author != current_user %}
+          {% if (recipe.author != current_user) %}
             <h5 class="mt-3">Poster: </h5>
-            {% if not recipe.author.credit %}  <!-- todo remove not add public ability -->
+            {% if recipe.credit %}
               <p class="d-inline"><img width="30px" height="30px" class="d-inline rounded-circle mb-1" src={{ url_for('static', filename='profile_pics/'+recipe.author.image_file) }}> {{ recipe.author.username }}</p>
               {% if status == 'None' %}
                 <button href="{{ url_for('users.recipe_follow', f_id=recipe.author.id) }}" class="float-right btn btn-sm btn-info" disabled>Request</button>
@@ -747,6 +615,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" crossorigin="anonymous"></script>
+{#<script>#}
+{#  $(function () {#}
+{#  $('[data-toggle="tooltip"]').tooltip()#}
+{#})</script>#}
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

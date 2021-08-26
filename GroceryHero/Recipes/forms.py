@@ -11,8 +11,9 @@ class RecipeForm(FlaskForm):
     title = StringField('Recipe Name', validators=[DataRequired(),
                                                    NoneOf(values=['<', '>'], message=" '>' and '<' symbols not allowed")])
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
-    type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']],
-                        default='Dinner')
+    type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Side',
+                                                          'Beverage', 'Cocktail', 'Other']],
+                        default='Other')
     public = RadioField('Public', choices=[('True', 'True'), ('False', 'False')], default='True')
     notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
@@ -56,5 +57,7 @@ class UploadRecipeImage(FlaskForm):
 
 
 class SvdForm(FlaskForm):
-    type_ = SelectField('Recipe Type', choices=[('all', 'All')]+[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Other']])
+    type_ = SelectField('Recipe Type', choices=[('all', 'All')]+[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner',
+                                                                                  'Dessert', 'Snack', 'Side',
+                                                                                  'Beverage', 'Cocktail', 'Other']])
     submit = SubmitField('Find New Recipes')

@@ -9,13 +9,13 @@ def load_user(user_id):
 
 
 class Followers(db.Model):
-    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Following user
-    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Person followed
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Following user (actively following)
+    follow_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Followed user (passively followed)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     status = db.Column(db.Integer, nullable=False)
-    user = db.relationship('User', foreign_keys=[user_id])
-    follow = db.relationship('User', foreign_keys=[follow_id])
+    user = db.relationship('User', foreign_keys=[user_id])  # Get User that is the follower
+    follow = db.relationship('User', foreign_keys=[follow_id])  # Get User that is being followed
+    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
 
     def __repr__(self):
         status = self.codes[self.status] if self.status in self.codes else 'Error'
@@ -80,6 +80,7 @@ class User(db.Model, UserMixin):
     reports = db.Column(db.JSON, nullable=False, default={'Reports': [], 'Reported': []})
     timezone = db.Column(db.String(60), nullable=True)
     # last_stat_gen = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    # following = db.relationship('Followers', foreign_keys='user_id')  # , lazy=True
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
@@ -128,20 +129,21 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     options = db.Column(db.JSON, nullable=False, default={})  # Optional/replacement ingredient {ing: ['opt', 'rep']}
     # sections = db.Column(db.JSON, nullable=False, default={})  # {'main': [ingredients], 'sauce':[ingredients]}, null?
     restrictions = db.Column(db.JSON, nullable=False, default=[])
-    # lactose-free
-    # dairy-free
-    # vegetarian
-    # vegan
-    # gluten-free
-    # kosher
-    # keto
-    # diabetes
-    # low-carb
-    # nut-free
-    # wheat-free
-    # shelfish-free
-    # egg-free
-    # soy-free
+    # lactose-free = db.Column(db.Boolean, nullable=False, default=False)
+    # dairy-free = db.Column(db.Boolean, nullable=False, default=False)
+    # vegetarian = db.Column(db.Boolean, nullable=False, default=False)
+    # vegan = db.Column(db.Boolean, nullable=False, default=False)
+    # gluten-free = db.Column(db.Boolean, nullable=False, default=False)
+    # kosher = db.Column(db.Boolean, nullable=False, default=False)
+    # keto = db.Column(db.Boolean, nullable=False, default=False)
+    # diabetes = db.Column(db.Boolean, nullable=False, default=False)
+    # low-carb = db.Column(db.Boolean, nullable=False, default=False)
+    # nut-free = db.Column(db.Boolean, nullable=False, default=False)
+    # wheat-free = db.Column(db.Boolean, nullable=False, default=False)
+    # shelfish-free = db.Column(db.Boolean, nullable=False, default=False)
+    # egg-free = db.Column(db.Boolean, nullable=False, default=False)
+    # soy-free = db.Column(db.Boolean, nullable=False, default=False)
+    # difficulty = db.Column(db.Integer, nullable=True)  # 1-5 rating
     nft_id = db.Column(db.Integer, nullable=True)  # ID of the minted nft corresponding to this recipe
     prep_time = db.Column(db.JSON, nullable=False, default={})  # prep time, cook time, etc
     nutrition = db.Column(db.JSON, nullable=False, default={})  # Vitamin A: 100mcg

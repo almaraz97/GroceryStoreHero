@@ -1,19 +1,22 @@
-import itertools
-import json
-import string
-from datetime import datetime
-from flask import render_template, url_for, flash, redirect, request, abort, Blueprint, session
-from flask_login import current_user, login_required
 from GroceryHero import db
+from GroceryHero.HarmonyTool import recipe_stack, norm_stack
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Modeling.svd import recipe_svd
 from GroceryHero.Recipes.forms import RecipeForm, RecipeLinkForm, UploadRecipeImage, SvdForm
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, remove_menu_items, \
-    recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, paginate_sort
+    recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, paginate_sort, Measurements
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture, Colors
 from GroceryHero.models import Recipes, User, Followers, Actions, User_Rec
 from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+from datetime import datetime
+from flask import render_template, url_for, flash, redirect, request, abort, Blueprint, session
+from flask_login import current_user, login_required
+from sqlalchemy import func
+import itertools
+import json
+import string
+from difflib import SequenceMatcher
 
 recipes = Blueprint('recipes', __name__)
 
@@ -50,14 +53,16 @@ def recipes_page(view='self'):
                                                                       recipe_ex)
         if request.method == "POST":
             if form.validate_on_submit():  # Harmony or search button was pressed
-                harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(Recipes.title.asc()).all()  # todo include borrowed recipes
+                harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(
+                    Recipes.title.asc()).all()  # todo include borrowed recipes
                 num_in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).count()
                 form.groups.data = form.groups.data if (num_in_menu > 0) else 2  # Can't harmonize groups of 1
                 recommended, possible = recipe_stack_w_args(harmony_recipes, preferences, form, in_menu, recipe_ex,
                                                             recipe_hist)
                 recommended = remove_menu_items(in_menu, recommended)
                 update_user_preferences(current_user, form, recommended, possible)
-                form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, harmony_recipes, recipe_ex)
+                form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, harmony_recipes,
+                                                                  recipe_ex)
     else:  # Friend recipes
         about, title, recipe_ids, view, friends = None, 'Friend Recipes', None, 'friends', True
     return render_template('recipes.html', title=title, cards=cards, sidebar=True, colors=colors,
@@ -107,7 +112,8 @@ def get_requests(all_friends):
                                         request.args.get('friend', None, type=int)
     search = search if search not in ['Recipe Options', ''] else None
     sort = sort if sort in ['hot', 'borrow', 'date', 'eaten', 'alpha'] else 'none'
-    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Other'] else 'all'
+    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Side',
+                               'Dessert', 'Other', 'Beverage', 'Drink'] else 'all'
     friend_choice = list(all_friends.keys()) if friend is None else [friend]
     return search, page, sort, types, friend_choice
 
@@ -195,7 +201,8 @@ def new_recipe():  # Giving recipe's title, ingredient list, instructions and et
         session['recipe'] = {'title': string.capwords(form.title.data), 'quantity': ingredients,  # Dict(ing:[unit,typ])
                              'notes': form.notes.data, 'type': form.type_.data, 'public': form.public.data}
         return redirect(url_for('recipes.new_recipe_quantity'))
-    return render_template('create_recipe.html', title='New Recipe', form=form, legend='Recipe Details', link=True)
+    return render_template('create_recipe.html', title='New Recipe', form=form, legend='Recipe Details', link=True,
+                           sidebar=True, new_recipe=True)
 
 
 @login_required
@@ -304,7 +311,8 @@ def update_recipe(recipe_id):  # Update recipe attributes
         form.content.data = ', '.join(recipe.quantity.keys())
         form.notes.data = recipe.notes
         form.type_.data = recipe.recipe_type
-    return render_template('create_recipe.html', title='Update Recipe Details', form=form, legend='Update Recipe Details')
+    return render_template('create_recipe.html', title='Update Recipe Details', form=form,
+                           legend='Update Recipe Details', sidebar=True, new_recipe=True, update=True)
 
 
 @login_required
@@ -572,6 +580,19 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
     db.session.commit()
     return redirect(url_for('recipes.recipes_page'))
 
+
+@recipes.route('/check_ingredients', methods=['GET'])
+@login_required
+def check_ings():
+    ingredients = request.form.get('ingredients', None)
+    if ingredients is not None:
+        duplicates = find_duplicates(ingredients, ratio=0.9)
+        poor_ings = find_char(ingredients)
+        return duplicates, poor_ings
+    else:
+        return None, None
+
+
 # @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
 # @login_required
 # def linked_user():
@@ -594,6 +615,90 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
 #     return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
 #                                                              f"attachment; filename={title}.txt"})
 
+
+def find_duplicates(ingredients, ratio=0.6):  # Find if ingredient list has duplicates
+    ingredient_set = []
+    for i, ing1 in enumerate(ingredients):
+        for j, ing2 in enumerate(ingredients):
+            if (not i >= j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > ratio):
+                ingredient_set.append([i, j])
+    return ingredient_set
+
+
+def find_char(ingredients):
+    characters = ['!', '#', '$', '%', '&', '(', ')', '*', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                  ':', '<', '>', '@', '^', 'chopped', 'condensed', 'cooked', 'cored', 'crumbled', 'crushed', 'cubed',
+                  'cut ', 'deboned', 'degree', 'diced', 'divided', 'drained', 'dried', 'e.g', 'firm', 'fresh', 'grated',
+                  'halved', 'inch', 'large', 'marinated', 'mashed', 'medium', 'melted', 'minced', 'packed', 'peeled',
+                  'pinch', 'pitted', 'prepared', 'processed', 'quartered', 'refrigerated', 'reserved', 'seeded', ',',
+                  'shredded', 'sifted', 'skinned', 'sliced', 'small', 'softened', 'split', 'squared', 'stemmed',
+                  'stewed', 'taste', 'thawed', 'roasted', 'toasted', 'topping', 'topped', 'unwrapped', 'warmed',
+                  'wrapped', '®', '=', 'to tast', 'to Tast', 'dash ', 'slice', 'steamed', 'sauteed', 'scalded',
+                  'boiled', 'boiling', 'evaporated', 'julienned', 'rinsed', 'wedge', 'wedges', 'cubes', 'lukewarm',
+                  'hot', 'warm', 'cold', 'pressed', 'shaved', 'torn', 'trimmed', 'zest', 'pureed']
+    switch = {'fat free': 'fat-free', 'extra lean': 'extra-lean', 'low fat': 'low-fat', 'french fried': 'french-fried',
+              'full fat': 'full-fat', 'sugar free': 'sugar-free', 'low sugar': 'low-sugar', 'grapeseed': 'grape seed',
+              'jalapeno': 'jalapeño', 'low sodium': 'Low-sodium', 'part skim': 'part-skim', 'non fat': 'non-fat',
+              'whole milk': 'whole-milk', 'plant based': 'plant-based', 'reduced fat ': 'reduced-fat', 'self rising':
+              'self-rising', 'lemon grass': 'lemongrass', 'non dairy': 'non-dairy', 'cheese filled': 'cheese-filled',
+              }
+    characters = characters + [x.capitalize() for x in characters] + Measurements.Measures + \
+        [x.lower() for x in Measurements.Measures]
+    bad_ing = []
+    for ing in ingredients:
+        for ch in characters:
+            if ch in ing:
+                bad_ing.append(ing)
+    return bad_ing
+
+
+def ing_sort(ingredients):
+    gen_dict = {
+        'produce': ['apple', 'apricot', 'asparagus', 'asparagus', 'avocado', 'baby bella mushroom', 'banana', 'beet',
+                    'bell pepper', 'blackberries', 'blueberries', 'bok choy', 'broccoli', 'broccoli',
+                    'brussels sprouts', 'cabbage', 'cabbage', 'cantaloupe', 'carrot', 'cauliflower', 'cauliflower',
+                    'celery', 'cherries', 'cilantro', 'collard green', 'corn', 'cranberries', 'cremini mushroom',
+                    'cucumber', 'eggplant', 'eggplant', 'garlic', 'ginger', 'grapefruit', 'grapes', 'green beans',
+                    'green onion', 'green onion', 'jalapeno', 'kale', 'kale', 'kiwi', 'leek', 'lemon', 'lemon',
+                    'lettuce', 'lime', 'lime', 'mango', 'melon', 'mushroom', 'okra', 'olive', 'olive', 'onion',
+                    'orange', 'parsley', 'parsnip', 'peach', 'pear', 'peas', 'pineapple', 'plum', 'potato', 'pumpkin',
+                    'radishes', 'raspberries', 'red onion', 'rhubarb', 'romaine', 'rutabagas', 'spinach', 'squash',
+                    'strawberries', 'sugar snap peas', 'sweet potato', 'swiss chard', 'tomato', 'turnip', 'watermelon',
+                    'white onion', 'yam', 'yellow onion', 'zucchini'],
+        'dairy': ['milk', 'egg', 'yogurt', 'butter', 'cheese'],
+        'meat': ['chicken', 'beef', 'fish', 'turkey', 'sausage', 'lamb', 'salmon', 'meatball', 'ham', 'cod', 'tuna'],
+        'dry': ['rice', 'beans', 'pasta', 'seeds', 'broth', 'sauce', 'paste', 'extract', 'cereal', 'peanut butter',
+                'bread', 'powder', 'oil', 'noodle', 'liqueur', 'bouillon'],
+        'canned': ['salsa', 'pickle', 'pickled', 'jam', 'preserve'],
+        'baking': ['cake', 'mix', 'frosting', 'sugar'],  # pancake? cornbread?
+        'frozen': ['pizza', 'frozen', 'ice cream', 'sherbet', 'sorbet'],
+        'drink': ['soda', 'carbonated', 'vodka', 'bitters', 'drink', 'juice', 'dip', 'cocktail', 'mix', 'gin', 'brandy',
+                  'liquor', 'tequila', 'nectar', 'champagne', 'rum'],
+        'snack': ['chips']}
+    sorted_ings = {aisle: [] for aisle in gen_dict}
+    for ing in ingredients:
+        for aisle, ing_list in list(gen_dict.items()):
+            for item in ing_list:
+                if item in ing:
+                    sorted_ings[aisle] = sorted_ings[aisle] + [ing]
+    return sorted_ings
+
+"""
+Guidelines for a better GroceryHero:
+Omit units of measure from ingredient names:
+Canned pineapple would 
+Omit preparation details from ingredient names:
+Use ingredient names that specify what to buy. For example: orange peel and orange would require purchasing the same 
+ingredient in a grocery store but orange would allow others to better find your recipe and producing a better grocery 
+list while 'orange peel' is a preparation detail you would add to the 'prep' section like 'minced' would for 
+'minced garlic'. Same for lemon vs lemon zest. However sugar is different than powdered sugar as is milk vs 
+evaporated milk or onion and red onion, pineapple vs pineapple rings, vegan parmesan cheese vs parmesan cheese.
+
+Omit plural ingredients if it makes sense.
+Foods that are considered a whole serving are generally singular such as a peach. Beans would be plural since one would
+not generally eat one bean. A sausage link could be eaten as a single serving. If you are still unsure, whether you
+can buy just one of an item can be another guide. Chocolate chips are numerous in a package so you would make it plural. 
+"""
 
 """
 import string
@@ -667,4 +772,11 @@ for recipe in db.session.query(Recipes).all():
     recipe.public = True
 db.session.commit()
 
+
+for recipe in db.session.query(Recipes).all():
+    if (recipe.prep_time is not None) and recipe.prep_time:
+        recipe.prep_time = recipe.prep_time['total']
+db.session.commit()
+
 """
+
