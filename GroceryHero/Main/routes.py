@@ -259,10 +259,10 @@ def add_to_extras():  # Get ingredient names in form
     form = ExtrasForm()
     form.multi.choices = [('', 'Ingredients Choices')] + [(choice, choice) for choice in choices]
     if form.validate_on_submit():  # Form is submitted and not empty list
-        choices = form.multi.data
+        choices = [x for x in form.multi.data if x != '']
         if form.other.data != '':
             choices = choices + [string.capwords(x.strip()) for x in form.other.data.split(', ') if x.strip() != '']
-        if choices == '':  # No selection  # todo add this to form?
+        if not choices:  # No selection
             return redirect(url_for('main.add_to_extras'))
         # if '' in choices:  # Default and maybe selections
         #     choices.remove('')  # Remove default
