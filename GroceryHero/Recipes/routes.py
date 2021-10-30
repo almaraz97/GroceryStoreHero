@@ -360,7 +360,7 @@ def recipe_download(recipe_id):
     new_rec = Recipes(title=recipe.title, quantity=recipe.quantity, notes=recipe.notes, user_id=current_user.id,
                       link=recipe.link, recipe_type=recipe.recipe_type, recipe_genre=recipe.recipe_genre,
                       picture=recipe.picture, servings=recipe.servings, originator=original_id,
-                      price=recipe.price, options=recipe.options)
+                      price=recipe.price, options=recipe.options, public=False)
     db.session.add(new_rec)
     db.session.commit()
     user_rec = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
