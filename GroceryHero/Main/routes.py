@@ -238,7 +238,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
         now_str = now.strftime(time_format)
         user_graphs = glob(f'GroceryHero/static/visualizations/{current_user.id}*')
         last_graph = user_graphs[-1].split('_')[-1][:-4] if user_graphs else None  # Rem path and jpeg, leave datetime
-        last_graph = datetime.strptime(last_graph, time_format) if user_graphs is not None else None
+        last_graph = datetime.strptime(last_graph, time_format) if last_graph is not None else None
         if (last_graph is None) or ((now-last_graph).days >= 7):
             stats_graph(current_user, all_recipes, now=now_str)
             graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
