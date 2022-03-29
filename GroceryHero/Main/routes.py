@@ -6,7 +6,7 @@ from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, convert_frac, stats_graph, change_extras)
+                                    show_harmony_weights, convert_frac, stats_graph, change_extras, ensure_harmony_keys)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 from flask import render_template, url_for, redirect, Blueprint, request, session
@@ -36,6 +36,7 @@ def demo_user():  # Enter secret password to be logged in for demo purposed
     form = """<form method="POST"><center><div class="form-group"><label class="form-control-label">Secret Password</label><input class="form-control form-control-lg" name="password" required="" type="text" value=""><br><input class="btn btn-info" type="submit"></center></form>"""
     if request.form.get('password') == 'wajahat':
         user = User.query.filter_by(id=17).first()
+        ensure_harmony_keys(user)
         login_user(user)
         return redirect(url_for('main.home'))
     else:
@@ -217,18 +218,19 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 h = (norm_stack(recs) ** modifier) * 100
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5) if avg_harmony else 0
-    if len(current_user.recipes) > 1:
-        time_format = '%Y-%m-%d'
-        now = datetime.now()
-        now_str = now.strftime(time_format)
-        user_graphs = glob(f'GroceryHero/static/visualizations/{current_user.id}*')
-        last_graph = user_graphs[-1].split('_')[-1][:-4] if user_graphs else None  # Rem path and jpeg, leave datetime
-        last_graph = datetime.strptime(last_graph, time_format) if last_graph is not None else None
-        if (last_graph is None) or ((now-last_graph).days >= 7):
-            stats_graph(current_user, all_recipes, now=now_str)
-            graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
-        else:
-            graph = url_for('static', filename=f'visualizations/{current_user.id}_{last_graph.strftime(time_format)}.jpg')
+
+    # if len(current_user.recipes) > 1:  # UMAP chart
+    #     time_format = '%Y-%m-%d'
+    #     now = datetime.now()
+    #     now_str = now.strftime(time_format)
+    #     user_graphs = glob(f'GroceryHero/static/visualizations/{current_user.id}*')
+    #     last_graph = user_graphs[-1].split('_')[-1][:-4] if user_graphs else None  # Rem path and jpeg, leave datetime
+    #     last_graph = datetime.strptime(last_graph, time_format) if last_graph is not None else None
+    #     if (last_graph is None) or ((now-last_graph).days >= 7):
+    #         stats_graph(current_user, all_recipes, now=now_str)
+    #         graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
+    #     else:
+    #         graph = url_for('static', filename=f'visualizations/{current_user.id}_{last_graph.strftime(time_format)}.jpg')
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True, clears=clears, graph=graph,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
                            avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
