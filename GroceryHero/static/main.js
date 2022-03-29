@@ -32,6 +32,26 @@ $(document).ready(function() {
     });
 });
 
+$(document).ready(function() {
+    $('.eatenSingleButton').on('click', function(){
+        let recipe_id = $(this).attr('e_id');
+        req = $.ajax({
+            url : '/home/change_eaten',
+            type: 'POST',
+            data: {recipe_id: recipe_id}
+        });
+
+        if (this.classList.contains("btn-outline-success")){
+            $(this).removeClass("btn-outline-success").addClass("btn-outline-secondary");
+            this.textContent = "Didn't eat yet"
+        } else{
+            $(this).removeClass("btn-outline-secondary").addClass("btn-outline-success");
+            this.textContent = "I ate this"
+        }
+    });
+});
+
+
 // Change to eaten without reload
 $(document).ready(function() {
     $('.eatenButton').on('click', function(){
@@ -42,11 +62,11 @@ $(document).ready(function() {
             url : '/home/change_eaten',
             type: 'POST',
             data: {recipe_id: recipe_id}
-            });
+        });
         if (button.classList.contains("btn-success")){
-        $(button).removeClass("btn-success").addClass("btn-secondary");
+            $(button).removeClass("btn-success").addClass("btn-secondary");
         } else{
-        $(button).removeClass("btn-secondary").addClass("btn-success");
+            $(button).removeClass("btn-secondary").addClass("btn-success");
         }
         // part that checks if all menu items are eaten, allows clear
         // let buttons = document.getElementsByClassName('menuItems');
@@ -100,7 +120,7 @@ $(document).ready(function() {
       let lis = ul.getElementsByTagName("li");
 
       for (let j=0; j<lis.length; j++){  // for each li
-          let item = lis[j]; console.log(item);
+          let item = lis[j]; //console.log(item);
           if (item.style.textDecoration==='line-through'){
               crossed.push(j); //console.log('struck')
               // ul.appendChild(item);
@@ -109,7 +129,7 @@ $(document).ready(function() {
           }
       }
       for (let i=0; i<not_crossed.length; i++){  // get not crossed items
-        console.log(not_crossed[i])
+        //console.log(not_crossed[i])
         not_crossed_items.push(lis[not_crossed[i]]);
       }
       for (let i=0; i<crossed.length; i++){  // get crossed items

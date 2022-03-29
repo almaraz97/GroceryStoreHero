@@ -182,7 +182,7 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
             return redirect(url_for('recipes.recipe_borrow', recipe_id=recipe_id))
     return render_template('recipe.html', title=recipe_post.title, recipe=recipe_post, recipe_single=True, sidebar=True,
                            url=url, form=form, others_eaten=others_eaten, others_borrowed=others_borrowed,
-                           other_downloaded=other_downloaded, borrowed=borrowed, status=status)
+                           other_downloaded=other_downloaded, borrowed=borrowed, status=status, borrow=borrow)
 
 
 @login_required

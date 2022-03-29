@@ -4,23 +4,39 @@
 {#  <!--<img class="rounded-circle article-img mt-2" src="{{ url_for('static', filename='profile_pics/' + recipe.author.image_file) }}">-->#}
   <div class="media-body mb-2 pl-2">
     <div class="article-metadata mb-3 pb-3">
-      {{recipe.in_menu}}
       {% if recipe.in_menu %}
-        <button class="btn btn-outline-success btn-md mt-2" style="float:right" type="button" data-toggle="modal" data-target="#eatModal">I ate this</button>
+        {% if recipe.eaten %}
+          {% set text = "Didn't eat yet" %}
+          {% set class_ = "btn-outline-secondary" %}
+        {% else %}
+          {% set text = "I ate this" %}
+          {% set class_ = "btn-outline-success" %}
+        {% endif %}
+        <button class="btn {{class_}} btn-md mt-2 ml-1 eatenSingleButton" e_id={{recipe.id}} style="float:right" type="button">{{ text }}</button>
       {% endif %}
       {% if recipe.author == current_user %}
       <div class="row article-title ml-1" style="float:right">
-        <a class="btn btn-outline-info btn-md mt-2 ml-1" href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}" style="float:right">Update</a>
-        <button class="btn btn-outline-danger btn-md ml-1 mr-3 mt-2" style="float:right" type="button" data-toggle="modal" data-target="#deleteModal">Delete</button>
+        <button class="btn btn-outline-danger btn-md ml-1 mr-1 mt-2" style="float:right" type="button" data-toggle="modal" data-target="#deleteModal">Delete</button>
+        <a class="btn btn-outline-info btn-md mt-2 ml-1 mr-3"  href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}">Update</a>
       </div>
     {% else %}
       <div style="float:right">
-        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-sm mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
+        {% if borrow.in_menu %}
+          {% if borrow.eaten %}
+            {% set text = "Didn't eat yet" %}
+            {% set class_ = "btn-outline-secondary" %}
+          {% else %}
+            {% set text = "I ate this" %}
+            {% set class_ = "btn-outline-success" %}
+          {% endif %}
+          <button class="btn {{class_}} btn-md mt-2 ml-1 eatenSingleButton" e_id={{recipe.id}} style="float:right" type="button">{{ text }}</button>
+      {% endif %}
+        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-md mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
         <form method="POST" action="" enctype="multipart/form-data" style="float:right">
           {% if borrowed %}
-            <button class="btn btn-info btn-sm mt-2 ml-1" style="float:right">Unborrow</button>
+            <button class="btn btn-info btn-md mt-2 ml-1" style="float:right">Unborrow</button>
           {% else %}
-            <button class="btn btn-outline-info btn-sm mt-2 ml-1" style="float:right">Borrow Recipe</button>
+            <button class="btn btn-outline-info btn-md mt-2 ml-1" style="float:right">Borrow Recipe</button>
           {% endif %}
         </form>
       </div>
