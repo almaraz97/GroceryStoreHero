@@ -1,8 +1,7 @@
 from GroceryHero import db
-from GroceryHero.HarmonyTool import recipe_stack, norm_stack
 from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, rem_trail_zero
 from GroceryHero.Modeling.svd import recipe_svd
-from GroceryHero.Recipes.forms import RecipeForm, RecipeLinkForm, UploadRecipeImage, SvdForm
+from GroceryHero.Recipes.forms import RecipeForm, RecipeLinkForm, UploadRecipeImage, SvdForm, FullSimplifyForm, SimplifyIngredientForm
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, remove_menu_items, \
     recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, paginate_sort, Measurements
 from GroceryHero.Users.forms import HarmonyForm
@@ -12,11 +11,11 @@ from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFound
 from datetime import datetime
 from flask import render_template, url_for, flash, redirect, request, abort, Blueprint, session
 from flask_login import current_user, login_required
-from sqlalchemy import func
 import itertools
 import json
 import string
 from difflib import SequenceMatcher
+
 
 recipes = Blueprint('recipes', __name__)
 
@@ -171,8 +170,7 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
         borrowed = False if borrow is None else borrow.borrowed
-
-    if request.method == 'POST':  # Download recipe  # todo mint recipe
+    if request.method == 'POST':  # Download recipe
         if form.validate_on_submit():
             if form.picture.data:
                 picture_file = save_picture(form.picture.data, filepath='static/recipe_pics')
@@ -581,6 +579,116 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
     return redirect(url_for('recipes.recipes_page'))
 
 
+@recipes.route('/ingredient_simplifier/<string:valid>', methods=['GET', 'POST'])
+@login_required
+def simplify_ingredients(valid='true'):  # Simplify first using valid ingredient list
+    ingredients = request.form.get('ingredients', None)
+    user_recipes = Recipes.query.filter_by(user_id=3).all()
+    if (request.method == 'GET') and ingredients is None:
+        ingredients = [[y for y in x.quantity.keys()] for x in user_recipes]
+        ingredients = set([item for sublist in ingredients for item in sublist])
+        if valid == 'true':
+            with open('GroceryHero/all_ingredients.csv', 'r') as i:
+                valid_ings = i.read().split(', ')
+
+            suggested_changes = {}
+            unsorted = ingredients.copy()
+            for ing in ingredients:
+                if ing in valid_ings:  # Remove valid ingredients from unsorted list
+                    unsorted.remove(ing)
+            for ing in unsorted:  # Suggest changes of ingredients that are close to valid ingredients
+                for valid_ing in valid_ings:
+                    suggested_changes[ing] = []
+                    if SequenceMatcher(a=valid_ing, b=ing).ratio() > 0.2:
+                        suggested_changes[ing].append(valid_ing)
+        else:
+            suggested_changes = {}  # Suggest changes of ingredients who share similar spellings
+            for i, ing1 in enumerate(ingredients):
+                suggested_changes[ing1] = []
+                for j, ing2 in enumerate(ingredients):
+                    if (not i == j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > 0.5):
+                        suggested_changes[ing1].append(ing2)
+        suggested_changes = {k: v for k, v in suggested_changes.items() if v}
+        # self_similar = {}
+        # for i, ing1 in enumerate(unsorted):
+        #     self_similar[ing1] = []
+        #     for j, ing2 in enumerate(unsorted):
+        #         if (not i >= j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > .5):
+        #             self_similar[ing1].append(ing2)
+
+        # data = {'ingredient_forms': [{'ingredient_name': ing,
+        #                               'suggested': [(x, x) for x in suggest]}
+        #                              for ing, suggest in suggested_changes.items()]}
+        # form = FullSimplifyForm(data=data)
+        # form.ingredients = [x for x in suggested_changes.keys()]
+
+        # form = FullSimplifyForm(formdata=data)
+        # form.ingredients = []
+        # for ing, suggestions in suggested_changes.items():
+        #     form.ingredients.append(ing)
+        #     child = SimplifyIngredientForm()
+        #     child.suggested.choices = [(x, x) for x in suggestions]
+        #     form.ingredient_forms.append_entry(child)
+        entries = []
+        for ing, suggestions in sorted(suggested_changes.items(), key=lambda x: x[0]):
+            form = SimplifyIngredientForm()
+            form.ingredient_name.data = ing
+            form.suggested.choices = [(None, 'Keep Ingredient')]+[(x, x) for x in suggestions]
+            entries.append(form)
+        # form = FullSimplifyForm(data={'ingredient_forms': entries})
+        # form = FullSimplifyForm()
+        # for entry in entries:
+        #     form.ingredient_forms.append_entry(entry)
+        # form.ingredients = [x for x in suggested_changes.keys()]
+        return render_template('ingredient_simplifier.html', title='Simplify', entries=entries, valid=valid,
+                               legend='Simplify Ingredients')
+    else:  # Change recipes who have ingredients of 'ings' to 'changes'
+        if valid == 'true':  # todo can be simplified?
+            returned = [x for x in request.form.lists()]
+            ing_changes = [(x, z) for x, y, z in zip(*returned)]
+        else:
+            returned = [x[1] for x in request.form.lists() if x[0] != 'csrf_token']
+            ing_changes = {x: y for x, y in zip(*returned) if y != 'None'}
+            ing_changes = {k: v for k, v in ing_changes.items() if ing_changes.get(v) != k}  # Dont' allow self-swaps
+        if ing_changes:
+            swap_ings(user_recipes, ing_changes)
+        entries = []
+
+    return render_template('ingredient_simplifier.html', title='Simplify', entries=entries, legend='Simplify Ingredients')
+
+
+# @recipes.route('/remove_duplicates', methods=['GET', 'POST'])
+# @login_required
+# def remove_duplicates():
+#     if not current_user.is_authenticated:
+#         return redirect(url_for('main.landing'))
+#     user_recipes = Recipes.query.filter_by(user_id=3).all()
+#     if request.method == 'GET':
+#         ingredients = [[y for y in x.quantity.keys()] for x in user_recipes]
+#         ingredients = set([item for sublist in ingredients for item in sublist])
+#         suggested_changes = {}
+#         for i, ing1 in enumerate(ingredients):
+#             suggested_changes[ing1] = []
+#             for j, ing2 in enumerate(ingredients):
+#                 if (not i == j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > 0.7):
+#                     suggested_changes[ing1].append(ing2)
+#         suggested_changes = {k: v for k, v in suggested_changes.items() if v}
+#
+#         entries = []
+#         for ing, suggestions in sorted(suggested_changes.items(), key=lambda x: x[0]):
+#             form = SimplifyIngredientForm()
+#             form.ingredient_name.data = ing
+#             form.suggested.choices = [(None, 'Keep Ingredient')] + [(x, x) for x in suggestions]
+#             entries.append(form)
+#     else:
+#         returned = [x[1] for x in request.form.lists()if x[0]!='csrf_token']
+#         ing_changes = {x: z for x, z in zip(*returned) if z != 'None'}
+#         swap_ings(user_recipes, ing_changes)
+#         entries = []
+#     return render_template('ingredient_simplifier.html', title='Simplify', entries=entries,
+#                            legend='Remove Duplicate Ingredients')
+
+
 @recipes.route('/check_ingredients', methods=['GET'])
 @login_required
 def check_ings():
@@ -591,6 +699,24 @@ def check_ings():
         return duplicates, poor_ings
     else:
         return None, None
+
+
+def swap_ings(_recipes, swaps):  # Could be faster if saving recipe IDs with swapped ings
+    for recipe in _recipes:
+        changed = False
+        new_quant = recipe.quantity.copy()
+        for ing, info in recipe.quantity.items():
+            if ing in swaps:
+                print(ing, 'in', swaps)
+                new_quant[swaps[ing]] = info
+                changed = True
+            else:
+                new_quant[ing] = info
+        if changed:
+            print(recipe.quantity)
+            print(new_quant)
+            # recipe.quantity = new_quant
+    # db.session.commit()
 
 
 # @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
@@ -622,7 +748,7 @@ def find_duplicates(ingredients, ratio=0.6):  # Find if ingredient list has dupl
         for j, ing2 in enumerate(ingredients):
             if (not i >= j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > ratio):
                 ingredient_set.append([i, j])
-    return ingredient_set
+    return ingredient_set  # tuples of ingredient indexes that are very similar
 
 
 def find_char(ingredients):

@@ -1,36 +1,33 @@
 {% extends 'layout.html' %}
 {% block content %}
-<!--<h1 class="mb-3">Recipe:</h1>-->
 <article class="media content-section">
 {#  <!--<img class="rounded-circle article-img mt-2" src="{{ url_for('static', filename='profile_pics/' + recipe.author.image_file) }}">-->#}
   <div class="media-body mb-2 pl-2">
-    <div class="article-metadata mb-3 pb-1">
-      <h2 itemprop="name" style="display:inline" class="article-title mb-0 mt-2">{{ recipe.title }}</h2>
-      {% if recipe.author == current_user %}
-        <div style="float:right;">
-{#          {% if current_user.pro %}#}
-{#            <a href="{{ url_for('recipes.publify_recipe', recipe_id=recipe.id) }}" style="float:right; color:white;" class="btn btn-secondary btn-sm ml-1 mt-2">Make Public</a>#}
-{#          {% endif %}#}
-          <button style="float:right" type="button" class="btn btn-outline-danger btn-sm ml-1 mt-2" data-toggle="modal" data-target="#deleteModal">Delete</button>
-          <a href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}" style="float:right" class="btn btn-outline-info btn-sm mt-2">Update</a>
-        </div>
-      {% else %}
-        <div style="float:right">
-          <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-sm mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
-          <form method="POST" action="" enctype="multipart/form-data" style="float:right">
-            {% if borrowed %}
-              <button class="btn btn-info btn-sm mt-2 ml-1" style="float:right">Unborrow</button>
-            {% else %}
-              <button class="btn btn-outline-info btn-sm mt-2 ml-1" style="float:right">Borrow Recipe</button>
-            {% endif %}
-          </form>
-        </div>
+    <div class="article-metadata mb-3 pb-3">
+      {{recipe.in_menu}}
+      {% if recipe.in_menu %}
+        <button class="btn btn-outline-success btn-md mt-2" style="float:right" type="button" data-toggle="modal" data-target="#eatModal">I ate this</button>
       {% endif %}
-        <div class="row">
-            <small class="text-muted pl-3 col-12">{{ recipe.date_created.strftime('%Y-%m-%d') }}</small>
-        </div>
-    </div>
+      {% if recipe.author == current_user %}
+      <div class="row article-title ml-1" style="float:right">
+        <a class="btn btn-outline-info btn-md mt-2 ml-1" href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}" style="float:right">Update</a>
+        <button class="btn btn-outline-danger btn-md ml-1 mr-3 mt-2" style="float:right" type="button" data-toggle="modal" data-target="#deleteModal">Delete</button>
+      </div>
+    {% else %}
+      <div style="float:right">
+        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-sm mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
+        <form method="POST" action="" enctype="multipart/form-data" style="float:right">
+          {% if borrowed %}
+            <button class="btn btn-info btn-sm mt-2 ml-1" style="float:right">Unborrow</button>
+          {% else %}
+            <button class="btn btn-outline-info btn-sm mt-2 ml-1" style="float:right">Borrow Recipe</button>
+          {% endif %}
+        </form>
+      </div>
+    {% endif %}
 
+      <h2 itemprop="name" class="m-0">{{ recipe.title }}</h2>
+    </div>
    {% set ingredients = recipe.quantity.keys() %}
    <h4 class="mb-2 pb-1">Ingredients:</h4>
     <ul class="pb-1">
@@ -49,6 +46,7 @@
           <p>There are no notes yet.</p>
         {% endif %}
      </div>
+  <!-- <button style="float:right" type="button" class="btn btn-outline-success btn-block ml-1 mt-2 mr-1" data-toggle="modal" data-target="#eatModal">I made this!</button> -->
   </div>
 </article>
 

@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="content-section mb-5">
+<h3 class="border-bottom mb-4">{{ legend }}</h3>
+
+{% if entries %}
+    <form method="POST" action="">
+        <fieldset class="form-group">
+            <div class="form-inline form-row mb-3">
+              <div class="col">Ingredient Name</div>
+              <div class="col">Suggestion</div>
+            </div>
+              {% for input_form in entries %}
+                {{ input_form.csrf_token }}
+                  <div class="form-inline form-row mb-3">
+                    <h5 class="col" hidden>{{ input_form.ingredient_name }}</h5>
+                    <h5 class="col">{{ input_form.ingredient_name.data }}</h5>
+                      <div class="col">
+                          {{ input_form.suggested(class="custom-select") }}
+                      </div>
+                  </div>
+              {% endfor %}
+
+        </fieldset>
+    <button value="submit" class="btn btn-info">Submit</button>
+    </form>
+{% else %}
+  {% if valid == 'true' %}
+    <p>All ingredients appear valid. Want to try and remove duplicates?</p>
+    <div class="mb-2">
+      <a class="btn btn-success" href="{{ url_for('recipes.recipes_page') }}">Back to Recipes</a>
+      <a class="btn btn-info" href="{{ url_for('recipes.simplify_ingredients', valid='false') }}">Yes</a>
+    </div>
+  {% else %}
+    <p>Ingredients don't seem to have duplicates. Want to try and standardize them?</p>
+    <div class="mb-2">
+      <a class="btn btn-success" href="{{ url_for('recipes.recipes_page') }}">Back to Recipes</a>
+      <a class="btn btn-info" href="{{ url_for('recipes.simplify_ingredients', valid='true') }}">Yes</a>
+    </div>
+  {% endif %}
+{% endif %}
+</div>
+{% endblock content %}

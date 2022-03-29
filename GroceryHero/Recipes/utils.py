@@ -531,7 +531,8 @@ def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice
     view_q, sort_q = view_dict[view], sort_dict.get(sort, None)  # hot/borrow sorting may need separate
 
     if sort in sort_dict:
-        recipe_list = Recipes.query.filter(and_(view_q, search_q, types_q)).order_by(sort_q). \
+        borrow_filter = Recipes.id.in_(borrows)  # User's borrowed recipes
+        recipe_list = Recipes.query.filter(or_(and_(view_q, search_q, types_q), borrow_filter)).order_by(sort_q). \
             paginate(page=page, per_page=per)
     else:
         # 1. id_borrowed_tuples = User_Rec.query.with_entities(User_Rec.recipe_id).filter_by(borrowed=True).group_by(

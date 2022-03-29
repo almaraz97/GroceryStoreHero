@@ -13,7 +13,7 @@ class RecipeForm(FlaskForm):
     content = TextAreaField('Ingredients (separate with commas)', validators=[DataRequired()])
     type_ = SelectField('Type', choices=[(x, x) for x in ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Side',
                                                           'Beverage', 'Cocktail', 'Other']],
-                        default='Other')
+                        default='Dinner')
     public = RadioField('Public', choices=[('True', 'True'), ('False', 'False')], default='True')
     notes = TextAreaField('Notes/Instructions (optional)')
     submit = SubmitField('Next')
@@ -48,6 +48,17 @@ class FullQuantityForm(FlaskForm):
     ingredients = []  # This should be editable todo is this being used?
     ingredient_forms = FieldList(FormField(QuantityForm), min_entries=1)
     notes = ''
+    submit = SubmitField('Submit')
+
+
+class SimplifyIngredientForm(FlaskForm):
+    ingredient_name = StringField('Ingredient', default='Default ingredient')  # For editing on quantity page
+    suggested = SelectField("Suggested")
+
+
+class FullSimplifyForm(FlaskForm):
+    ingredients = []  # This should be editable todo is this being used?
+    ingredient_forms = FieldList(FormField(SimplifyIngredientForm), min_entries=1)
     submit = SubmitField('Submit')
 
 

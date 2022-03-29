@@ -49,7 +49,7 @@ class User(db.Model, UserMixin):
                                     default={'excludes': [], 'similarity': 45, 'groups': 3, 'possible': 0,
                                              'recommended': {}, 'rec_limit': 3, 'tastes': {}, 'ingredient_weights': {},
                                              'sticky_weights': {}, 'recipe_ids': {}, 'history': 0,
-                                             'ingredient_excludes': [], 'algorithm': 'Balanced'})
+                                             'ingredient_excludes': [], 'algorithm': 'Balanced'})  # TODO CREATE HARMONY TABLE FOR THIS
     pro = db.Column(db.Boolean, nullable=False, default=False)  # Harmony Tool
     grocery_list = db.Column(db.JSON, nullable=False, default=[])  # todo False, make dict instead of [gl, overlap]
     # overlap = db.Column(db.Integer, nullable=False, default=0)  # todo
@@ -127,22 +127,25 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     borrows = db.relationship('User_Rec', backref='source', lazy=True)  # Borrowed versions of the recipe
 
     options = db.Column(db.JSON, nullable=False, default={})  # Optional/replacement ingredient {ing: ['opt', 'rep']}
+    # todo have options as reference to quantity dict or its own quantity dict for optional items?
     # sections = db.Column(db.JSON, nullable=False, default={})  # {'main': [ingredients], 'sauce':[ingredients]}, null?
     restrictions = db.Column(db.JSON, nullable=False, default=[])
-    # lactose-free = db.Column(db.Boolean, nullable=False, default=False)
-    # dairy-free = db.Column(db.Boolean, nullable=False, default=False)
-    # vegetarian = db.Column(db.Boolean, nullable=False, default=False)
-    # vegan = db.Column(db.Boolean, nullable=False, default=False)
     # gluten-free = db.Column(db.Boolean, nullable=False, default=False)
-    # kosher = db.Column(db.Boolean, nullable=False, default=False)
-    # keto = db.Column(db.Boolean, nullable=False, default=False)
-    # diabetes = db.Column(db.Boolean, nullable=False, default=False)
-    # low-carb = db.Column(db.Boolean, nullable=False, default=False)
+    # lactose-free = db.Column(db.Boolean, nullable=False, default=False)
+    # lactose-free = db.Column(db.Boolean, nullable=False, default=False)
     # nut-free = db.Column(db.Boolean, nullable=False, default=False)
     # wheat-free = db.Column(db.Boolean, nullable=False, default=False)
-    # shelfish-free = db.Column(db.Boolean, nullable=False, default=False)
+    # shellfish-free = db.Column(db.Boolean, nullable=False, default=False)
     # egg-free = db.Column(db.Boolean, nullable=False, default=False)
     # soy-free = db.Column(db.Boolean, nullable=False, default=False)
+    # low-fat = db.Column(db.Boolean, nullable=False, default=False)
+    # low-carb = db.Column(db.Boolean, nullable=False, default=False)
+    # low-calorie = db.Column(db.Boolean, nullable=False, default=False)
+    # low-salt = db.Column(db.Boolean, nullable=False, default=False)
+    # vegetarian = db.Column(db.Boolean, nullable=False, default=False)
+    # vegan = db.Column(db.Boolean, nullable=False, default=False)
+    # kosher = db.Column(db.Boolean, nullable=False, default=False)
+    # diabetic = db.Column(db.Boolean, nullable=False, default=False)
     # difficulty = db.Column(db.Integer, nullable=True)  # 1-5 rating
     nft_id = db.Column(db.Integer, nullable=True)  # ID of the minted nft corresponding to this recipe
     prep_time = db.Column(db.JSON, nullable=False, default={})  # prep time, cook time, etc
@@ -153,15 +156,37 @@ class Recipes(db.Model):  # Recipes are first class citizens!
     credit = db.Column(db.Boolean, nullable=False, default=False)  # If they want their name shown to non-friends
 
     def __repr__(self):
-        return f"Recipes('{self.title}', 'ingredients: {len(self.quantity.keys())}', 'created: {self.date_created.strftime('%Y-%m-%d')}')"
+        return f"Recipes({self.id}: {self.title[:6]}.., ings: {len(self.quantity.keys())}, Date: {self.date_created.strftime('%Y-%m-%d')}')"
 
     def __eq__(self, other):
         if isinstance(other, Recipes):
             return (self.title == other.title) and (self.quantity.keys() == other.quantity.keys())
         return False
 
+    def to_schema(self):
+        """Converts recipe into https://schema.org/Recipe format"""
+        schema_diets = ['Diabetic', 'GlutenFree', 'Halal', 'Hindu', 'Kosher', 'LowCalorie',
+                        'LowFat', 'LowLactose', 'LowSalt', 'Vegan', 'Vegetarian']
+        # diets = [self.diabetic, self.gluten-free, self.halal, self.hindu, self.kosher, self.low-calorie,
+        # self.low-fat, self.lactose-free, self.low-salt, self.vegan, self.vegetarian]
+        schema = {'cookTime': self.prep_time.keys().sum(),
+                  'cookingMethod': '',  # frying, steaming...
+                  'nutrition': self.nutrition,
+                  'recipeCategory': self.recipe_type,
+                  'recipeCuisine': self.recipe_genre,
+                  'recipeIngredient': self.quantity.keys(),
+                  'recipeInstructions': self.notes,
+                  'recipeYield': self.servings,
+                  'suitableForDiet': []}  # [k for k, v in zip(schema_diets, diets) if v]
+        return schema
 
-class User_Rec(db.Model):  # For borrowed recipes
+    def ingredients(self):
+        """Returns recipe ingredients with optional ingredients added if they are marked as wanted"""
+        ingredients = self.quantity | {k: v for k, v in self.options.items() if v}
+        return ingredients
+
+
+class User_Rec(db.Model):  # Borrowed recipes
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True, nullable=False)
     borrowed = db.Column(db.Boolean, nullable=False, default=False)
@@ -175,10 +200,15 @@ class User_Rec(db.Model):  # For borrowed recipes
 
     comments = db.Column(db.JSON, nullable=False, default={})  # {Date: str}  # If person comments on recipe_id
     diffs = db.Column(db.JSON, nullable=False, default={})  # Ingredients to switch from original recipe
+    # options = db.Column(db.JSON, nullable=False, default={})  # Optional/replacement ingredient {ing: ['opt', 'rep']}
     # todo cant change more than 50% of it? Maybe someone who eat a modified one contributes eatens?
 
     def __repr__(self):
         return f"User_Rec(user_id: {self.user_id}, recipe_id: {self.recipe_id})"
+
+    def ingredients(self):
+        """Returns ingredients of the original recipe and the changes the borrower makes to the recipe"""
+        return
 
 
 class Aisles(db.Model):  # todo make shelf table?
