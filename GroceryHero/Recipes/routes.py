@@ -165,7 +165,8 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
     others_eaten = sum(x.times_eaten for x in User_Rec.query.filter_by(recipe_id=recipe_id).all())
     others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
-    borrowed = True
+    borrowed, borrow = True, False
+    # borrowed = True
 
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
@@ -599,7 +600,8 @@ def simplify_ingredients(valid='true'):  # Simplify first using valid ingredient
             for ing in unsorted:  # Suggest changes of ingredients that are close to valid ingredients
                 for valid_ing in valid_ings:
                     suggested_changes[ing] = []
-                    if SequenceMatcher(a=valid_ing, b=ing).ratio() > 0.2:
+                    if SequenceMatcher(a=valid_ing, b=ing).ratio() > 0.3:
+                        print(valid_ing, ing)
                         suggested_changes[ing].append(valid_ing)
         else:
             suggested_changes = {}  # Suggest changes of ingredients who share similar spellings

@@ -13,7 +13,7 @@ from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.models import Recipes, Aisles, User_Rec
 
 
-def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list) -> (dict, int):
+def aisle_grocery_sort(recipe_menu_list: list, aisles: dict, extras: list): #  -> tuple(dict, int)
     """
     Recipe_menu_list = [Model.Recipe,...]
     aisles = [{aisle_name: [ingredient_name,...]},...]
@@ -70,44 +70,51 @@ def change_extras(old_extras, added_extras, grocery_list, aisles, remove=False):
     grocery_list = {aisle: [[Measurements(name=ing[0], value=ing[1], unit=ing[2]), ing[3]] for ing in grocery_list[aisle]]
                     for aisle in grocery_list}
     aisles = {aisle.title: aisle.content.split(', ') for aisle in aisles}
-    aisles['Other (unsorted)'] = aisles['Other (unsorted)'] if 'Other (unsorted)' in aisles else ''
+    aisles['Other (unsorted)'] = aisles['Other (unsorted)'] if 'Other (unsorted)' in aisles else []
 
     deletes, adds = [], []  # Track deleted ingredients from groceries and added extras to groceries
-    for i, extra_ing in enumerate(added_extras.copy()):
-        found = False
+    for i, extra_ing in enumerate(added_extras.copy()):  # Iterate through extras to find where they belong
+        
         extra_ing = Measurements(name=extra_ing[0], value=extra_ing[1], unit=extra_ing[2])
-        for aisle in aisles:
-            if aisle in grocery_list:  # Could probably optimize this more
-                for j, aisle_ing in enumerate(grocery_list[aisle]):  # Check if extra has entry in grocery list aisle
-                    aisle_ing = aisle_ing[0]
-                    if extra_ing == aisle_ing:  # __eq__ checks name and unit compatibility
-                        found = True  # Should this be difference if the item is strike out already?
-                        total = (aisle_ing - extra_ing) if remove else (aisle_ing + extra_ing)
-                        if total.value > 0:
-                            grocery_list[aisle][j] = [total, 0]  # Keep strike
-                            adds.append(i)  # Track which extras found in aisle items, add them later if add & !match
-                        else:
-                            deletes.append(j)  # Track which grocery list items were removed, safe remove them after
-                        break  # Extra matched an aisle ingredient
-                if found:  # Go to next extra item
-                    break
+        for aisle in aisles:  # Check if extra has an aisle
 
-            # Extra ingredient does not have an entry in the grocery list, add it to correct aisle section
-            if (extra_ing.name in aisles[aisle]) and (aisle in grocery_list):
-                if extra_ing.value > 0:  # Only have positive ingredients in grocery list
-                    grocery_list[aisle] = sorted(grocery_list[aisle] + [[extra_ing, 0]], key=lambda x: x[0].name)
+            grocery_list_measures = [x[0] for x in grocery_list[aisle]]
+            if (extra_ing.name in aisles[aisle]) and (aisle in grocery_list) and (extra_ing in grocery_list_measures): # Combine extra in grocery_list[aisle]
+                j = grocery_list_measures.index(extra_ing)
+                grocery_aisle_ing = grocery_list_measures[j]
+                total = (grocery_aisle_ing - extra_ing) if remove else (grocery_aisle_ing + extra_ing)
+                if total.value > 0:
+                    grocery_list[aisle][j] = [total, 0]  # Keep strike
+                    adds.append(i)  # Track which extras found in aisle items, add them later if add & !match
+                else:
+                    deletes.append(j)  # Track which grocery list items were removed, safe remove them after
+                break
+            elif (extra_ing.name in aisles[aisle]) and (aisle in grocery_list) and (extra_ing not in grocery_list_measures): # Append extra to its aisle (What data type is grocery_list[aisle]?)
+                grocery_list[aisle] = sorted(grocery_list[aisle] + [[extra_ing, 0]], key=lambda x: x[0].name)
                 adds.append(i)
                 break
-            elif extra_ing.name in aisles[aisle]:  # Aisle has extra ing but theres no section for it in grocery list
+            elif (extra_ing.name in aisles[aisle]) and (aisle not in grocery_list) and (extra_ing not in grocery_list_measures):  # Set extra and its aisle
                 grocery_list[aisle] = [extra_ing, 0]
                 adds.append(i)
                 break
+            elif (extra_ing.name not in aisles[aisle]) and (aisle in grocery_list) and (extra_ing in grocery_list_measures):  # Combine extra in 'Other (unsorted)'
+                j = grocery_list_measures.index(extra_ing)
+                grocery_aisle_ing = grocery_list_measures[j]
+                total = (grocery_aisle_ing - extra_ing) if remove else (grocery_aisle_ing + extra_ing)
+                if total.value > 0:
+                    grocery_list[aisle][j] = [total, 0]  # Keep strike
+                    adds.append(i)  # Track which extras found in aisle items, add them later if add & !match
+                else:
+                    deletes.append(j)  # Track which grocery list items were removed, safe remove them after
+                break
+        else:   # Append extra to 'Other (unsorted)'
+            grocery_list['Other (unsorted)'] = sorted(grocery_list['Other (unsorted)'] + [[extra_ing, 0]], key=lambda x: x[0].name)
+            adds.append(i)
 
     extras = [*old_extras, *added_extras]  # combine old extras with new items
     grocery_list = {aisle: [ing[0].to_str()+[ing[1]] for j, ing in enumerate(grocery_list[aisle]) if j not in deletes]
                     for aisle in grocery_list}
     return extras, [grocery_list, overlap]
-
 
 def combineMeasures(measures: list) -> list:  # Assert Measures objects?
     """[['Cauliflower', 1.0, 'US Cup', 0], ['Cauliflower', -1.0, 'US Cup', 0],

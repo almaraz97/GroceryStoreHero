@@ -6,13 +6,14 @@ from GroceryHero.Recipes.utils import Measurements
 from GroceryHero.Users.forms import FullHarmonyForm
 from GroceryHero.models import Recipes, Aisles, Actions, User_Rec, User
 from GroceryHero.Main.utils import (update_grocery_list, get_harmony_settings, get_history_stats,
-                                    show_harmony_weights, convert_frac, stats_graph, change_extras, ensure_harmony_keys)
+                                    show_harmony_weights, convert_frac, change_extras, ensure_harmony_keys)
 from GroceryHero.Pantry.utils import update_pantry
 from GroceryHero import db
 from flask import render_template, url_for, redirect, Blueprint, request, session
 from flask_login import current_user, login_required, login_user
 from datetime import datetime
 from glob import glob
+import os
 import json
 import string
 
@@ -218,7 +219,6 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
                 h = (norm_stack(recs) ** modifier) * 100
                 avg_harmony.append(h)
         avg_harmony = round(sum(avg_harmony) / len(avg_harmony), 5) if avg_harmony else 0
-
     # if len(current_user.recipes) > 1:  # UMAP chart
     #     time_format = '%Y-%m-%d'
     #     now = datetime.now()
@@ -231,6 +231,7 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
     #         graph = url_for('static', filename=f'visualizations/{current_user.id}_{now_str}.jpg')
     #     else:
     #         graph = url_for('static', filename=f'visualizations/{current_user.id}_{last_graph.strftime(time_format)}.jpg')
+
     return render_template('stats.html', title='Your Statistics', sidebar=True, about=True, clears=clears, graph=graph,
                            recipe_history=history_count_names, ingredient_count=ingredient_count, harmony=harmony,
                            avg_harmony=avg_harmony, average_menu_len=average_menu_len, frequency_pairs=rules,
@@ -240,9 +241,11 @@ def stats():  # Bar chart of recipe frequencies, ingredient frequencies, recipe 
 @login_required
 @main.route('/extras', methods=['GET', 'POST'])
 def add_to_extras():  # Get ingredient names in form
-    aisles = Aisles.query.filter_by(user_id=current_user.id).all()
-    ingredients = [aisle.content.split(', ') for aisle in aisles]
-    choices = sorted({item for sublist in ingredients for item in sublist if item})
+    # aisles = Aisles.query.filter_by(user_id=current_user.id).all()
+    # ingredients = [aisle.content.split(', ') for aisle in aisles]  # TODO base extras suggestions off aisles or total extras?
+    # choices = sorted({item for sublist in ingredients for item in sublist if item})
+    with open(os.getcwd()+'/GroceryHero/all_ingredients.csv') as f:
+        choices = f.read().split(', ')
     form = ExtrasForm()
     form.multi.choices = [('', 'Ingredients Choices')] + [(choice, choice) for choice in choices]
     if form.validate_on_submit():  # Form is submitted and not empty list
@@ -273,8 +276,10 @@ def add_extras(ingredients):  # Add ingredient units/values
         # Extras list Format: [ [AisleName, [IngredientName, quantity, unit, BoolCheck]],...]
         added_extras = []
         for i, ingredient_form in enumerate(form.ingredient_forms):
-            ing_name = form.ingredients[i]
             value = convert_frac(ingredient_form.ingredient_quantity.data)
+            if value <= 0:
+                continue
+            ing_name = form.ingredients[i]
             unit = ingredient_form.ingredient_type.data
             added_extras.append([ing_name, value, unit, 0])
 
@@ -283,8 +288,7 @@ def add_extras(ingredients):  # Add ingredient units/values
         aisles = current_user.aisles
         if not aisles:
             aisles = GenericAisles().get_all()
-        new_extras, new_grocery_list = change_extras(old_extras, added_extras,
-                                                     grocery_list, aisles, remove=False)
+        new_extras, new_grocery_list = change_extras(old_extras, added_extras, grocery_list, aisles, remove=False)
         current_user.extras, current_user.grocery_list = [], []
         db.session.commit()
         current_user.extras = new_extras
@@ -300,6 +304,8 @@ def clear_extras():
     old_extras = current_user.extras.copy()
     grocery_list = current_user.grocery_list.copy()
     aisles = current_user.aisles
+    if not aisles:
+        aisles = GenericAisles().get_all()
 
     _, new_grocery_list = change_extras(old_extras, old_extras, grocery_list, aisles, remove=True)
     current_user.extras, current_user.grocery_list = [], []

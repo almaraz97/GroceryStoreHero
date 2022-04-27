@@ -188,14 +188,16 @@ class GenericAisles:
     def get_all(self):
         all_generic = []
         for aisle, ingredients in self.GENERIC_AISLES.items():
-            ingredients = ', '.join(set([word.strip().capitalize() for word in ingredients]))
+            ingredients = ', '.join(set([' '.join([x.capitalize() for x in word.strip().split(' ')]) for word in ingredients]))
+            # ingredients = ', '.join(set([word.strip().capitalize() for word in ingredients]))
             all_generic.append(GenericAisles(title=aisle, content=ingredients))
         return all_generic
 
     def get_all_dict(self):
         all_generic = {}
         for aisle, ingredients in self.GENERIC_AISLES.items():
-            ingredients = ', '.join(set([word.strip().capitalize() for word in ingredients]))
+            ingredients = ', '.join(set([' '.join([x.capitalize() for x in word.strip().split(' ')]) for word in ingredients]))
+            # ingredients = ', '.join(set([word.strip().capitalize() for word in ingredients]))
             all_generic[aisle] = GenericAisles(title=aisle, content=ingredients)
         return all_generic
 
