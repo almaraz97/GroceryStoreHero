@@ -48,11 +48,7 @@ def create_app(config_class=Config):
     from GroceryHero.Pantry.routes import pantry
     from GroceryHero.errors.handlers import errors
 
-    app.register_blueprint(main)
-    app.register_blueprint(users)
-    app.register_blueprint(recipes)
-    app.register_blueprint(aisles)
-    app.register_blueprint(pantry)
-    app.register_blueprint(errors)
+    for blueprint in [main, users, recipes, aisles, pantry, errors]:
+        app.register_blueprint(blueprint)
 
     return app
