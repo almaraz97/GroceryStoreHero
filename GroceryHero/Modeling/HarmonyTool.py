@@ -25,34 +25,26 @@ def dot(v1, v2):
 #     return avg_sim/max_sim
 #
 #
-# def norm_stack_simple2(input_recipe_dict, algorithm):
-#     # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
-#     recipe_ingredients = sorted(set([item for sublist in input_recipe_dict.values() for item in sublist]))
-#     # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
-#     recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe]
-#                            else 0
-#                            for ingredient in recipe_ingredients]
-#                   for recipe in input_recipe_dict}
-#     avg_vec = [sum(row)/len(row) for row in zip(*recipe_vec.values())]
-#     perfect_vec = [1 for _ in recipe_vec]
-#     if algorithm == 'Charity':  # Zero norm
-#         score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
-#         max_l = perfect_vec[0]
-#     elif algorithm == 'Fairness':  # One norm
-#         score = sum(avg_vec)
-#         max_l = sum(perfect_vec)
-#     elif algorithm == 'Balanced':  # Two norm
-#         score = math.sqrt(sum([x ** 2 for x in avg_vec]))
-#         max_l = math.sqrt(sum([x ** 2 for x in perfect_vec]))
-#     elif algorithm == 'Selfish':  # Nine norm
-#         score = sum([x ** 9 for x in avg_vec]) ** (1. / 9)
-#         max_l = sum([x ** 9 for x in perfect_vec]) ** (1. / 9)
-#     elif algorithm == 'Greedy':  # Infinity norm
-#         score = max(avg_vec)
-#         max_l = max(perfect_vec)
-#     else:
-#         score, max_l = 1, 1
-#     return score/max_l
+def norm_stack_simple2(input_recipe_dict, power=2):
+    # List of unique ingredients from recipe dict (alphabetical) (Ingredient Set)
+    recipe_ingredients = sorted(set([item for sublist in input_recipe_dict.values() for item in sublist]))
+    # Dictionary of One-hot vector of ingredients (recipe name as Key, one-hot vec as Value) (Recipe Matrix)
+    recipe_vec = {recipe: [1 if ingredient in input_recipe_dict[recipe]
+                           else 0
+                           for ingredient in recipe_ingredients]
+                  for recipe in input_recipe_dict}
+    avg_vec = [sum(row)/len(row) for row in zip(*recipe_vec.values())]
+    perfect_vec = [1 for _ in recipe_vec]
+    if power == 0:
+        score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
+        max_l = perfect_vec[0]
+    elif power == -1:  # Infinity norm
+        score = max(avg_vec)
+        max_l = max(perfect_vec)
+    else:
+        score = sum([x ** power for x in avg_vec]) ** (1. / power)
+        max_l = sum([x ** power for x in perfect_vec]) ** (1. / power)
+    return score/max_l
 
 
 def norm_stack(input_recipe_dict: dict, algorithm='Balanced', ingredient_weights=None, tastes=None, sticky_weights=None,
