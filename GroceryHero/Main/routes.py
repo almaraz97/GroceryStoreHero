@@ -1,5 +1,5 @@
 from GroceryHero.Aisles.utils import GenericAisles
-from GroceryHero.HarmonyTool import norm_stack
+from GroceryHero.Modeling.HarmonyTool import norm_stack
 from GroceryHero.Main.forms import ExtrasForm
 from GroceryHero.Recipes.forms import FullQuantityForm
 from GroceryHero.Recipes.utils import Measurements
