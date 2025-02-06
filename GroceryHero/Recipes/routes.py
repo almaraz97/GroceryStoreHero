@@ -3,11 +3,11 @@ from GroceryHero.Main.utils import update_grocery_list, get_harmony_settings, re
 from GroceryHero.Modeling.svd import recipe_svd
 from GroceryHero.Recipes.forms import RecipeForm, RecipeLinkForm, UploadRecipeImage, SvdForm, FullSimplifyForm, SimplifyIngredientForm
 from GroceryHero.Recipes.utils import parse_ingredients, generate_feed_contents, get_friends, remove_menu_items, \
-    recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, paginate_sort, Measurements
+    recipe_stack_w_args, update_user_preferences, load_harmonyform, load_quantityform, paginate_sort, Measurements, get_search_params, get_recipe_history, exclude_recent_recipes
 from GroceryHero.Users.forms import HarmonyForm
 from GroceryHero.Users.utils import save_picture, Colors
 from GroceryHero.models import Recipes, User, Followers, Actions, User_Rec
-from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+from recipe_scrapers import scrape_html, WebsiteNotImplementedError, NoSchemaFoundInWildMode
 from datetime import datetime
 from flask import render_template, url_for, flash, redirect, request, abort, Blueprint, session
 from flask_login import current_user, login_required
@@ -22,66 +22,78 @@ recipes = Blueprint('recipes', __name__)
 
 @login_required
 @recipes.route('/recipes', methods=['GET', 'POST'])
-@recipes.route('/recipes/<string:view>', methods=['GET', 'POST'])
-def recipes_page(view='self'):
+def recipes_self():
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
-    followees, all_friends = get_friends(current_user)
-    possible, recommended, form, about, colors, friends, title = 0, None, HarmonyForm(), True, Colors.rec_colors, None, 'Recipes'
-    search, page, sort, types, friend = search, page, sort, types, friend_choice = get_requests(all_friends)
-    per = 100 if view != 'friends' else 50
-    recipe_list, count, in_menu, borrows, recipe_ids = paginate_sort(friend_choice=friend_choice,
-                                                                     search=search, page=page, sort=sort, type_=types,
-                                                                     view=view, per=per)
-    cards = recipe_list.items
+
+    possible, recommended, form, about, colors = 0, None, HarmonyForm(),  None if current_user.pro else True, Colors.rec_colors
+    search, page, sort, types = request.form.get('search', None), request.args.get('page', 1, type=int), \
+                                        request.args.get('sort', 'none'), request.args.get('types', 'all')
+    
+    recipe_list, count, in_menu, borrows, recipe_ids = paginate_sort(search=search, page=page, sort=sort, type_=types, view="self", per=50)
+    in_menu = [r.title for r in in_menu] if in_menu is not None else []
+    preferences = get_harmony_settings(current_user.harmony_preferences)
+    recipe_hist = get_recipe_history(current_user.history)
+    recipe_ex = exclude_recent_recipes(recipe_hist, current_user.harmony_preferences['history'])
+    
+    if request.method == "GET":
+        form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list.items, recipe_ex)
+    if request.method == "POST":
+        if form.validate_on_submit():  # Harmony or search button was pressed
+            harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(
+                Recipes.title.asc()).all()  # todo include borrowed recipes
+            num_in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).count()
+            form.groups.data = form.groups.data if (num_in_menu > 0) else 2  # Can't harmonize groups of 1
+            recommended, possible = recipe_stack_w_args(harmony_recipes, preferences, form, in_menu, recipe_ex,
+                                                        recipe_hist)
+            recommended = remove_menu_items(in_menu, recommended)
+            update_user_preferences(current_user, form, recommended, possible)
+            form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, harmony_recipes, recipe_ex)
+
+    return render_template('recipes.html', title='Recipes', cards=recipe_list.items, sidebar=True, colors=colors,
+                           borrows=borrows, count=count, friend_dict={}, recipe_list=recipe_list,
+                           recipe_ids=recipe_ids, friend=None, about=about, combos=possible,
+                           all_friends=[], friends=None,
+                           recommended=recommended, form=form, page=page, sort=sort, types=types, view="self")
+
+@login_required
+@recipes.route('/recipes/friends', methods=['GET', 'POST'])
+def recipes_friends():
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.landing'))
+
+    form, friends, colors, title = HarmonyForm(), [], Colors.rec_colors, "Friend Recipes"
+
+    all_friends = get_friends(current_user)
+    search, page, sort, types, friend = get_search_params(all_friends)
+    recipe_list, count, _, borrows, recipe_ids = paginate_sort(
+                                                            friend_choice=friend,
+                                                            search=search, page=page, sort=sort, type_=types,
+                                                            view="friends", per=100)
+
     # friend is [id] unless one wasn't chosen, then it is just the whole friend dict
     if friend and (friend != all_friends):  # If a friend choice was made
         followee = Followers.query.filter_by(user_id=current_user.id, follow_id=friend[0]).first()
         if followee is None or followee.status != 1:  # Don't allow looking at recipes from people you don't follow
-            return redirect(url_for('recipes.recipes_page', view='self'))
-    if view != 'friends':
-        in_menu = [r.title for r in in_menu] if in_menu is not None else []
-        about = None if current_user.pro else True
-        preferences = get_harmony_settings(current_user.harmony_preferences)
-        recipe_hist = [[x.title for x in Recipes.query.filter(Recipes.id.in_(sublist)).all()] for sublist in
-                       current_user.history]
-        excludes = int(current_user.harmony_preferences['history'])
-        recipe_ex = [item for sublist in recipe_hist[:excludes] for item in sublist]
-        if request.method == "GET":
-            form, recommended, recipe_ex, possible = load_harmonyform(current_user, form, in_menu, recipe_list.items,
-                                                                      recipe_ex)
-        if request.method == "POST":
-            if form.validate_on_submit():  # Harmony or search button was pressed
-                harmony_recipes = Recipes.query.filter_by(author=current_user).order_by(
-                    Recipes.title.asc()).all()  # todo include borrowed recipes
-                num_in_menu = Recipes.query.filter_by(author=current_user, in_menu=True).count()
-                form.groups.data = form.groups.data if (num_in_menu > 0) else 2  # Can't harmonize groups of 1
-                recommended, possible = recipe_stack_w_args(harmony_recipes, preferences, form, in_menu, recipe_ex,
-                                                            recipe_hist)
-                recommended = remove_menu_items(in_menu, recommended)
-                update_user_preferences(current_user, form, recommended, possible)
-                form, recommended, _, possible = load_harmonyform(current_user, form, in_menu, harmony_recipes,
-                                                                  recipe_ex)
-    else:  # Friend recipes
-        about, title, recipe_ids, view, friends = None, 'Friend Recipes', None, 'friends', True
-    return render_template('recipes.html', title=title, cards=cards, sidebar=True, colors=colors,
+            return redirect(url_for('recipes.recipes_self'))
+    return render_template('recipes.html', title=title, cards=recipe_list.items, sidebar=True, colors=colors,
                            borrows=borrows, count=count, friend_dict=all_friends, recipe_list=recipe_list,
-                           recipe_ids=recipe_ids, friend=friend, about=about, combos=possible,
+                           recipe_ids=recipe_ids, friend=friend, about=None, combos=0,
                            all_friends=all_friends, friends=friends,
-                           recommended=recommended, form=form, page=page, sort=sort, types=types, view=view)
+                           form=form, page=page, sort=sort, types=types, view="friends")
 
 
 @login_required
-@recipes.route('/public_recipes', methods=['GET', 'POST'])
-def public_recipes():  # view for public may be redundant
+@recipes.route('/recipes/public', methods=['GET', 'POST'])
+def recipes_public():
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     colors, rankings = Colors.rec_colors, {}
-    followees, all_friends = get_friends(current_user)
-    search, page, sort, types, friend_choice = get_requests(all_friends)
+    all_friends = get_friends(current_user)
+    search, page, sort, types, friend_choice = get_search_params(all_friends)
     recipe_list, count, _, borrows, _ = paginate_sort(page=page, sort=sort, type_=types, search=search, view='public',
                                                       friend_choice=all_friends)
-    cards = recipe_list.items
+
     form = SvdForm()
     # print(sorted([[x.trend_index, x.title] for x in Recipes.query.all()], key=lambda y: y[0], reverse=True))
     if request.method == 'POST':
@@ -99,26 +111,14 @@ def public_recipes():  # view for public may be redundant
         flash('You must clear your menu at least once so the algorithm knows what foods you like', 'info')
     template = 'recipes_public.html'
 
-    return render_template(template, title='Public Recipes', cards=cards, sidebar=True, colors=colors,
+    return render_template(template, title='Public Recipes', cards=recipe_list.items, sidebar=True, colors=colors,
                            borrows=borrows, count=count, form=form,
                            recipe_list=recipe_list, page=page, sort=sort, types=types, view='public',
                            friend_dict=friend_choice, all_friends=friend_choice, public=True, rankings=rankings)
 
 
-def get_requests(all_friends):
-    search, page, sort, types, friend = request.form.get('search', None), request.args.get('page', 1, type=int), \
-                                        request.args.get('sort', 'none'), request.args.get('types', 'all'), \
-                                        request.args.get('friend', None, type=int)
-    search = search if search not in ['Recipe Options', ''] else None
-    sort = sort if sort in ['hot', 'borrow', 'date', 'eaten', 'alpha'] else 'none'
-    types = types if types in ['all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Side',
-                               'Dessert', 'Other', 'Beverage', 'Drink'] else 'all'
-    friend_choice = list(all_friends.keys()) if friend is None else [friend]
-    return search, page, sort, types, friend_choice
-
-
 @login_required
-@recipes.route('/friend_feed', methods=['GET', 'POST'])
+@recipes.route('/friends/feed', methods=['GET', 'POST'])
 def friend_feed():
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
@@ -143,7 +143,7 @@ def friend_feed():
 
 @login_required
 @recipes.route('/recipes/<int:recipe_id>', methods=['GET', 'POST'])
-def recipe_single(recipe_id):  # TODO Minting recipe must be public
+def recipe_single(recipe_id):
     if not current_user.is_authenticated:
         return redirect(url_for('main.landing'))
     recipe_post = Recipes.query.get_or_404(recipe_id)
@@ -152,7 +152,7 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
         following = Followers.query.filter_by(user_id=author_id, follow_id=current_user.id).first()
         status = following.getStatus() if following is not None else 'None'
         if (not recipe_post.public) and (status != 1):  # User is trying to look at nonpublic recipe (not friend either)
-            return redirect(url_for('recipes.recipes_page', view='public'))
+            return redirect(url_for('recipes.recipes_self', view='public'))
     else:
         status = 'Followed'
     form = UploadRecipeImage()
@@ -166,7 +166,6 @@ def recipe_single(recipe_id):  # TODO Minting recipe must be public
     others_borrowed = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.borrowed)
     other_downloaded = sum(1 for x in User_Rec.query.filter_by(recipe_id=recipe_id).all() if x.downloaded)
     borrowed, borrow = True, False
-    # borrowed = True
 
     if recipe_post.author != current_user:
         borrow = User_Rec.query.filter_by(recipe_id=recipe_id, user_id=current_user.id).first()
@@ -230,11 +229,11 @@ def new_recipe_quantity():  # Show default/loaded ingredient quantity and measur
         db.session.add(action)
         db.session.commit()
         flash('Your recipe has been created!', 'success')
-        return redirect(url_for('recipes.recipes_page'))
+        return redirect(url_for('recipes.recipes_self'))
     return render_template('recipe_quantity.html', title='New Recipe', form=form, legend='Recipe Ingredients',
                            recipe=recipe)
 
-
+# TODO use an AI to clean and format the ingredients
 @login_required
 @recipes.route('/recipes/link', methods=['GET', 'POST'])
 def recipe_from_link():  # page where user enters url
@@ -243,10 +242,10 @@ def recipe_from_link():  # page where user enters url
     form = RecipeLinkForm()
     if form.validate_on_submit():
         try:
-            scraper = scrape_me(form.link.data)
+            scraper = scrape_html(None, form.link.data, online=True)
         except WebsiteNotImplementedError:
             try:
-                scraper = scrape_me(form.link.data, wild_mode=True)
+                scraper = scrape_html(None, form.link.data, online=True, wild_mode=True)
             except NoSchemaFoundInWildMode:
                 flash("Website not supported :/", 'danger')
                 return redirect(url_for('recipes.recipe_from_link'))
@@ -422,9 +421,6 @@ def recipe_borrow(recipe_id):  # From single page to borrowing the recipe
     return redirect(url_for('recipes.recipe_single', recipe_id=recipe_id))
 
 
-# ######################################### functions, not views #################################################
-
-
 @login_required
 @recipes.route('/recipes/<int:recipe_id>/delete', methods=['POST'])
 def delete_recipe(recipe_id):
@@ -433,7 +429,7 @@ def delete_recipe(recipe_id):
     recipe = Recipes.query.get_or_404(recipe_id)
     if recipe.author != current_user:  # You can only change your own recipes
         abort(403)
-        return redirect(url_for('recipes.recipes_page'))
+        return redirect(url_for('recipes.recipes_self'))
     if recipe.title in current_user.harmony_preferences['recommended']:  # If delete recipe in recommended
         temp = {key: value for key, value in current_user.harmony_preferences.items()}
         temp['recommended'] = {}  # Reset recipe tool recommendations
@@ -449,7 +445,7 @@ def delete_recipe(recipe_id):
     db.session.add(action)
     db.session.commit()
     flash('Your recipe has been deleted!', 'success')
-    return redirect(url_for('recipes.recipes_page'))
+    return redirect(url_for('recipes.recipes_self'))
 
 
 @recipes.route('/recipes/change_menu', methods=['POST'])
@@ -515,7 +511,7 @@ def add_to_menu(recipe_id):  # Adding from RHT recommendations
     recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
-    return redirect(url_for('recipes.recipes_page'))
+    return redirect(url_for('recipes.recipes_self'))
 
 
 @recipes.route('/recipes/multi_add_menu/', methods=['GET', 'POST'])  # From Recipe Harmony Tool Multi-select
@@ -532,7 +528,7 @@ def multi_add_to_menu():
         recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
-    return redirect(url_for('recipes.recipes_page'))
+    return redirect(url_for('recipes.recipes_self'))
 
 
 @recipes.route('/recipes/multi_add_menu2/<ids>', methods=['GET', 'POST'])  # From Recipe Harmony Tool <ul> group
@@ -540,7 +536,7 @@ def multi_add_to_menu():
 def multi_add_to_menu2(ids=None):
     ids = json.loads(ids)
     if ids is None or ids == '':
-        return redirect(url_for('recipes.recipes_page'))  # Potential bug
+        return redirect(url_for('recipes.recipes_self'))  # Potential bug
     for recipe_id in ids:
         recipe = Recipes.query.get_or_404(recipe_id)
         if recipe.author != current_user:
@@ -550,7 +546,7 @@ def multi_add_to_menu2(ids=None):
         recipe.in_menu = True
     update_grocery_list(current_user)
     db.session.commit()
-    return redirect(url_for('recipes.recipes_page'))
+    return redirect(url_for('recipes.recipes_self'))
 
 
 @recipes.route('/recipe_similarity/<ids>/<sim>', methods=['GET', 'POST'])
@@ -577,7 +573,7 @@ def recipe_similarity(ids, sim):  # The too similar button in recommendations
     dictionary['tastes'] = json.dumps(dictionary['tastes'])
     current_user.harmony_preferences = dictionary
     db.session.commit()
-    return redirect(url_for('recipes.recipes_page'))
+    return redirect(url_for('recipes.recipes_self'))
 
 
 @recipes.route('/ingredient_simplifier/<string:valid>', methods=['GET', 'POST'])
@@ -659,37 +655,6 @@ def simplify_ingredients(valid='true'):  # Simplify first using valid ingredient
     return render_template('ingredient_simplifier.html', title='Simplify', entries=entries, legend='Simplify Ingredients')
 
 
-# @recipes.route('/remove_duplicates', methods=['GET', 'POST'])
-# @login_required
-# def remove_duplicates():
-#     if not current_user.is_authenticated:
-#         return redirect(url_for('main.landing'))
-#     user_recipes = Recipes.query.filter_by(user_id=3).all()
-#     if request.method == 'GET':
-#         ingredients = [[y for y in x.quantity.keys()] for x in user_recipes]
-#         ingredients = set([item for sublist in ingredients for item in sublist])
-#         suggested_changes = {}
-#         for i, ing1 in enumerate(ingredients):
-#             suggested_changes[ing1] = []
-#             for j, ing2 in enumerate(ingredients):
-#                 if (not i == j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > 0.7):
-#                     suggested_changes[ing1].append(ing2)
-#         suggested_changes = {k: v for k, v in suggested_changes.items() if v}
-#
-#         entries = []
-#         for ing, suggestions in sorted(suggested_changes.items(), key=lambda x: x[0]):
-#             form = SimplifyIngredientForm()
-#             form.ingredient_name.data = ing
-#             form.suggested.choices = [(None, 'Keep Ingredient')] + [(x, x) for x in suggestions]
-#             entries.append(form)
-#     else:
-#         returned = [x[1] for x in request.form.lists()if x[0]!='csrf_token']
-#         ing_changes = {x: z for x, z in zip(*returned) if z != 'None'}
-#         swap_ings(user_recipes, ing_changes)
-#         entries = []
-#     return render_template('ingredient_simplifier.html', title='Simplify', entries=entries,
-#                            legend='Remove Duplicate Ingredients')
-
 
 @recipes.route('/check_ingredients', methods=['GET'])
 @login_required
@@ -719,29 +684,6 @@ def swap_ings(_recipes, swaps):  # Could be faster if saving recipe IDs with swa
             print(new_quant)
             # recipe.quantity = new_quant
     # db.session.commit()
-
-
-# @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
-# @login_required
-# def linked_user():
-# followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
-# friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-# cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)
-# # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
-# recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
-# recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
-# rec_dict = {r.id: r for r in recs}
-# title_dict = {v.title: k for k, v in rec_dict.items()}
-# all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
-# return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
-#                        colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
-#                        all_friend_recs=all_friend_recs, title_dict=title_dict)
-
-# elif recipe_post.user_id == current_user.id:
-#     title = recipe_post.title
-#     recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
-#     return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
-#                                                              f"attachment; filename={title}.txt"})
 
 
 def find_duplicates(ingredients, ratio=0.6):  # Find if ingredient list has duplicates
@@ -810,101 +752,4 @@ def ing_sort(ingredients):
                 if item in ing:
                     sorted_ings[aisle] = sorted_ings[aisle] + [ing]
     return sorted_ings
-
-"""
-Guidelines for a better GroceryHero:
-Omit units of measure from ingredient names:
-Canned pineapple would 
-Omit preparation details from ingredient names:
-Use ingredient names that specify what to buy. For example: orange peel and orange would require purchasing the same 
-ingredient in a grocery store but orange would allow others to better find your recipe and producing a better grocery 
-list while 'orange peel' is a preparation detail you would add to the 'prep' section like 'minced' would for 
-'minced garlic'. Same for lemon vs lemon zest. However sugar is different than powdered sugar as is milk vs 
-evaporated milk or onion and red onion, pineapple vs pineapple rings, vegan parmesan cheese vs parmesan cheese.
-
-Omit plural ingredients if it makes sense.
-Foods that are considered a whole serving are generally singular such as a peach. Beans would be plural since one would
-not generally eat one bean. A sausage link could be eaten as a single serving. If you are still unsure, whether you
-can buy just one of an item can be another guide. Chocolate chips are numerous in a package so you would make it plural. 
-"""
-
-"""
-import string
-from GroceryHero.Recipes.utils import parse_ingredients
-from GroceryHero.Users.utils import save_picture
-from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
-from GroceryHero.models import Recipes
-from GroceryHero import db, create_app
-db.app = create_app()
-
-
-def recipe_from_link(link):  # page where user enters url
-    try:
-        scraper = scrape_me(link)
-    except WebsiteNotImplementedError:
-        try:
-            scraper = scrape_me(link, wild_mode=True)
-        except NoSchemaFoundInWildMode:
-            return {}
-    ingredients = [x.lower() for x in scraper.ingredients()]
-    ings, quantity = parse_ingredients(ingredients)
-    ings = [string.capwords(x.strip()) for x in ings if x.strip() != '']
-    im_path = scraper.image()
-    quantity = {ingredient: [Q, M] for ingredient, (Q, M) in zip(ings, quantity)}
-    # servings = scraper.yields()
-    prep_time = scraper.total_time()
-    recipe_dict = {'title': scraper.title(), 'notes': scraper.instructions(),
-                   'quantity': quantity, 'link': link, 'im_path': im_path, 'prep_time': prep_time}
-    return recipe_dict
-
-
-def zuck(recipe):  # If recipe is not empty
-    title = recipe['title']
-    quantity = recipe['quantity']
-    notes = recipe['notes']
-    prep_time = float(recipe['prep_time']) if recipe['prep_time'] != 0 else None
-    prep_time = {'total': int(prep_time)} if ((prep_time is not None) and prep_time.is_integer()) else prep_time
-    rtype = 'Dinner'
-    link = recipe.get('link', '')
-    pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
-    pic_fn = pic_fn if pic_fn is not None else 'default.png'
-    recipe = Recipes(title=title, quantity=quantity, user_id=14,
-                     notes=notes, recipe_type=rtype, link=link,
-                     picture=pic_fn, public=True, prep_time=prep_time, credit=False)
-    return recipe
-
-
-def zuckRecipes(start=6_663, end=26_894):
-    site = 'https://www.allrecipes.com/recipe/'
-    start = 13884
-    for i in range(start, end):
-        try:
-            recipe = recipe_from_link(site+str(i)+'/')  # Returns dict
-            if recipe:  #
-                recipe = zuck(recipe)
-                db.session.add(recipe)
-            else:
-                print(i)
-            if (i % 10) == 0:
-                db.session.commit()
-                # recipe.originator = recipe.id
-                # db.session.commit()
-        except Exception as e:
-            print(e)
-
-with db.app.app_context():
-    zuckRecipes()
-    
-    
-for recipe in db.session.query(Recipes).all():
-    recipe.public = True
-db.session.commit()
-
-
-for recipe in db.session.query(Recipes).all():
-    if (recipe.prep_time is not None) and recipe.prep_time:
-        recipe.prep_time = recipe.prep_time['total']
-db.session.commit()
-
-"""
 

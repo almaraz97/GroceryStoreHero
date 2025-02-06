@@ -29,7 +29,7 @@
       <div class="collapse navbar-collapse" id="navbarToggle">
         <div class="navbar-nav mr-auto">
         {% if current_user.is_authenticated %}
-          <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_page') }}">Recipes</a>
+          <a class="nav-item nav-link" href="{{ url_for('recipes.recipes_self') }}">Recipes</a>
           <a class="nav-item nav-link" href="{{ url_for('pantry.pantry_page') }}">Pantry</a>
           <a class="nav-item nav-link" href="{{ url_for('aisles.aisles_page') }}">Aisles</a>
         {% endif %}
@@ -269,7 +269,7 @@
                 </li>
             {% endif %}
             {% for friend in all_friends %}
-              {% if feed is defined %}{% set friend_send = url_for('recipes.friend_feed', friend=friend) %}{% else %} {% set friend_send = url_for('recipes.recipes_page', view='friends', sort=sort, types=types, friend=friend) %}{% endif %}
+              {% if feed is defined %}{% set friend_send = url_for('recipes.friend_feed', friend=friend) %}{% else %} {% set friend_send = url_for('recipes.recipes_friends', sort=sort, types=types, friend=friend) %}{% endif %}
                 <li class="mb-2" style="list-style-type: None; font-size: 20px;">
                 <a href="{{ friend_send }}">
                   <img class="rounded-circle account-img mb-0" style="width:30px;height: 30px; float:left;" src="{{ url_for('static', filename='profile_pics/' + all_friends[friend].image_file) }}">{{ all_friends[friend].username }}
@@ -484,7 +484,7 @@
           <p class='text-muted border-bottom pb-2'>The recommendation system that will save you time and money.</p>
           {{ form.hidden_tag() }}
           <!--Form which updates User JSON and reloads page-->
-          <form action="{{ url_for('recipes.recipes_page') }}" method="POST">
+          <form action="{{ url_for('recipes.recipes_self') }}" method="POST">
             {{ form.hidden_tag() }}
             <fieldset>
               <!--Drop down Groups-->
@@ -602,7 +602,7 @@
 {#    <div class="navbar-nav col p-0"> <!--mr-auto-->#}
 {#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('main.home') }}"><img src="{{ url_for('static', filename='icons/home.png')  }}" height="35px" width="35px"></a>#}
 {#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('pantry.pantry_page') }}"><img src="{{ url_for('static', filename='icons/pantry.png')  }}" height="35px" width="35px"></a>#}
-{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('recipes.recipes_page') }}"><img src="{{ url_for('static', filename='icons/recipes.png')  }}" height="35px" width="35px"></a>#}
+{#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('recipes.recipes_self') }}"><img src="{{ url_for('static', filename='icons/recipes.png')  }}" height="35px" width="35px"></a>#}
 {#      <a class="nav-item nav-link col-sm text-center" style="float:inline" href="{{ url_for('aisles.aisles_page') }}"><img src="{{ url_for('static', filename='icons/aisles.png')  }}" height="35px" width="35px"></a>#}
 {#      {% if current_user.is_authenticated %}#}
 {#      <a class="nav-item nav-link col-sm text-center" href="{{ url_for('users.account') }}"><img src="{{ url_for('static', filename='icons/account.png')  }}" height="35px" width="35px"></a>#}

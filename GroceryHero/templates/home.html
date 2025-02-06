@@ -25,7 +25,7 @@
               <h5 class="mb-0">
                 {% if current_user.is_authenticated %}
                   <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-                    <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_page') }}">Add to your menu</a>
+                    <a style="text-decoration:none; color: grey;" href="{{ url_for('recipes.recipes_self') }}">Add to your menu</a>
                   </button>
                 {% else %}
                   <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">

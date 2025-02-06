@@ -14,9 +14,9 @@
     </form>
   </div>
 <div class="row p-0 mt-4 mx-0 mb-1">
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page', view='friends') }}">Friend Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.public_recipes') }}">Public Recipes</a>
-  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_page') }}">Your Recipes</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_friends') }}">Friend Recipes</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_public') }}">Public Recipes</a>
+  <a class="col-4 m-0 p-0 btn btn-sm btn-success" style="border-radius:0" href="{{ url_for('recipes.recipes_self') }}">Your Recipes</a>
 </div>
 {% endif %}
 {% if cards is not defined or cards|length < 1 %}  <!-- User has no friend actions -->
@@ -24,7 +24,7 @@
     <div class="card-header p-0" id="headingMenu">
       <h5 class="mb-0">
         <button style=".collapse" class="btn btn-light btn-block" data-toggle="collapse" data-target="#collapseMenu"  aria-controls="collapseMenu">
-            <a style="text-decoration:none; color: grey;" href="{% if current_user.is_authenticated %}{{ url_for('recipes.recipes_page') }}{% else %}{{ url_for('users.auth_login') }}{% endif %}">You have nothing on your feed yet.</a>
+            <a style="text-decoration:none; color: grey;" href="{% if current_user.is_authenticated %}{{ url_for('recipes.recipes_self') }}{% else %}{{ url_for('users.auth_login') }}{% endif %}">You have nothing on your feed yet.</a>
         </button>
       </h5>
     </div>
@@ -37,12 +37,12 @@
   <!--Action Cards-->
   {% for action in cards %}
     <article class="media content-section" style="border-left-color:{{colors[action['type_']]}}; border-left-width: 5px; border-radius: 5px; border-bottom: 0; border-top: 0; border-right: 0"> <!--border-right-color-->
-      <a href="{{ url_for('recipes.recipes_page', view='friends', friend=action['user_id']) }}">
+      <a href="{{ url_for('recipes.recipes_friends', friend=action['user_id']) }}">
         <img class="rounded-circle account-img mb-0 mr-0" style="width:85px; height: 85px" src="{{ url_for('static', filename='profile_pics/' + friend_dict[action['user_id']].image_file) }}">
       </a>
       <div class="media-body ml-4 row">
         <div class="col-8 my-auto py-auto">
-          <p style="font-size: 18px;" class="m-0"><a style="font-size: 20px;" href="{{ url_for('recipes.recipes_page', view='friends', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
+          <p style="font-size: 18px;" class="m-0"><a style="font-size: 20px;" href="{{ url_for('recipes.recipes_friends', friend=action['user_id']) }}">@{{ friend_dict[action['user_id']].username }}</a> {{ action['content']|safe }}
         </div>
         <div class="text-muted col-4" style="">
             {{ action['date_created'].strftime('%b %d %Y %H:%M ') }}  <!-- -->

@@ -3,10 +3,10 @@ import os
 import numpy as np
 import sklearn
 from apyori import apriori
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from flask import current_app
 from sklearn.manifold import TSNE
-import umap
+# import umap
 from GroceryHero import db
 from GroceryHero.Aisles.utils import GenericAisles
 from GroceryHero.Recipes.utils import Measurements
@@ -321,9 +321,10 @@ def stats_graph(user, all_recipes, now):
         #
         # coordinates = almaraz_algorithm(25, recipe_vec)
         # labels = [x for x in all_recipes.keys()]
-        reducer = umap.UMAP(n_components=dim, metric='manhattan')
-        model = reducer.fit_transform(recipe_vec)
+        # reducer = umap.UMAP(n_components=dim, metric='manhattan')
+        # model = reducer.fit_transform(recipe_vec)
         # model = []
+        pass
     x, y = [x[0] for x in model], [x[1] for x in model]
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(x, y)

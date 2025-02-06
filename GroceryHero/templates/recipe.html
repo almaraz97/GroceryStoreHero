@@ -14,32 +14,33 @@
         {% endif %}
         <button class="btn {{class_}} btn-md mt-2 ml-1 eatenSingleButton" e_id={{recipe.id}} style="float:right" type="button">{{ text }}</button>
       {% endif %}
+
       {% if recipe.author == current_user %}
-      <div class="row article-title ml-1" style="float:right">
-        <button class="btn btn-outline-danger btn-md ml-1 mr-1 mt-2" style="float:right" type="button" data-toggle="modal" data-target="#deleteModal">Delete</button>
-        <a class="btn btn-outline-info btn-md mt-2 ml-1 mr-3"  href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}">Update</a>
-      </div>
-    {% else %}
-      <div style="float:right">
-        {% if borrow.in_menu %}
-          {% if borrow.eaten %}
-            {% set text = "Didn't eat yet" %}
-            {% set class_ = "btn-outline-secondary" %}
-          {% else %}
-            {% set text = "I ate this" %}
-            {% set class_ = "btn-outline-success" %}
+        <div class="row article-title ml-1" style="float:right">
+          <button class="btn btn-outline-danger btn-md ml-1 mr-1 mt-2" style="float:right" type="button" data-toggle="modal" data-target="#deleteModal">Delete</button>
+          <a class="btn btn-outline-info btn-md mt-2 ml-1 mr-3"  href="{{ url_for('recipes.update_recipe', recipe_id=recipe.id) }}">Update</a>
+        </div>
+      {% else %}
+        <div style="float:right">
+          {% if borrow.in_menu %}
+            {% if borrow.eaten %}
+              {% set text = "Didn't eat yet" %}
+              {% set class_ = "btn-outline-secondary" %}
+            {% else %}
+              {% set text = "I ate this" %}
+              {% set class_ = "btn-outline-success" %}
+            {% endif %}
+            <button class="btn {{class_}} btn-md mt-2 ml-1 eatenSingleButton" e_id={{recipe.id}} style="float:right" type="button">{{ text }}</button>
           {% endif %}
-          <button class="btn {{class_}} btn-md mt-2 ml-1 eatenSingleButton" e_id={{recipe.id}} style="float:right" type="button">{{ text }}</button>
-      {% endif %}
-        <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-md mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
-        <form method="POST" action="" enctype="multipart/form-data" style="float:right">
-          {% if borrowed %}
-            <button class="btn btn-info btn-md mt-2 ml-1" style="float:right">Unborrow</button>
-          {% else %}
-            <button class="btn btn-outline-info btn-md mt-2 ml-1" style="float:right">Borrow Recipe</button>
-          {% endif %}
-        </form>
-      </div>
+          <a href="{{ url_for('recipes.recipe_download', recipe_id=recipe.id) }}" class="btn btn-success btn-md mt-2 ml-1" style="float:right; color: white;">Download Recipe</a>
+          <form method="POST" action="" enctype="multipart/form-data" style="float:right">
+            {% if borrowed %}
+              <button class="btn btn-info btn-md mt-2 ml-1" style="float:right">Unborrow</button>
+            {% else %}
+              <button class="btn btn-outline-info btn-md mt-2 ml-1" style="float:right">Borrow Recipe</button>
+            {% endif %}
+          </form>
+        </div>
     {% endif %}
 
       <h2 itemprop="name" class="m-0">{{ recipe.title }}</h2>
@@ -48,7 +49,10 @@
    <h4 class="mb-2 pb-1">Ingredients:</h4>
     <ul class="pb-1">
       {% for item in ingredients %}
-        <li itemprop="recipeIngredient" class="groceries">{{ item }} <i style="font-size: 14px;">{{ recipe.quantity[item][0] }} {{ recipe.quantity[item][1] }}{% if recipe.quantity[item][0] != '1' %}s{% endif %}</i></li>
+        <li itemprop="recipeIngredient" class="groceries">
+          {{ item }} 
+          <i style="font-size: 14px;">{{ recipe.quantity[item][0] }} {{ recipe.quantity[item][1] }}{% if recipe.quantity[item][0] != '1' %}s{% endif %}</i>
+        </li>
       {% endfor %}
     </ul>
     <h4 class="mb-2 pb-1">Notes:</h4>

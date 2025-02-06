@@ -31,6 +31,7 @@ def create_app(config_class=Config):
         client_kwargs={
             'scope': 'openid profile email',
         },
+        server_metadata_url=f'https://dev-7z79kd24.us.auth0.com/.well-known/openid-configuration'
     )
     app.auth0 = auth0
     app.auth0_urls = auth0_urls
@@ -48,11 +49,7 @@ def create_app(config_class=Config):
     from GroceryHero.Pantry.routes import pantry
     from GroceryHero.errors.handlers import errors
 
-    app.register_blueprint(main)
-    app.register_blueprint(users)
-    app.register_blueprint(recipes)
-    app.register_blueprint(aisles)
-    app.register_blueprint(pantry)
-    app.register_blueprint(errors)
+    for blueprint in [main, users, recipes, aisles, pantry, errors]:
+        app.register_blueprint(blueprint)
 
     return app

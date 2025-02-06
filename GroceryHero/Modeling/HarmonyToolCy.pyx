@@ -2,6 +2,10 @@ import itertools
 import math
 import random
 
+# cdef struct Recipe:
+#     char name
+#     char[][] ingredients
+
 cdef double dot(v1, v2):
     cdef sum_ = 0
     for i in range(len(v1)):
@@ -32,6 +36,7 @@ cdef double norm_stack(input_recipe_dict, algorithm, ingredient_weights, tastes,
     avg_vec = [avg_mag * x for x in avg_vec]
     perfect_mag = (math.factorial(len(comp_vec)) / (2 * math.factorial(len(comp_vec) - 2))) / 2
     perfect_vec = [perfect_mag * len(avg_vec) for _ in avg_vec]
+
     if algorithm == 'Charity':  # Zero norm
         score = [1.0 if x > min(avg_vec) else 0.0 for x in avg_vec].count(1.0)
         max_l = perfect_vec[0]
@@ -53,7 +58,7 @@ cdef double norm_stack(input_recipe_dict, algorithm, ingredient_weights, tastes,
     else:
         score, max_l = 1, 1
     avg_taste = 1
-    if tastes:
+    if tastes:  # Modify score by how similar tasting the recipes are
         taste_comparisons = list(itertools.combinations(input_recipe_dict, 2))
         taste_scores = [tastes[comparison] if comparison in tastes else 1 for comparison in taste_comparisons]
         avg_taste = sum(taste_scores) / len(taste_comparisons)
@@ -68,7 +73,7 @@ cdef create_combos(recipes, count, excludes, includes, limit):
     recipes = [recipe for recipe in recipes if recipe not in includes]
     combos = list(itertools.combinations(recipes, count))
     # Limit combinations
-    if len(combos) > limit:
+    if len(combos) > limit:  # Get random sample of the combinations n=limit
         random.shuffle(combos)
         combos = combos[:limit]
     if includes:  # If there are menu items add to combinations
@@ -83,6 +88,7 @@ cdef dict score_combos(recipes, combos, max_sim, algo, weights, taste, ing_ex, s
     scores = {}
     for group in combos:
         dictionary = {rec: recipes[rec] for rec in group}  # recipe+ingredients of each thing in the group
+        # {str(recipe): [ing,...],...}
         harmony_score = norm_stack(dictionary, algorithm=algo, ingredient_weights=weights, tastes=taste,
                                    sticky_weights=sticky, ingredient_excludes=ing_ex)**modifier
         if harmony_score < max_sim:
@@ -182,3 +188,21 @@ def recipe_stack(recipes, int count, max_sim=1.0, excludes=None, includes=None, 
 #     # cdef list similarity
 #     # cdef list rows
 #     # cdef list avg_v
+
+# Recipe stack
+# # cdef char[][] ingredient_excludes  # Array of strings
+#     # cdef float[] ingredient_weights
+#     # cdef float[] sticky_weights
+#     # cdef dict tastes
+#     ##cdef char[][] recipe_ingredients
+#     ##cdef float[] avg_vec
+#     # cdef dict avg_sticky
+#     # cdef dict comp_vec
+#     ##cdef float[] perfect_vec
+#     ##cdef float[] taste_comparisons
+#     ##cdef float[] taste_scores
+#     # cdef dict recipe_vec
+#     # cdef char[][] ingredients
+#     # cdef float[] similarity
+#     # cdef list rows
+#     # cdef float[] avg_v

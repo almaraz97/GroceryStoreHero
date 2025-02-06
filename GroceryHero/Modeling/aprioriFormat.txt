@@ -1,0 +1,101 @@
+RelationRecord(
+items=frozenset({'Burgers', 'Chicken Enchiladas', 'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), support=0.25, ordered_statistics=
+
+[
+OrderedStatistic(items_base=frozenset(),
+items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas', 'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=0.25, lift=1.0),
+
+OrderedStatistic(items_base=frozenset({'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), confidence=0.5, lift=2.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers'}),
+items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Burgers'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=0.5, lift=2.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs'}),
+items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers'}),
+items_add=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs'}),
+items_add=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicken Enchiladas'}),
+items_add=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers'}),
+items_add=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Burgers', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Chicago Hotdogs', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Chicago Hotdogs', 'Burgers'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Chicago Hotdogs'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Burgers'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers'}),
+items_add=frozenset({'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Chicken Enchiladas'}),
+items_add=frozenset({'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Chicken Enchiladas'}),
+items_add=frozenset({'Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers', 'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=4.0),
+
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches'}),
+items_add=frozenset({'Chicken Enchiladas'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Chicago Hotdogs'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Burgers'}), confidence=1.0, lift=2.0),
+
+OrderedStatistic(items_base=frozenset({'Chicago Hotdogs', 'Burgers', 'Bbq Pulled Chicken Sandwiches', 'Chicken Enchiladas'}),
+items_add=frozenset({'Black Bean Burgers'}), confidence=1.0, lift=4.0),
+
+OrderedStatistic(items_base=frozenset({'Black Bean Burgers', 'Chicago Hotdogs', 'Burgers', 'Chicken Enchiladas'}),
+items_add=frozenset({'Bbq Pulled Chicken Sandwiches'}), confidence=1.0, lift=2.0)
+
+])

@@ -1,8 +1,8 @@
 from GroceryHero import create_app, db
 from GroceryHero.models import Recipes, User
 from kmodes.kmodes import KModes
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import plot, axes
+# import matplotlib.pyplot as plt
+# from matplotlib.pyplot import plot, axes
 import mplcursors
 
 app = create_app()

@@ -15,7 +15,6 @@ class Followers(db.Model):
     status = db.Column(db.Integer, nullable=False)
     user = db.relationship('User', foreign_keys=[user_id])  # Get User that is the follower
     follow = db.relationship('User', foreign_keys=[follow_id])  # Get User that is being followed
-    codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
 
     def __repr__(self):
         status = self.codes[self.status] if self.status in self.codes else 'Error'
@@ -23,7 +22,8 @@ class Followers(db.Model):
         return f"Followers({self.user_id} {status} {self.follow_id} on {time})"
 
     def getStatus(self):
-        return self.codes[self.status]
+        codes = {0: 'Requested', 1: 'Followed', 2: 'Unfollowed', 3: 'Blocked'}
+        return codes[self.status]
 
 
 class User(db.Model, UserMixin):
@@ -87,7 +87,7 @@ class User(db.Model, UserMixin):
 
     @property
     def all_recipes(self):
-        all_recipes = User_Rec.query.filter_by(recipe_id=self.id, borrowed=True)
+        all_recipes = list(User_Rec.query.filter_by(recipe_id=self.id, borrowed=True))
         return all_recipes + self.recipes
 
 
@@ -169,7 +169,7 @@ class Recipes(db.Model):  # Recipes are first class citizens!
                         'LowFat', 'LowLactose', 'LowSalt', 'Vegan', 'Vegetarian']
         # diets = [self.diabetic, self.gluten-free, self.halal, self.hindu, self.kosher, self.low-calorie,
         # self.low-fat, self.lactose-free, self.low-salt, self.vegan, self.vegetarian]
-        schema = {'cookTime': self.prep_time.keys().sum(),
+        schema = {'cookTime': sum(self.prep_time.values()),
                   'cookingMethod': '',  # frying, steaming...
                   'nutrition': self.nutrition,
                   'recipeCategory': self.recipe_type,
@@ -208,7 +208,14 @@ class User_Rec(db.Model):  # Borrowed recipes
 
     def ingredients(self):
         """Returns ingredients of the original recipe and the changes the borrower makes to the recipe"""
-        return
+        recipe = Recipes.query.get(self.recipe_id)
+        if recipe:
+            original_ingredients = recipe.quantity
+            modified_ingredients = {**original_ingredients, **self.diffs}
+            return modified_ingredients
+        return None
+        modified_ingredients = {**original_ingredients, **self.diffs}
+        return modified_ingredients
 
 
 class Aisles(db.Model):  # todo make shelf table?
