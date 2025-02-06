@@ -233,7 +233,7 @@ def new_recipe_quantity():  # Show default/loaded ingredient quantity and measur
     return render_template('recipe_quantity.html', title='New Recipe', form=form, legend='Recipe Ingredients',
                            recipe=recipe)
 
-
+# TODO use an AI to clean and format the ingredients
 @login_required
 @recipes.route('/recipes/link', methods=['GET', 'POST'])
 def recipe_from_link():  # page where user enters url
@@ -242,10 +242,10 @@ def recipe_from_link():  # page where user enters url
     form = RecipeLinkForm()
     if form.validate_on_submit():
         try:
-            scraper = scrape_html(form.link.data)
+            scraper = scrape_html(None, form.link.data, online=True)
         except WebsiteNotImplementedError:
             try:
-                scraper = scrape_html(form.link.data, wild_mode=True)
+                scraper = scrape_html(None, form.link.data, online=True, wild_mode=True)
             except NoSchemaFoundInWildMode:
                 flash("Website not supported :/", 'danger')
                 return redirect(url_for('recipes.recipe_from_link'))
