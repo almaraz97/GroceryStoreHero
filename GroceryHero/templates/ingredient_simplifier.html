@@ -28,13 +28,13 @@
   {% if valid == 'true' %}
     <p>All ingredients appear valid. Want to try and remove duplicates?</p>
     <div class="mb-2">
-      <a class="btn btn-success" href="{{ url_for('recipes.recipes_page') }}">Back to Recipes</a>
+      <a class="btn btn-success" href="{{ url_for('recipes.recipes_self') }}">Back to Recipes</a>
       <a class="btn btn-info" href="{{ url_for('recipes.simplify_ingredients', valid='false') }}">Yes</a>
     </div>
   {% else %}
     <p>Ingredients don't seem to have duplicates. Want to try and standardize them?</p>
     <div class="mb-2">
-      <a class="btn btn-success" href="{{ url_for('recipes.recipes_page') }}">Back to Recipes</a>
+      <a class="btn btn-success" href="{{ url_for('recipes.recipes_self') }}">Back to Recipes</a>
       <a class="btn btn-info" href="{{ url_for('recipes.simplify_ingredients', valid='true') }}">Yes</a>
     </div>
   {% endif %}

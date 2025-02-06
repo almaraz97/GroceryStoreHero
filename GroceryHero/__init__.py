@@ -31,6 +31,7 @@ def create_app(config_class=Config):
         client_kwargs={
             'scope': 'openid profile email',
         },
+        server_metadata_url=f'https://dev-7z79kd24.us.auth0.com/.well-known/openid-configuration'
     )
     app.auth0 = auth0
     app.auth0_urls = auth0_urls

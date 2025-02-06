@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 import pytz
-from flask import url_for
+from flask import url_for, request
 from flask_login import current_user
 from sqlalchemy import or_, and_
 from math import ceil
 from GroceryHero import db
-from GroceryHero.HarmonyTool import recipe_stack
+from GroceryHero.Modeling.HarmonyTool import recipe_stack
 from GroceryHero.models import Recipes, Followers, User, User_Rec
-
 
 class Measurements:
     Measures = ['Unit', 'Package', 'Can', 'Bottle', 'Jar', 'US Cup', 'US Tablespoon', 'US Teaspoon', 'US Fluid Ounce',
@@ -164,6 +163,42 @@ class Measurements:
 from GroceryHero.Recipes.forms import FullQuantityForm
 
 
+def get_recipe_history(user_recipe_history):
+    if not user_recipe_history: # Validate a logged in user
+        return []
+    return [[title[0] for title in Recipes.query.with_entities(Recipes.title)
+                                   .filter(Recipes.id.in_(sublist)).all()]
+                for sublist in user_recipe_history.values()]
+
+def exclude_recent_recipes(recipe_history, history_exclusion_preference):
+    # Preference for how many clears back should be excluded
+    return [item for sublist in recipe_history[:int(history_exclusion_preference)]
+                for item in sublist] 
+
+def get_search_params(all_friends): 
+    VALID_SORT_OPTIONS = {'hot', 'borrow', 'date', 'eaten', 'alpha'}
+    VALID_TYPE_OPTIONS = {
+        'all', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 
+        'Side', 'Dessert', 'Other', 'Beverage', 'Drink'
+    }
+
+    page = request.args.get('page', default=1, type=int)
+    
+    search = request.form.get('search')
+    search = None if search in {'Recipe Options', ''} else search
+
+    sort = request.args.get('sort', default='none')
+    sort = sort if sort in VALID_SORT_OPTIONS else 'none'
+
+    types = request.args.get('types', default='all')
+    types = types if types in VALID_TYPE_OPTIONS else 'all'
+
+    friend_id = request.args.get('friend', type=int)
+    friend_choice = list(all_friends.keys()) if friend_id is None else [friend_id]
+
+    return search, page, sort, types, friend_choice
+
+
 def parse_ingredients(ingredients):
     specials = {'¼': '1/4', '½': '1/2', '¾': '3/4', '⅐': '1/7', '⅑': '1/9', '⅒': '1/10', '⅓': '1/3', '⅔': '2/3',
                 '⅕': '1/5', '⅖': '2/5', '⅗': '3/6', '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8',
@@ -314,7 +349,10 @@ def generate_feed_contents(cards):
         for title1 in rec_titles:  # If recipe title changed or no longer exists handle it here
             for title2 in titles:
                 if SequenceMatcher(a=title1, b=title2).ratio() > .8:  # New title is similar to old one
-                    titles.remove(title1)
+                    try:
+                        titles.remove(title1)
+                    except:
+                        pass
         for title in titles:  # If recipe got deleted use its old title and dont link
             rec_titles[title] = None
         content = ''
@@ -349,7 +387,21 @@ def generate_feed_contents(cards):
 def get_friends(user):
     followees = [x.follow_id for x in Followers.query.filter_by(user_id=user.id).all() if x.status == 1]
     followee_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
-    return followees, followee_dict
+    return followee_dict
+
+# def get_friends(user):
+#     # Get IDs of people the user follows, join with their User object, then return them in a dict
+#     followees = Followers.query.filter_by(user_id=user.id, status=1).join(User, Followers.follow_id == User.id).all()
+#     return {follow.follow_id: follow.followee for follow in followees}
+
+# def get_friends(user):
+#     followees = (
+#         db.session.query(Followers.follow_id, User)
+#         .join(User, Followers.follow_id == User.id)
+#         .filter(Followers.user_id == user.id, Followers.status == 1)
+#         .all()
+#     )
+#     return {follow_id: followee for follow_id, followee in followees}
 
 
 def update_user_preferences(user, form, recommended, possible):
@@ -514,7 +566,7 @@ def borrow_sort(item):
     return count
 
 
-def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice=None, per=15,  # todo add asc or desc
+def paginate_sort(view='', sort='alpha', type_='all', search=None, friend_choice=[], per=15,  # todo add asc or desc
                   page=1):  # Sorts, filters and paginates, returning a paginate object
     in_menu, recipe_ids = None, {}  # todo Generators instead?
     borrows = {x.recipe_id: x.in_menu for x in
@@ -634,4 +686,158 @@ def convert_history():
 #                              FLOAT).desc()
 # 1.0 * Recipes.times_eaten / ((func.extract('epoch', datetime.now()) -
 #                                                       func.extract('epoch', Recipes.date_created)) / 60.0).desc()
+
+
+
+
+# @recipes.route('/remove_duplicates', methods=['GET', 'POST'])
+# @login_required
+# def remove_duplicates():
+#     if not current_user.is_authenticated:
+#         return redirect(url_for('main.landing'))
+#     user_recipes = Recipes.query.filter_by(user_id=3).all()
+#     if request.method == 'GET':
+#         ingredients = [[y for y in x.quantity.keys()] for x in user_recipes]
+#         ingredients = set([item for sublist in ingredients for item in sublist])
+#         suggested_changes = {}
+#         for i, ing1 in enumerate(ingredients):
+#             suggested_changes[ing1] = []
+#             for j, ing2 in enumerate(ingredients):
+#                 if (not i == j) and (SequenceMatcher(a=ing1, b=ing2).ratio() > 0.7):
+#                     suggested_changes[ing1].append(ing2)
+#         suggested_changes = {k: v for k, v in suggested_changes.items() if v}
+#
+#         entries = []
+#         for ing, suggestions in sorted(suggested_changes.items(), key=lambda x: x[0]):
+#             form = SimplifyIngredientForm()
+#             form.ingredient_name.data = ing
+#             form.suggested.choices = [(None, 'Keep Ingredient')] + [(x, x) for x in suggestions]
+#             entries.append(form)
+#     else:
+#         returned = [x[1] for x in request.form.lists()if x[0]!='csrf_token']
+#         ing_changes = {x: z for x, z in zip(*returned) if z != 'None'}
+#         swap_ings(user_recipes, ing_changes)
+#         entries = []
+#     return render_template('ingredient_simplifier.html', title='Simplify', entries=entries,
+#                            legend='Remove Duplicate Ingredients')
+
+# @recipes.route('/linked_user/<int:new_user>', methods=['GET', 'POST'])
+# @login_required
+# def linked_user():
+# followees = [x.follow_id for x in Followers.query.filter_by(user_id=current_user.id).all() if x.status == 1]
+# friend_dict = {id_: User.query.filter_by(id=id_).first() for id_ in followees}
+# cards = sorted(Actions.query.filter(Actions.user_id.in_(followees)).all(), key=lambda x: x.date_created, reverse=True)
+# # Get friend recipe dict(id:Recipe) to hyperlink their 'Clear' actions
+# recs = [item for sublist in [r.recipe_ids for r in cards] for item in sublist]
+# recs = Recipes.query.filter(Recipes.id.in_(recs)).all()
+# rec_dict = {r.id: r for r in recs}
+# title_dict = {v.title: k for k, v in rec_dict.items()}
+# all_friend_recs = {x.id: x for x in Recipes.query.filter(Recipes.user_id.in_(followees)).all()}
+# return render_template('friend_feed.html', rec_dict=rec_dict, cards=cards, title='Friend Feed', sidebar=True, #search=None
+#                        colors=colors, friend_dict=friend_dict, all_friends=friend_dict, friends=True, feed=True,
+#                        all_friend_recs=all_friend_recs, title_dict=title_dict)
+
+# elif recipe_post.user_id == current_user.id:
+#     title = recipe_post.title
+#     recipes = json.dumps({title: [recipe_post.quantity, recipe_post.notes]}, indent=2)
+#     return Response(recipes, mimetype="text/plain", headers={"Content-disposition":
+#                                                              f"attachment; filename={title}.txt"})
+
+
+"""
+Guidelines for a better GroceryHero:
+Omit units of measure from ingredient names:
+Canned pineapple would be pineapple with "canned" as the measurement.
+Omit preparation details from ingredient names:
+Use ingredient names that specify what to buy. For example: orange peel and orange would require purchasing the same 
+ingredient in a grocery store but orange would allow others to better find your recipe and producing a better grocery 
+list while 'orange peel' is a preparation detail you would add to the 'prep' section like 'minced' would for 
+'minced garlic'. Same for lemon vs lemon zest. However sugar is different than powdered sugar as is milk vs 
+evaporated milk or onion and red onion, pineapple vs pineapple rings, vegan parmesan cheese vs parmesan cheese.
+
+Omit plural ingredients if it makes sense.
+Foods that are considered a whole serving are generally singular such as a peach. Beans would be plural since one would
+not generally eat one bean. A sausage link could be eaten as a single serving. If you are still unsure, whether you
+can buy just one of an item can be another guide. Chocolate chips are numerous in a package so you would make it plural. 
+"""
+
+"""
+import string
+from GroceryHero.Recipes.utils import parse_ingredients
+from GroceryHero.Users.utils import save_picture
+from recipe_scrapers import scrape_me, WebsiteNotImplementedError, NoSchemaFoundInWildMode
+from GroceryHero.models import Recipes
+from GroceryHero import db, create_app
+db.app = create_app()
+
+
+def recipe_from_link(link):  # page where user enters url
+    try:
+        scraper = scrape_me(link)
+    except WebsiteNotImplementedError:
+        try:
+            scraper = scrape_me(link, wild_mode=True)
+        except NoSchemaFoundInWildMode:
+            return {}
+    ingredients = [x.lower() for x in scraper.ingredients()]
+    ings, quantity = parse_ingredients(ingredients)
+    ings = [string.capwords(x.strip()) for x in ings if x.strip() != '']
+    im_path = scraper.image()
+    quantity = {ingredient: [Q, M] for ingredient, (Q, M) in zip(ings, quantity)}
+    # servings = scraper.yields()
+    prep_time = scraper.total_time()
+    recipe_dict = {'title': scraper.title(), 'notes': scraper.instructions(),
+                   'quantity': quantity, 'link': link, 'im_path': im_path, 'prep_time': prep_time}
+    return recipe_dict
+
+
+def zuck(recipe):  # If recipe is not empty
+    title = recipe['title']
+    quantity = recipe['quantity']
+    notes = recipe['notes']
+    prep_time = float(recipe['prep_time']) if recipe['prep_time'] != 0 else None
+    prep_time = {'total': int(prep_time)} if ((prep_time is not None) and prep_time.is_integer()) else prep_time
+    rtype = 'Dinner'
+    link = recipe.get('link', '')
+    pic_fn = save_picture(recipe.get('im_path', None), 'static/recipe_pics', download=True)
+    pic_fn = pic_fn if pic_fn is not None else 'default.png'
+    recipe = Recipes(title=title, quantity=quantity, user_id=14,
+                     notes=notes, recipe_type=rtype, link=link,
+                     picture=pic_fn, public=True, prep_time=prep_time, credit=False)
+    return recipe
+
+
+def zuckRecipes(start=6_663, end=26_894):
+    site = 'https://www.allrecipes.com/recipe/'
+    start = 13884
+    for i in range(start, end):
+        try:
+            recipe = recipe_from_link(site+str(i)+'/')  # Returns dict
+            if recipe:  #
+                recipe = zuck(recipe)
+                db.session.add(recipe)
+            else:
+                print(i)
+            if (i % 10) == 0:
+                db.session.commit()
+                # recipe.originator = recipe.id
+                # db.session.commit()
+        except Exception as e:
+            print(e)
+
+with db.app.app_context():
+    zuckRecipes()
+    
+    
+for recipe in db.session.query(Recipes).all():
+    recipe.public = True
+db.session.commit()
+
+
+for recipe in db.session.query(Recipes).all():
+    if (recipe.prep_time is not None) and recipe.prep_time:
+        recipe.prep_time = recipe.prep_time['total']
+db.session.commit()
+
+"""
 
